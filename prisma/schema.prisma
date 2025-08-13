@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Group {
+  id          String   @id
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  bookmarks   Bookmark[]
+
+  @@map("groups")
+}
+
+model Bookmark {
+  id               String    @id
+  groupId          String    @map("group_id")
+  title            String
+  url              String
+  category         String
+  memo             String?
+  address          String?
+  priority         Int       @default(3)
+  visited          Boolean   @default(false)
+  visitedAt        DateTime? @map("visited_at")
+  autoTitle        String?   @map("auto_title")
+  autoDescription  String?   @map("auto_description")  
+  autoImageUrl     String?   @map("auto_image_url")
+  autoSiteName     String?   @map("auto_site_name")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([category])
+  @@index([visited])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([url])
+  @@map("bookmarks")
+}

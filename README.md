@@ -1,87 +1,149 @@
-# Welcome to React Router!
+# WishMap 🗺️
 
-A modern, production-ready template for building full-stack React applications using React Router.
+行きたい場所を家族・恋人と共有するWebアプリケーション
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 概要
 
-## Features
+WishMapは、アカウント登録不要で「行きたい場所」を簡単に共有・管理できるWebアプリです。
+8桁のグループIDを共有するだけで、みんなで行きたいスポットを集めることができます。
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## 主な機能
 
-## Getting Started
+- 🚀 **アカウント不要**: 登録なしですぐに使用開始
+- 🔗 **簡単共有**: URLまたはグループIDで瞬時に共有
+- 📍 **ブックマーク管理**: URL、カテゴリ、興味度、メモを登録
+- 🤖 **自動情報取得**: URLからタイトルや説明を自動取得
+- ✅ **訪問管理**: 行った場所をチェックして管理
+- 🔍 **検索・フィルター**: カテゴリや訪問状況で絞り込み
+- 📊 **統計情報**: グループの活動状況を可視化
 
-### Installation
+## 技術スタック
 
-Install the dependencies:
+- **フロントエンド**: React 19 + React Router 7 + TypeScript + TailwindCSS
+- **バックエンド**: Express.js + Node.js
+- **データベース**: SQLite + Prisma ORM
+- **その他**: Cheerio (スクレイピング), Helmet (セキュリティ)
+
+## セットアップ
+
+### 前提条件
+
+- Node.js 18+ 
+- npm
+
+### インストール
 
 ```bash
+# 依存関係をインストール
 npm install
+
+# サービス層の依存関係をインストール
+cd apps/service && npm install && cd ../..
+
+# データベースを初期化
+npm run db:migrate
 ```
 
-### Development
+### 開発サーバーの起動
 
-Start the development server with HMR:
+#### 方法1: フロントエンドとAPIを同時に起動
 
 ```bash
+npm run dev:all
+```
+
+- フロントエンド: http://localhost:5173
+- API: http://localhost:3001
+
+#### 方法2: 個別に起動
+
+```bash
+# フロントエンド開発サーバー
 npm run dev
+
+# APIサーバー（別ターミナル）
+npm run dev:api
 ```
 
-Your application will be available at `http://localhost:5173`.
+## プロジェクト構造
 
-## Building for Production
+```
+wanna-go/
+├── app/                    # フロントエンド (React Router)
+│   ├── routes/            # ページコンポーネント
+│   ├── components/        # 共有コンポーネント
+│   └── lib/              # ユーティリティ・API層
+├── apps/
+│   └── service/          # APIサーバー (Express.js)
+│       ├── routes/       # APIルート
+│       └── utils/        # ユーティリティ関数
+├── prisma/               # データベーススキーマ・マイグレーション
+└── public/               # 静的ファイル
+```
 
-Create a production build:
+## API エンドポイント
+
+### グループ関連
+- `GET /api/groups/:groupId` - グループ情報取得
+- `POST /api/groups` - グループ作成
+- `PUT /api/groups/:groupId` - グループ更新
+- `GET /api/groups/check/:groupId` - ID重複チェック
+
+### ブックマーク関連
+- `GET /api/groups/:groupId/bookmarks` - ブックマーク一覧
+- `POST /api/groups/:groupId/bookmarks` - ブックマーク作成
+- `GET /api/bookmarks/:bookmarkId` - ブックマーク詳細
+- `PUT /api/bookmarks/:bookmarkId` - ブックマーク更新
+- `DELETE /api/bookmarks/:bookmarkId` - ブックマーク削除
+
+### その他
+- `POST /api/url-metadata` - URLメタデータ取得
+
+## データベース操作
 
 ```bash
+# マイグレーション実行
+npm run db:migrate
+
+# Prisma Clientの生成
+npm run db:generate
+
+# データベース管理画面
+npm run db:studio
+```
+
+## 本番環境構築
+
+```bash
+# 本番用ビルド
 npm run build
+
+# 本番サーバー起動
+npm start
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+## 環境変数
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+# .env
+DATABASE_URL="file:./dev.db"
+NODE_ENV="development"
+PORT=3001
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## カテゴリ
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+以下のカテゴリが利用可能です：
+- レストラン
+- 観光地
+- ショッピング
+- アクティビティ
+- その他
 
-### DIY Deployment
+## ライセンス
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+このプロジェクトはMITライセンスの下で公開されています。
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ using React Router + Prisma
