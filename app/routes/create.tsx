@@ -1,8 +1,8 @@
 import type { Route } from "./+types/create";
-import { useState, useEffect } from "react";
-import { Link, Form, useActionData, useNavigation, redirect } from "react-router";
-import { createGroup, checkGroupIdAvailability } from "../services/group.server";
-import { generateGroupId } from "../lib/utils";
+import { useState } from "react";
+import { Link, Form, useActionData, useNavigation } from "react-router";
+import { redirect } from "react-router";
+import { createGroup } from "../services/group.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -15,26 +15,16 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const name = formData.get("name")?.toString();
   const description = formData.get("description")?.toString();
-  const groupId = formData.get("groupId")?.toString();
 
   if (!name?.trim()) {
     return { error: "グループ名を入力してください" };
   }
 
-  if (!groupId) {
-    return { error: "グループIDが必要です" };
-  }
-
   try {
-    const isAvailable = await checkGroupIdAvailability(groupId);
-    if (!isAvailable) {
-      return { error: "このIDは既に使用されています" };
-    }
-
+    // groupIDは自動生成される
     const group = await createGroup({
       name: name.trim(),
       description: description?.trim() || undefined,
-      id: groupId,
     });
     
     return redirect(`/group/${group.id}`);
@@ -46,143 +36,145 @@ export async function action({ request }: Route.ActionArgs) {
 export default function Create() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [groupId, setGroupId] = useState("");
-  const [isIdChecked, setIsIdChecked] = useState(false);
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  useEffect(() => {
-    setGroupId(generateGroupId());
-  }, []);
-
-  const regenerateId = () => {
-    setGroupId(generateGroupId());
-    setIsIdChecked(false);
-  };
-
-  const checkId = async () => {
-    try {
-      const response = await fetch(`/api/check-group-id?groupId=${groupId}`);
-      const result = await response.json();
-      setIsIdChecked(result.available);
-    } catch (err) {
-      setIsIdChecked(false);
-    }
-  };
-
-  useEffect(() => {
-    if (groupId) {
-      checkId();
-    }
-  }, [groupId]);
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Link 
               to="/" 
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+              className="btn btn-ghost btn-sm mb-6 hover:translate-x-1 transition-transform"
             >
-              ← WishMap
+              ← WishMapに戻る
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">
-              新しいグループを作成
-            </h1>
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">
+                新しいグループを作成
+              </h1>
+              <p className="text-lg text-slate-500 dark:text-slate-400">
+                みんなで共有する行きたい場所リストを始めましょう
+              </p>
+            </div>
           </div>
 
-          {/* Form */}
-          <div className="bg-white rounded-lg p-6 shadow-md">
-            <Form method="post" className="space-y-6">
-              <input type="hidden" name="groupId" value={groupId} />
-              
-              {/* Group Name */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  グループ名 *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="我が家の行きたいところ"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  maxLength={100}
-                  required
-                />
+          {/* Form Card */}
+          <div className="card">
+            <div className="card-content space-y-6">
+              {/* Info Banner */}
+              <div className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-blue-600 dark:text-blue-400 text-xl mt-0.5">💡</div>
+                  <div>
+                    <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      自動でグループIDを生成
+                    </h3>
+                    <p className="text-blue-700 dark:text-blue-300 text-sm">
+                      作成後に表示されるURLを家族や友人に共有して、一緒に行きたい場所を管理できます
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              {/* Group ID */}
-              <div>
-                <label htmlFor="groupId" className="block text-sm font-medium text-gray-700 mb-2">
-                  グループID (自動生成)
-                </label>
-                <div className="flex gap-2">
+              
+              <Form method="post" className="space-y-6">
+                {/* Group Name */}
+                <div className="space-y-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-900 dark:text-slate-50">
+                    グループ名 <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    id="groupId"
-                    value={groupId}
-                    readOnly
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    id="name"
+                    name="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="我が家の行きたいところ"
+                    className="input text-base"
+                    maxLength={100}
+                    required
                   />
-                  <button
-                    type="button"
-                    onClick={regenerateId}
-                    className="px-4 py-2 text-blue-600 hover:text-blue-800 border border-blue-600 hover:border-blue-800 rounded-lg transition-colors"
-                  >
-                    🔄再生成
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  ※ このIDでグループを共有します
-                </p>
-                {isIdChecked && (
-                  <p className="text-sm text-green-600 mt-1 flex items-center">
-                    <span className="mr-1">✅</span>
-                    ID重複チェック済み
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    最大100文字まで入力できます ({name.length}/100)
                   </p>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  説明 (任意)
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="家族で行きたい場所やりたいことをまとめています"
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  maxLength={500}
-                />
-              </div>
-
-              {/* Error Message */}
-              {actionData?.error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{actionData.error}</p>
                 </div>
-              )}
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting || !isIdChecked}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
-              >
-                {isSubmitting ? "作成中..." : "グループを作成"}
-              </button>
-            </Form>
+                {/* Description */}
+                <div className="space-y-2">
+                  <label htmlFor="description" className="block text-sm font-medium text-slate-900 dark:text-slate-50">
+                    説明 <span className="text-slate-500 dark:text-slate-400 text-xs">(任意)</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="家族で行きたい場所ややりたいことをまとめています"
+                    rows={4}
+                    className="textarea"
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    グループの目的や説明を追加できます ({description.length}/500)
+                  </p>
+                </div>
+
+                {/* Error Message */}
+                {actionData?.error && (
+                  <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-600 dark:text-red-400 text-lg">⚠️</span>
+                      <p className="text-red-700 dark:text-red-300 font-medium">{actionData.error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !name.trim()}
+                  className="btn btn-primary w-full btn-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+                      作成中...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      ✨ グループを作成する
+                    </span>
+                  )}
+                </button>
+              </Form>
+            </div>
           </div>
+
+          {/* Preview Card */}
+          {name.trim() && (
+            <div className="card mt-6 animate-fadeIn">
+              <div className="card-header">
+                <h3 className="card-title text-lg">プレビュー</h3>
+                <p className="card-description">作成されるグループの見た目</p>
+              </div>
+              <div className="card-content">
+                <div className="border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-100/20 dark:bg-slate-800/20">
+                  <h4 className="font-semibold text-slate-900 dark:text-slate-50 text-xl mb-2">{name}</h4>
+                  {description && (
+                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{description}</p>
+                  )}
+                  <div className="mt-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                      グループID: xxxxxxxx (自動生成)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

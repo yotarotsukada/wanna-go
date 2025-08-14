@@ -1,10 +1,12 @@
 import type { Route } from "./+types/add-bookmark";
 import { useState, useCallback } from "react";
-import { Link, useParams, Form, useActionData, useNavigation, redirect } from "react-router";
+import { Link, useParams, Form, useActionData, useNavigation } from "react-router";
+import { redirect } from "react-router";
 import { createBookmark } from "../services/bookmark.server";
 import { CATEGORIES } from "../lib/constants";
 import { isValidURL, debounce } from "../lib/utils";
-import type { Category, UrlMetadata } from "../lib/types";
+import type { Category } from "../lib/constants";
+import type { UrlMetadata } from "../lib/types";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -120,21 +122,21 @@ export default function AddBookmark() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Link 
               to={`/group/${groupId}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
             >
               ← ブックマークを追加
             </Link>
           </div>
 
           {/* Form */}
-          <div className="bg-white rounded-lg p-6 shadow-md">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
             <Form method="post" className="space-y-6">
               {/* Hidden metadata fields */}
               {metadata && (
@@ -147,7 +149,7 @@ export default function AddBookmark() {
               )}
               {/* URL */}
               <div>
-                <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   URL *
                 </label>
                 <input
@@ -157,7 +159,7 @@ export default function AddBookmark() {
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   placeholder="https://example.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   required
                 />
                 <div className="mt-2 flex items-center gap-2">
@@ -165,17 +167,17 @@ export default function AddBookmark() {
                     type="button"
                     onClick={() => url && fetchMetadata(url)}
                     disabled={!url || !isValidURL(url) || isLoadingMetadata}
-                    className="px-3 py-1 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded disabled:bg-gray-100 disabled:text-gray-400"
+                    className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded disabled:bg-gray-100 disabled:text-gray-400 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
                   >
                     URLから情報を取得
                   </button>
-                  {isLoadingMetadata && <span className="text-sm text-gray-500">🔄取得中...</span>}
+                  {isLoadingMetadata && <span className="text-sm text-gray-500 dark:text-gray-400">🔄取得中...</span>}
                 </div>
               </div>
 
               {/* Title */}
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   タイトル *
                 </label>
                 <input
@@ -185,18 +187,18 @@ export default function AddBookmark() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="美味しいラーメン店"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={200}
                   required
                 />
                 {metadata?.success && metadata.title && (
-                  <p className="text-sm text-gray-500 mt-1">(自動取得: {metadata.title})</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">(自動取得: {metadata.title})</p>
                 )}
               </div>
 
               {/* Description */}
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   説明 (自動取得)
                 </label>
                 <textarea
@@ -206,14 +208,14 @@ export default function AddBookmark() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="説明文..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={500}
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   カテゴリ *
                 </label>
                 <select
@@ -221,7 +223,7 @@ export default function AddBookmark() {
                   name="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as Category)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   required
                 >
                   {CATEGORIES.map(cat => (
@@ -232,7 +234,7 @@ export default function AddBookmark() {
 
               {/* Address */}
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   住所・場所（任意）
                 </label>
                 <input
@@ -242,14 +244,14 @@ export default function AddBookmark() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="東京都渋谷区上原1-2-3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={200}
                 />
               </div>
 
               {/* Priority */}
               <div>
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   興味度
                 </label>
                 <div className="flex items-center gap-2">
@@ -264,13 +266,13 @@ export default function AddBookmark() {
                     className="flex-1"
                   />
                   <span className="text-lg">{'⭐'.repeat(priority)}</span>
-                  <span className="text-sm text-gray-500 w-16">({priority}/5)</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 w-16">({priority}/5)</span>
                 </div>
               </div>
 
               {/* Memo */}
               <div>
-                <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="memo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   メモ
                 </label>
                 <textarea
@@ -280,15 +282,15 @@ export default function AddBookmark() {
                   onChange={(e) => setMemo(e.target.value)}
                   placeholder="友人おすすめ！"
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={1000}
                 />
               </div>
 
               {/* Error Message */}
               {actionData?.error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{actionData.error}</p>
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                  <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
                 </div>
               )}
 

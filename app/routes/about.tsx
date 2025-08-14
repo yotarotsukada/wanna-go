@@ -10,39 +10,39 @@ export function meta({}: Route.MetaArgs) {
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Link 
               to="/"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
             >
               ← ホームに戻る
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               WishMapについて
             </h1>
           </div>
 
           {/* Content */}
-          <div className="bg-white rounded-lg p-6 shadow-md space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md space-y-6">
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 🗺️ WishMapとは
               </h2>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 WishMapは、家族や恋人、友人と「行きたい場所」を簡単に共有・管理できるWebアプリです。
                 アカウント登録不要で、URLを共有するだけでグループを作成し、みんなで行きたいスポットを集めることができます。
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 ✨ 主な機能
               </h2>
-              <ul className="space-y-2 text-gray-700">
+              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 mt-1">•</span>
                   <span><strong>グループ共有:</strong> 8桁のIDでグループを作成・参加</span>
@@ -67,10 +67,10 @@ export default function About() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 🎯 こんな時に便利
               </h2>
-              <ul className="space-y-2 text-gray-700">
+              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="text-blue-500 mr-2 mt-1">•</span>
                   <span>家族での旅行計画や週末のお出かけ先選び</span>
@@ -91,10 +91,10 @@ export default function About() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 🔒 プライバシーとセキュリティ
               </h2>
-              <ul className="space-y-2 text-gray-700">
+              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="text-orange-500 mr-2 mt-1">•</span>
                   <span>アカウント登録不要でプライバシーを保護</span>
@@ -111,10 +111,10 @@ export default function About() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 🚀 使い方
               </h2>
-              <ol className="space-y-3 text-gray-700">
+              <ol className="space-y-3 text-gray-700 dark:text-gray-300">
                 <li className="flex items-start">
                   <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5 flex-shrink-0">1</span>
                   <span>「新しいグループを作成」でグループを作成</span>
@@ -135,7 +135,7 @@ export default function About() {
             </section>
 
             <section className="bg-blue-50 p-4 rounded-lg">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                 💡 ヒント
               </h2>
               <ul className="space-y-2 text-gray-700 text-sm">
