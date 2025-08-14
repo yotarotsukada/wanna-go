@@ -1,10 +1,15 @@
 import type { Route } from "./+types/edit-bookmark";
 import { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router";
-import { api } from "../lib/api";
+import { Link, useParams, Form, useLoaderData, useActionData, useNavigation } from "react-router";
+import { getBookmark, updateBookmark, deleteBookmark } from "../services/bookmark.server";
+import { getGroup } from "../services/group.server";
 import { CATEGORIES } from "../lib/constants";
 import { isValidURL } from "../lib/utils";
-import type { Category, Bookmark } from "../lib/types";
+import type { Category } from "../lib/constants";
+import type { Bookmark } from "../entities/bookmark/bookmark";
+import type { Group } from "../entities/group/group";
+import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
+import { redirect } from "react-router";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -13,168 +18,167 @@ export function meta({ params }: Route.MetaArgs) {
   ];
 }
 
-export default function EditBookmark() {
-  const { groupId, bookmarkId } = useParams();
-  const navigate = useNavigate();
+export async function loader({ params }: Route.LoaderArgs) {
+  const { bookmarkId } = params;
   
-  const [bookmark, setBookmark] = useState<Bookmark | null>(null);
-  const [loading, setLoading] = useState(true);
-  
-  const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<Category>("レストラン");
-  const [address, setAddress] = useState("");
-  const [priority, setPriority] = useState(3);
-  const [memo, setMemo] = useState("");
-  const [visited, setVisited] = useState(false);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  if (!bookmarkId) {
+    throw new Response("Bookmark ID is required", { status: 400 });
+  }
 
-  useEffect(() => {
-    if (bookmarkId) {
-      loadBookmark();
-    }
-  }, [bookmarkId]);
-
-  const loadBookmark = async () => {
-    if (!bookmarkId) return;
+  try {
+    const bookmark = await getBookmark(bookmarkId);
     
-    setLoading(true);
-    try {
-      const data = await api.getBookmark(bookmarkId);
-      setBookmark(data);
-      setUrl(data.url);
-      setTitle(data.title);
-      setCategory(data.category);
-      setAddress(data.address || "");
-      setPriority(data.priority);
-      setMemo(data.memo || "");
-      setVisited(data.visited);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "ブックマークの読み込みに失敗しました");
-    } finally {
-      setLoading(false);
+    if (!bookmark) {
+      throw new Response("Bookmark not found", { status: 404 });
     }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    const group = await getGroup(bookmark.groupId);
     
-    if (!title.trim() || !url.trim() || !category) {
-      setError("タイトル、URL、カテゴリは必須です");
-      return;
+    if (!group) {
+      throw new Response("Group not found", { status: 404 });
     }
 
-    if (!isValidURL(url)) {
-      setError("有効なURLを入力してください");
-      return;
-    }
+    return Response.json({ bookmark, group });
+  } catch (error) {
+    console.error("Error loading bookmark:", error);
+    throw new Response("Failed to load bookmark", { status: 500 });
+  }
+}
 
-    if (!bookmarkId) return;
+export async function action({ request, params }: Route.ActionArgs) {
+  const { bookmarkId, groupId } = params;
+  const formData = await request.formData();
+  const intent = formData.get("intent");
 
-    setIsSubmitting(true);
-    setError("");
+  if (!bookmarkId) {
+    return Response.json({ error: "Bookmark ID is required" }, { status: 400 });
+  }
 
-    try {
-      await api.updateBookmark(bookmarkId, {
+  try {
+    if (intent === "delete") {
+      await deleteBookmark(bookmarkId);
+      return redirect(`/group/${groupId}`);
+    } else {
+      // Update bookmark
+      const title = formData.get("title")?.toString();
+      const url = formData.get("url")?.toString();
+      const category = formData.get("category")?.toString() as Category;
+      const memo = formData.get("memo")?.toString();
+      const address = formData.get("address")?.toString();
+      const priority = Number(formData.get("priority")) || 3;
+      const visited = formData.get("visited") === "on";
+
+      if (!title?.trim() || !url?.trim() || !category) {
+        return Response.json({ error: "タイトル、URL、カテゴリは必須です" });
+      }
+
+      if (!isValidURL(url)) {
+        return Response.json({ error: "有効なURLを入力してください" });
+      }
+
+      await updateBookmark(bookmarkId, {
         title: title.trim(),
         url: url.trim(),
         category,
-        memo: memo.trim() || undefined,
-        address: address.trim() || undefined,
+        memo: memo?.trim() || undefined,
+        address: address?.trim() || undefined,
         priority,
         visited,
-        visitedAt: visited ? new Date().toISOString() : undefined,
       });
 
-      navigate(`/group/${groupId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "ブックマークの更新に失敗しました");
-    } finally {
-      setIsSubmitting(false);
+      return redirect(`/group/${groupId}`);
     }
-  };
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "操作に失敗しました" });
+  }
+}
 
-  const handleDelete = async () => {
-    if (!confirm("このブックマークを削除しますか？")) return;
-    if (!bookmarkId) return;
-
+export default function EditBookmark() {
+  const { groupId } = useParams();
+  const { bookmark, group } = useLoaderData() as { bookmark: Bookmark; group: Group };
+  const actionData = useActionData() as { error?: string; success?: boolean } | undefined;
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  
+  const [url, setUrl] = useState(bookmark.url);
+  const [title, setTitle] = useState(bookmark.title);
+  const [category, setCategory] = useState<Category>(bookmark.category);
+  const [address, setAddress] = useState(bookmark.address || "");
+  const [priority, setPriority] = useState(bookmark.priority);
+  const [memo, setMemo] = useState(bookmark.memo || "");
+  const [visited, setVisited] = useState(bookmark.visited);
+  
+  // フロントエンドバリデーション状態（エンティティ関数を活用）
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  
+  // リアルタイムバリデーション関数
+  const validateField = (field: string, value: any) => {
     try {
-      await api.deleteBookmark(bookmarkId);
-      navigate(`/group/${groupId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "ブックマークの削除に失敗しました");
+      switch (field) {
+        case 'url':
+          validateBookmarkUrl(value);
+          break;
+        case 'title':
+          validateBookmarkTitle(value);
+          break;
+        case 'priority':
+          validatePriority(value);
+          break;
+      }
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    } catch (error) {
+      setValidationErrors(prev => ({ 
+        ...prev, 
+        [field]: error instanceof Error ? error.message : '入力エラー' 
+      }));
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !bookmark) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Link to={`/group/${groupId}`} className="text-blue-600 hover:text-blue-800">
-            グループに戻る
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Link 
               to={`/group/${groupId}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
             >
               ← ブックマークを編集
             </Link>
           </div>
 
           {/* Form */}
-          <div className="bg-white rounded-lg p-6 shadow-md">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <Form method="post" className="space-y-6">
               {/* URL */}
               <div>
-                <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   URL *
                 </label>
                 <input
                   type="url"
                   id="url"
+                  name="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   required
                 />
               </div>
 
               {/* Title */}
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   タイトル *
                 </label>
                 <input
                   type="text"
                   id="title"
+                  name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={200}
                   required
                 />
@@ -182,14 +186,15 @@ export default function EditBookmark() {
 
               {/* Category */}
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   カテゴリ *
                 </label>
                 <select
                   id="category"
+                  name="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as Category)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   required
                 >
                   {CATEGORIES.map(cat => (
@@ -200,28 +205,30 @@ export default function EditBookmark() {
 
               {/* Address */}
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   住所・場所（任意）
                 </label>
                 <input
                   type="text"
                   id="address"
+                  name="address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={200}
                 />
               </div>
 
               {/* Priority */}
               <div>
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   興味度
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
                     id="priority"
+                    name="priority"
                     min="1"
                     max="5"
                     value={priority}
@@ -229,21 +236,22 @@ export default function EditBookmark() {
                     className="flex-1"
                   />
                   <span className="text-lg">{'⭐'.repeat(priority)}</span>
-                  <span className="text-sm text-gray-500 w-16">({priority}/5)</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 w-16">({priority}/5)</span>
                 </div>
               </div>
 
               {/* Memo */}
               <div>
-                <label htmlFor="memo" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="memo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   メモ
                 </label>
                 <textarea
                   id="memo"
+                  name="memo"
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={1000}
                 />
               </div>
@@ -253,20 +261,21 @@ export default function EditBookmark() {
                 <label className="flex items-center">
                   <input
                     type="checkbox"
+                    name="visited"
                     checked={visited}
                     onChange={(e) => setVisited(e.target.checked)}
-                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     ☑️ 訪問しました
                   </span>
                 </label>
               </div>
 
               {/* Error Message */}
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{error}</p>
+              {actionData?.error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                  <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
                 </div>
               )}
 
@@ -281,14 +290,20 @@ export default function EditBookmark() {
                 </button>
                 
                 <button
-                  type="button"
-                  onClick={handleDelete}
+                  type="submit"
+                  name="intent"
+                  value="delete"
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                  onClick={(e) => {
+                    if (!confirm("このブックマークを削除しますか？")) {
+                      e.preventDefault();
+                    }
+                  }}
                 >
                   削除
                 </button>
               </div>
-            </form>
+            </Form>
           </div>
         </div>
       </div>
