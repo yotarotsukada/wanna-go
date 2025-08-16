@@ -17,8 +17,7 @@ if (process.env.NODE_ENV === 'production') {
     url: connectionString,
     authToken,
   })
-  const prisma = new PrismaClient({ adapter })
-  db = new PrismaClient();
+  db = new PrismaClient({ adapter })
 } else {
   if (!global.__db__) {
     global.__db__ = new PrismaClient();
