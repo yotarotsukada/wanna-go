@@ -177,7 +177,7 @@ export default function ThemesPage() {
                               {theme.bookmarkCount}件のブックマーク
                             </Chip>
                             <span className="text-sm text-slate-500 dark:text-slate-400">
-                              作成日: {formatDate(theme.createdAt.toISOString())}
+                              作成日: {formatDate(typeof theme.createdAt === 'string' ? theme.createdAt : theme.createdAt.toISOString())}
                             </span>
                           </div>
                         </div>
