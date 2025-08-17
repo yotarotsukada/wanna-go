@@ -6,6 +6,8 @@ import { getGroup } from "../services/group.server";
 import type { Group } from "../entities/group/group";
 import { ThemeValidationError } from "../entities/theme/theme-errors";
 import { Button, Card, CardBody, Input } from "@heroui/react";
+import { EmojiPicker } from "../components/emoji-picker";
+import { useState } from "react";
 
 interface LoaderData {
   group: Group;
@@ -86,6 +88,7 @@ export default function CreateThemePage() {
   const actionData = useActionData<ActionData>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const [selectedEmoji, setSelectedEmoji] = useState("");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
@@ -140,17 +143,21 @@ export default function CreateThemePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Input
-                    type="text"
-                    name="icon"
-                    label="アイコン（絵文字、任意）"
-                    placeholder="🎆"
-                    variant="bordered"
-                    maxLength={10}
-                    isInvalid={!!actionData?.fieldErrors?.icon}
-                    errorMessage={actionData?.fieldErrors?.icon}
-                    description="花火、ハート、料理などの絵文字を入力できます"
+                  <label className="text-sm font-medium text-default-700">
+                    アイコン（絵文字、任意）
+                  </label>
+                  <EmojiPicker
+                    value={selectedEmoji}
+                    onChange={setSelectedEmoji}
+                    placeholder="絵文字を選択してください"
                   />
+                  <input type="hidden" name="icon" value={selectedEmoji} />
+                  {actionData?.fieldErrors?.icon && (
+                    <p className="text-red-500 text-sm">{actionData.fieldErrors.icon}</p>
+                  )}
+                  <p className="text-xs text-default-500">
+                    花火、ハート、料理などの絵文字でテーマを表現できます
+                  </p>
                 </div>
 
                 <div className="flex gap-3 pt-4">
