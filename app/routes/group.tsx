@@ -13,7 +13,7 @@ import { redirect } from "react-router";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `グループ ${params.groupId} - WishMap` },
+    { title: `グループ ${params.groupId} - wanna-go` },
     { name: "description", content: "行きたい場所のブックマーク一覧" },
   ];
 }

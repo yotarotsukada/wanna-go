@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "WishMap - 行きたい場所を家族・恋人と共有しよう" },
+    { title: "wanna-go - 行きたい場所を家族・恋人と共有しよう" },
     { name: "description", content: "アカウント不要でURLで簡単共有。地図で場所を確認できる行きたい場所管理アプリ" },
   ];
 }
@@ -28,7 +28,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <div className="mb-6">
               <h1 className="text-6xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">
-                WishMap
+                wanna-go
               </h1>
               <div className="text-4xl mb-6">🗺️</div>
             </div>
