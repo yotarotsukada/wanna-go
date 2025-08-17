@@ -260,8 +260,8 @@ export default function AddBookmark() {
                   <Slider
                     size="sm"
                     step={1}
-                    min={1}
-                    max={5}
+                    minValue={1}
+                    maxValue={5}
                     value={priority}
                     onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
                     className="flex-1"
