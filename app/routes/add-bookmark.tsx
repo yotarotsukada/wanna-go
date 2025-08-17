@@ -267,11 +267,12 @@ export default function AddBookmark() {
                     className="flex-1"
                     color="primary"
                   />
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{'⭐'.repeat(priority)}</span>
-                    <Chip size="sm" variant="flat" className="w-12">
-                      {priority}/5
-                    </Chip>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span key={i} className={i < priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+                        ★
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <input type="hidden" name="priority" value={priority} />
