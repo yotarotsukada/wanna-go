@@ -6,7 +6,7 @@ import { createGroup } from "../services/group.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "新しいグループを作成 - WishMap" },
+    { title: "新しいグループを作成 - wanna-go" },
     { name: "description", content: "新しいグループを作成して家族や恋人と行きたい場所を共有しよう" },
   ];
 }
@@ -50,7 +50,7 @@ export default function Create() {
               to="/" 
               className="btn btn-ghost btn-sm mb-6 hover:translate-x-1 transition-transform"
             >
-              ← WishMapに戻る
+              ← wanna-goに戻る
             </Link>
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">

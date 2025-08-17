@@ -1,4 +1,4 @@
-# WishMap アプリ設計仕様書
+# wanna-go アプリ設計仕様書
 
 ## 1. URL設計
 
@@ -17,12 +17,12 @@
 ### 1.2 具体的なURL例
 
 ```
-https://wishmap.app/
-https://wishmap.app/create
-https://wishmap.app/group/xy7k9m2p
-https://wishmap.app/group/xy7k9m2p/add
-https://wishmap.app/group/xy7k9m2p/edit/bookmark-uuid-123
-https://wishmap.app/group/xy7k9m2p/settings
+https://wanna-go.vercel.app/
+https://wanna-go.vercel.app/create
+https://wanna-go.vercel.app/group/xy7k9m2p
+https://wanna-go.vercel.app/group/xy7k9m2p/add
+https://wanna-go.vercel.app/group/xy7k9m2p/edit/bookmark-uuid-123
+https://wanna-go.vercel.app/group/xy7k9m2p/settings
 ```
 
 ### 1.3 グループID仕様
@@ -38,7 +38,7 @@ https://wishmap.app/group/xy7k9m2p/settings
 
 ```
 ┌─────────────────────────────────────┐
-│ WishMap 🗺️                          │
+│ wanna-go 🗺️                          │
 ├─────────────────────────────────────┤
 │                                     │
 │        行きたい場所を               │
@@ -66,7 +66,7 @@ https://wishmap.app/group/xy7k9m2p/settings
 
 ```
 ┌─────────────────────────────────────┐
-│ ← WishMap                           │
+│ ← wanna-go                          │
 ├─────────────────────────────────────┤
 │                                     │
 │  新しいグループを作成               │
@@ -265,7 +265,7 @@ https://wishmap.app/group/xy7k9m2p/settings
 │                                     │
 │  グループURL                        │
 │  ┌─────────────────────────────┐     │
-│  │ https://wishmap.app/group/  │     │
+│  │ https://wanna-go.vercel.app/group/  │     │
 │  │ xy7k9m2p                    │     │
 │  └─────────────────────────────┘     │
 │  [URLをコピー] [QRコード表示]       │
