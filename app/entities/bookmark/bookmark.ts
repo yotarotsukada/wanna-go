@@ -1,4 +1,5 @@
 import type { Category } from '../../lib/constants';
+import type { Theme } from '../theme/theme';
 import { 
   InvalidBookmarkUrlError, 
   BookmarkValidationError, 
@@ -24,6 +25,11 @@ export interface Bookmark {
   readonly autoSiteName: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+// テーマ情報を含むブックマーク
+export interface BookmarkWithThemes extends Bookmark {
+  readonly themes: Theme[];
 }
 
 // バリデーション関数（冪等）

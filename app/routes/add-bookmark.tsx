@@ -1,19 +1,37 @@
 import type { Route } from "./+types/add-bookmark";
 import { useState, useCallback } from "react";
-import { Link, useParams, Form, useActionData, useNavigation } from "react-router";
+import { Link, useParams, Form, useActionData, useNavigation, useLoaderData } from "react-router";
 import { redirect } from "react-router";
 import { createBookmark } from "../services/bookmark.server";
+import { themeService } from "../services/theme";
 import { CATEGORIES } from "../lib/constants";
 import { isValidURL, debounce } from "../lib/utils";
 import type { Category } from "../lib/constants";
 import type { UrlMetadata } from "../lib/types";
-import { Button, Card, CardBody, CardHeader, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
+import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
+import { Button, Card, CardBody, CardHeader, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
     { title: `ブックマーク追加 - wanna-go` },
     { name: "description", content: "新しいブックマークを追加" },
   ];
+}
+
+export async function loader({ params }: Route.LoaderArgs) {
+  const { groupId } = params;
+  
+  if (!groupId) {
+    throw redirect("/");
+  }
+
+  try {
+    const themes = await themeService.getThemesByGroupId(groupId);
+    return Response.json({ themes });
+  } catch (error) {
+    console.error("Error loading themes:", error);
+    return Response.json({ themes: [] });
+  }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -34,6 +52,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const autoDescription = formData.get("autoDescription")?.toString();
   const autoImageUrl = formData.get("autoImageUrl")?.toString();
   const autoSiteName = formData.get("autoSiteName")?.toString();
+  const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
   if (!title?.trim() || !url?.trim() || !category) {
     return { error: "タイトル、URL、カテゴリは必須です" };
@@ -44,7 +63,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   try {
-    await createBookmark(groupId, {
+    const bookmark = await createBookmark(groupId, {
       title: title.trim(),
       url: url.trim(),
       category,
@@ -57,6 +76,11 @@ export async function action({ request, params }: Route.ActionArgs) {
       autoSiteName: autoSiteName || undefined,
     });
 
+    // テーマとの関連付け
+    if (themeIds.length > 0) {
+      await themeService.updateBookmarkThemes(bookmark.id, themeIds);
+    }
+
     return redirect(`/group/${groupId}`);
   } catch (error) {
     return { error: error instanceof Error ? error.message : "ブックマークの追加に失敗しました" };
@@ -68,6 +92,7 @@ export default function AddBookmark() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const { themes } = useLoaderData() as { themes: ThemeWithBookmarkCount[] };
   
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
@@ -76,6 +101,7 @@ export default function AddBookmark() {
   const [address, setAddress] = useState("");
   const [priority, setPriority] = useState(3);
   const [memo, setMemo] = useState("");
+  const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(new Set());
   
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [metadata, setMetadata] = useState<UrlMetadata | null>(null);
@@ -277,6 +303,46 @@ export default function AddBookmark() {
                 </div>
                 <input type="hidden" name="priority" value={priority} />
               </div>
+
+              {/* Themes */}
+              {themes.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-900 dark:text-slate-50">
+                    テーマ（任意）
+                  </label>
+                  <div className="space-y-2">
+                    {themes.map((theme) => (
+                      <div key={theme.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          isSelected={selectedThemeIds.has(theme.id)}
+                          onValueChange={(isSelected) => {
+                            const newSelectedThemeIds = new Set(selectedThemeIds);
+                            if (isSelected) {
+                              newSelectedThemeIds.add(theme.id);
+                            } else {
+                              newSelectedThemeIds.delete(theme.id);
+                            }
+                            setSelectedThemeIds(newSelectedThemeIds);
+                          }}
+                          size="sm"
+                        >
+                          <span className="text-sm text-slate-900 dark:text-slate-50">
+                            {theme.icon && <span className="mr-1">{theme.icon}</span>}
+                            {theme.name}
+                          </span>
+                        </Checkbox>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Hidden inputs for selected theme IDs */}
+                  {Array.from(selectedThemeIds).map((themeId) => (
+                    <input key={themeId} type="hidden" name="themeIds" value={themeId} />
+                  ))}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    ※ 複数選択可能
+                  </p>
+                </div>
+              )}
 
               {/* Memo */}
               <div className="space-y-2">

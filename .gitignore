@@ -6,3 +6,7 @@
 /build/
 
 /generated/prisma
+dev.db
+
+# trubo
+/.turbo/

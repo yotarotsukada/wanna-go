@@ -145,6 +145,15 @@ export default function GroupPage() {
             <div className="flex gap-2">
               <Button
                 as={Link}
+                to={`/group/${group.id}/themes`}
+                variant="ghost"
+                size="sm"
+                startContent={<span>🎯</span>}
+              >
+                テーマ管理
+              </Button>
+              <Button
+                as={Link}
                 to={`/group/${group.id}/settings`}
                 variant="ghost"
                 size="sm"

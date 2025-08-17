@@ -1,9 +1,9 @@
 import { Link } from "react-router";
-import type { Bookmark } from "../entities/bookmark/bookmark";
+import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import { formatDate } from "../lib/utils";
 
 interface BookmarkCardProps {
-  bookmark: Bookmark;
+  bookmark: BookmarkWithThemes;
   onToggleVisited: (bookmarkId: string, visited: boolean) => void;
   onDelete: (bookmarkId: string) => void;
 }
@@ -53,7 +53,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
               <span className="text-xl">{emoji}</span>
               <span className="truncate">{bookmark.title}</span>
             </h3>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className={`badge border ${categoryColor}`}>
                 {bookmark.category}
               </span>
@@ -61,6 +61,20 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
                 {stars}
               </div>
             </div>
+            {bookmark.themes && bookmark.themes.length > 0 && (
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-slate-500 dark:text-slate-400">テーマ:</span>
+                {bookmark.themes.map((theme) => (
+                  <span
+                    key={theme.id}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200 rounded-full dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800"
+                  >
+                    {theme.icon && <span>{theme.icon}</span>}
+                    <span>{theme.name}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           {bookmark.visited && (
             <div className="ml-3 flex-shrink-0">

@@ -1,5 +1,5 @@
 import { db } from '../db.server';
-import { bookmarkFromJson, bookmarkToJson, type Bookmark } from '../../entities/bookmark/bookmark';
+import { bookmarkFromJson, bookmarkToJson, type Bookmark, type BookmarkWithThemes } from '../../entities/bookmark/bookmark';
 import { BookmarkNotFoundError } from '../../entities/bookmark/bookmark-errors';
 
 // リポジトリインターface
@@ -13,7 +13,8 @@ interface BookmarkRepository {
       visited?: string;
       search?: string;
     }
-  ): Promise<Bookmark[]>;
+  ): Promise<BookmarkWithThemes[]>;
+  findByIdWithThemes(bookmarkId: string): Promise<BookmarkWithThemes | null>;
   save(bookmark: Bookmark): Promise<Bookmark>;
   delete(bookmarkId: string): Promise<void>;
   count(groupId: string): Promise<{
@@ -42,6 +43,38 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
     return bookmark;
   },
 
+  async findByIdWithThemes(bookmarkId: string): Promise<BookmarkWithThemes | null> {
+    const model = await db.bookmark.findUnique({
+      where: { id: bookmarkId },
+      include: {
+        bookmarkThemes: {
+          include: {
+            theme: true
+          },
+          orderBy: {
+            theme: {
+              createdAt: 'asc'
+            }
+          }
+        }
+      }
+    });
+    
+    if (!model) return null;
+
+    const bookmark = bookmarkFromJson(model);
+    const themes = model.bookmarkThemes.map(bt => ({
+      id: bt.theme.id,
+      groupId: bt.theme.groupId,
+      name: bt.theme.name,
+      icon: bt.theme.icon,
+      createdAt: bt.theme.createdAt,
+      updatedAt: bt.theme.updatedAt
+    }));
+
+    return { ...bookmark, themes };
+  },
+
   async findByGroupId(
     groupId: string,
     filters?: {
@@ -49,7 +82,7 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
       visited?: string;
       search?: string;
     }
-  ): Promise<Bookmark[]> {
+  ): Promise<BookmarkWithThemes[]> {
     let where: any = { groupId };
 
     if (filters?.category && filters.category !== 'all') {
@@ -70,13 +103,36 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
 
     const models = await db.bookmark.findMany({
       where,
+      include: {
+        bookmarkThemes: {
+          include: {
+            theme: true
+          },
+          orderBy: {
+            theme: {
+              createdAt: 'asc'
+            }
+          }
+        }
+      },
       orderBy: [
         { priority: 'desc' },
         { createdAt: 'desc' }
       ]
     });
 
-    return models.map(model => bookmarkFromJson(model));
+    return models.map(model => {
+      const bookmark = bookmarkFromJson(model);
+      const themes = model.bookmarkThemes.map(bt => ({
+        id: bt.theme.id,
+        groupId: bt.theme.groupId,
+        name: bt.theme.name,
+        icon: bt.theme.icon,
+        createdAt: bt.theme.createdAt,
+        updatedAt: bt.theme.updatedAt
+      }));
+      return { ...bookmark, themes };
+    });
   },
 
   async save(bookmark: Bookmark): Promise<Bookmark> {
