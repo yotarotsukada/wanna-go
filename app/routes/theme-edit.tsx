@@ -219,7 +219,7 @@ export default function EditThemePage() {
                         {theme.bookmarkCount}件のブックマーク
                       </Chip>
                       <Chip variant="flat" size="sm">
-                        作成日: {formatDate(theme.createdAt.toISOString())}
+                        作成日: {formatDate(typeof theme.createdAt === 'string' ? theme.createdAt : theme.createdAt.toISOString())}
                       </Chip>
                     </div>
                   </CardBody>
