@@ -7,10 +7,11 @@ import { formatDate } from "../lib/utils";
 import type { Group } from "../entities/group/group";
 import type { BookmarksResponse } from "../services/bookmark";
 import { redirect } from "react-router";
+import { Button, Card, CardBody, CardHeader, Input, Textarea, Chip } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `グループ設定 - WishMap` },
+    { title: `グループ設定 - wanna-go` },
     { name: "description", content: "グループの設定と統計情報" },
   ];
 }
