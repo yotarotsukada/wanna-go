@@ -262,40 +262,54 @@ export default function EditBookmark() {
 
               {/* Themes */}
               {themes.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    テーマ（任意）
-                  </label>
-                  <div className="space-y-2">
-                    {themes.map((theme) => (
-                      <div key={theme.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`theme-${theme.id}`}
-                          checked={selectedThemeIds.has(theme.id)}
-                          onChange={(e) => {
-                            const newSelectedThemeIds = new Set(selectedThemeIds);
-                            if (e.target.checked) {
-                              newSelectedThemeIds.add(theme.id);
-                            } else {
-                              newSelectedThemeIds.delete(theme.id);
-                            }
-                            setSelectedThemeIds(newSelectedThemeIds);
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <label htmlFor={`theme-${theme.id}`} className="text-sm text-gray-900 dark:text-gray-100 cursor-pointer">
-                          {theme.icon && <span className="mr-1">{theme.icon}</span>}
-                          {theme.name}
-                        </label>
+                <div className="space-y-2">
+                  <Select
+                    label="テーマ（任意）"
+                    placeholder="テーマを選択..."
+                    selectionMode="multiple"
+                    selectedKeys={selectedThemeIds}
+                    onSelectionChange={(keys) => {
+                      setSelectedThemeIds(new Set(Array.from(keys).map(String)));
+                    }}
+                    variant="bordered"
+                    classNames={{
+                      trigger: "min-h-12",
+                      value: "flex flex-wrap gap-1",
+                    }}
+                    renderValue={(items) => (
+                      <div className="flex flex-wrap gap-1">
+                        {items.map((item) => {
+                          const theme = themes.find(t => t.id === item.key);
+                          return (
+                            <Chip
+                              key={item.key}
+                              color="secondary"
+                              variant="flat"
+                              size="sm"
+                              startContent={theme?.icon && <span>{theme.icon}</span>}
+                            >
+                              {theme?.name}
+                            </Chip>
+                          );
+                        })}
                       </div>
+                    )}
+                  >
+                    {themes.map((theme) => (
+                      <SelectItem 
+                        key={theme.id} 
+                        textValue={theme.name}
+                        startContent={theme.icon && <span>{theme.icon}</span>}
+                      >
+                        {theme.name}
+                      </SelectItem>
                     ))}
-                  </div>
+                  </Select>
                   {/* Hidden inputs for selected theme IDs */}
                   {Array.from(selectedThemeIds).map((themeId) => (
                     <input key={themeId} type="hidden" name="themeIds" value={themeId} />
                   ))}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     ※ 複数選択可能
                   </p>
                 </div>
