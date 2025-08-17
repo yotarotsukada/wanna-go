@@ -10,7 +10,7 @@ import { redirect } from "react-router";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `グループ設定 - WishMap` },
+    { title: `グループ設定 - wanna-go` },
     { name: "description", content: "グループの設定と統計情報" },
   ];
 }

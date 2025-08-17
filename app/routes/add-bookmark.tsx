@@ -10,7 +10,7 @@ import type { UrlMetadata } from "../lib/types";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `ブックマーク追加 - WishMap` },
+    { title: `ブックマーク追加 - wanna-go` },
     { name: "description", content: "新しいブックマークを追加" },
   ];
 }

@@ -13,7 +13,7 @@ import { redirect } from "react-router";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `ブックマーク編集 - WishMap` },
+    { title: `ブックマーク編集 - wanna-go` },
     { name: "description", content: "ブックマークを編集" },
   ];
 }
