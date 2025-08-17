@@ -3,8 +3,8 @@ import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "アプリについて - WishMap" },
-    { name: "description", content: "WishMapについての詳細情報" },
+    { title: "アプリについて - wanna-go" },
+    { name: "description", content: "wanna-goについての詳細情報" },
   ];
 }
 
@@ -22,7 +22,7 @@ export default function About() {
               ← ホームに戻る
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              WishMapについて
+              wanna-goについて
             </h1>
           </div>
 
@@ -30,10 +30,10 @@ export default function About() {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md space-y-6">
             <section>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                🗺️ WishMapとは
+                🗺️ wanna-goとは
               </h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                WishMapは、家族や恋人、友人と「行きたい場所」を簡単に共有・管理できるWebアプリです。
+                wanna-goは、家族や恋人、友人と「行きたい場所」を簡単に共有・管理できるWebアプリです。
                 アカウント登録不要で、URLを共有するだけでグループを作成し、みんなで行きたいスポットを集めることができます。
               </p>
             </section>

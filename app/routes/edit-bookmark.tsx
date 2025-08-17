@@ -10,10 +10,11 @@ import type { Bookmark } from "../entities/bookmark/bookmark";
 import type { Group } from "../entities/group/group";
 import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
 import { redirect } from "react-router";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
-    { title: `ブックマーク編集 - WishMap` },
+    { title: `ブックマーク編集 - wanna-go` },
     { name: "description", content: "ブックマークを編集" },
   ];
 }
