@@ -10,6 +10,9 @@
 ├── /group/:groupId (グループメイン)
 │   ├── /group/:groupId/add (ブックマーク追加)
 │   ├── /group/:groupId/edit/:bookmarkId (ブックマーク編集)
+│   ├── /group/:groupId/themes (テーマ管理)
+│   │   ├── /group/:groupId/themes/create (テーマ作成)
+│   │   └── /group/:groupId/themes/edit/:themeId (テーマ編集)
 │   └── /group/:groupId/settings (グループ設定)
 └── /about (アプリについて)
 ```
@@ -22,6 +25,9 @@ https://wanna-go.vercel.app/create
 https://wanna-go.vercel.app/group/xy7k9m2p
 https://wanna-go.vercel.app/group/xy7k9m2p/add
 https://wanna-go.vercel.app/group/xy7k9m2p/edit/bookmark-uuid-123
+https://wanna-go.vercel.app/group/xy7k9m2p/themes
+https://wanna-go.vercel.app/group/xy7k9m2p/themes/create
+https://wanna-go.vercel.app/group/xy7k9m2p/themes/edit/theme-uuid-456
 https://wanna-go.vercel.app/group/xy7k9m2p/settings
 ```
 
@@ -101,9 +107,9 @@ https://wanna-go.vercel.app/group/xy7k9m2p/settings
 
 ```
 ┌─────────────────────────────────────┐
-│ 我が家の行きたいところ 📝 ⚙️       │
+│ 我が家の行きたいところ 📝 🎯 ⚙️     │
 ├─────────────────────────────────────┤
-│ [+ ブックマーク追加]                │
+│ [+ ブックマーク追加] [🎯 テーマ管理]      │
 ├─────────────────────────────────────┤
 │                                     │
 │ ┌─ フィルター ──────────────────┐     │
@@ -113,6 +119,7 @@ https://wanna-go.vercel.app/group/xy7k9m2p/settings
 │ ┌─ ブックマークカード ─────────┐     │
 │ │ 🍜 美味しいラーメン店         │     │
 │ │ カテゴリ: レストラン ⭐⭐⭐⭐  │     │
+│ │ テーマ: 🍽️美味しいグルメを楽しむ │     │
 │ │ 📍 東京都渋谷区...           │     │
 │ │ 📝 友人おすすめ！味噌が絶品   │     │
 │ │ 🔗 tabelog.com/...           │     │
@@ -122,6 +129,7 @@ https://wanna-go.vercel.app/group/xy7k9m2p/settings
 │ ┌─ ブックマークカード ─────────┐     │
 │ │ 🏛️ 国立科学博物館            │     │
 │ │ カテゴリ: 観光地 ⭐⭐⭐⭐⭐    │     │
+│ │ テーマ: ♨️箱根旅行に行く         │     │
 │ │ 📍 東京都台東区...           │     │
 │ │ 📝 子供と一緒に楽しめそう     │     │
 │ │ 🔗 kahaku.go.jp              │     │
@@ -319,6 +327,27 @@ CREATE TABLE bookmarks (
     FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE CASCADE
 );
 
+-- テーマテーブル
+CREATE TABLE themes (
+    id TEXT PRIMARY KEY,              -- UUID
+    group_id TEXT NOT NULL,           -- グループID (外部キー)
+    name TEXT NOT NULL,               -- テーマ名
+    icon TEXT,                        -- アイコン（絵文字、任意）
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE CASCADE
+);
+
+-- ブックマーク-テーマ関連テーブル（多対多）
+CREATE TABLE bookmark_themes (
+    bookmark_id TEXT NOT NULL,        -- ブックマークID (外部キー)
+    theme_id TEXT NOT NULL,           -- テーマID (外部キー)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (bookmark_id, theme_id),
+    FOREIGN KEY (bookmark_id) REFERENCES bookmarks (id) ON DELETE CASCADE,
+    FOREIGN KEY (theme_id) REFERENCES themes (id) ON DELETE CASCADE
+);
+
 -- インデックス作成
 CREATE INDEX idx_bookmarks_group_id ON bookmarks(group_id);
 CREATE INDEX idx_bookmarks_category ON bookmarks(category);
@@ -326,6 +355,10 @@ CREATE INDEX idx_bookmarks_visited ON bookmarks(visited);
 CREATE INDEX idx_bookmarks_priority ON bookmarks(priority);
 CREATE INDEX idx_bookmarks_created_at ON bookmarks(created_at);
 CREATE INDEX idx_bookmarks_url ON bookmarks(url);
+CREATE INDEX idx_themes_group_id ON themes(group_id);
+CREATE INDEX idx_themes_created_at ON themes(created_at);
+CREATE INDEX idx_bookmark_themes_bookmark_id ON bookmark_themes(bookmark_id);
+CREATE INDEX idx_bookmark_themes_theme_id ON bookmark_themes(theme_id);
 ```
 
 ### 3.2 データサンプル
@@ -360,6 +393,20 @@ INSERT INTO bookmarks (
     'レストラン', 'インスタで見つけた。パンケーキが美味しそう',
     '東京都渋谷区表参道1-1-1', 3, 1
 );
+
+-- テーマデータサンプル
+INSERT INTO themes (id, group_id, name, icon) VALUES 
+('th001', 'xy7k9m2p', '花火を見たい', '🎆'),
+('th002', 'xy7k9m2p', '箱根旅行に行く', '♨️'),
+('th003', 'xy7k9m2p', '美味しいグルメを楽しむ', '🍽️'),
+('th004', 'a3f8d1q7', 'デートスポット巡り', '💕'),
+('th005', 'm9x2c5b8', '友達とワイワイ遊ぶ', '🎉');
+
+-- ブックマーク-テーマ関連データサンプル
+INSERT INTO bookmark_themes (bookmark_id, theme_id) VALUES 
+('bm001', 'th003'), -- ラーメン店 - グルメ
+('bm002', 'th002'), -- 科学博物館 - 箱根旅行
+('bm003', 'th003'); -- カフェ - グルメ
 ```
 
 ### 3.3 カテゴリ一覧（enum的な扱い）
@@ -411,6 +458,51 @@ SELECT
     AVG(priority) as avg_priority
 FROM bookmarks 
 WHERE group_id = 'xy7k9m2p';
+
+-- テーマ一覧取得
+SELECT * FROM themes 
+WHERE group_id = 'xy7k9m2p' 
+ORDER BY created_at;
+
+-- テーマと関連ブックマーク取得
+SELECT b.*, t.name as theme_name, t.icon as theme_icon
+FROM bookmarks b
+INNER JOIN bookmark_themes bt ON b.id = bt.bookmark_id
+INNER JOIN themes t ON bt.theme_id = t.id
+WHERE b.group_id = 'xy7k9m2p'
+ORDER BY b.created_at DESC;
+
+-- ブックマークと関連テーマ取得（テーマ情報を含む）
+SELECT 
+    b.*,
+    GROUP_CONCAT(t.name) as theme_names,
+    GROUP_CONCAT(t.icon) as theme_icons,
+    GROUP_CONCAT(t.id) as theme_ids
+FROM bookmarks b
+LEFT JOIN bookmark_themes bt ON b.id = bt.bookmark_id
+LEFT JOIN themes t ON bt.theme_id = t.id
+WHERE b.group_id = 'xy7k9m2p'
+GROUP BY b.id
+ORDER BY b.created_at DESC;
+
+-- 特定テーマに紐づくブックマーク取得
+SELECT b.*
+FROM bookmarks b
+INNER JOIN bookmark_themes bt ON b.id = bt.bookmark_id
+WHERE bt.theme_id = 'th003'
+ORDER BY b.created_at DESC;
+
+-- テーマの統計情報
+SELECT 
+    t.id,
+    t.name,
+    t.icon,
+    COUNT(bt.bookmark_id) as bookmark_count
+FROM themes t
+LEFT JOIN bookmark_themes bt ON t.id = bt.theme_id
+WHERE t.group_id = 'xy7k9m2p'
+GROUP BY t.id, t.name, t.icon
+ORDER BY t.created_at;
 ```
 
 ## 4. API設計
@@ -428,6 +520,12 @@ POST   /api/groups/:groupId/bookmarks    # ブックマーク作成
 GET    /api/bookmarks/:bookmarkId        # ブックマーク詳細取得  
 PUT    /api/bookmarks/:bookmarkId        # ブックマーク更新
 DELETE /api/bookmarks/:bookmarkId        # ブックマーク削除
+
+GET    /api/groups/:groupId/themes       # テーマ一覧取得
+POST   /api/groups/:groupId/themes       # テーマ作成
+GET    /api/themes/:themeId              # テーマ詳細取得
+PUT    /api/themes/:themeId              # テーマ更新
+DELETE /api/themes/:themeId              # テーマ削除
 
 POST   /api/url-metadata                 # URL メタデータ取得
 ```
@@ -463,7 +561,14 @@ POST   /api/url-metadata                 # URL メタデータ取得
             "auto_image_url": "https://tabelog.com/imgview/original?id=r12345",
             "auto_site_name": "食べログ",
             "created_at": "2025-08-01T11:30:00Z",
-            "updated_at": "2025-08-01T11:30:00Z"
+            "updated_at": "2025-08-01T11:30:00Z",
+            "themes": [
+                {
+                    "id": "th003",
+                    "name": "美味しいグルメを楽しむ",
+                    "icon": "🍽️"
+                }
+            ]
         }
     ],
     "total": 1,
@@ -491,6 +596,53 @@ POST   /api/url-metadata                 # URL メタデータ取得
     "favicon": "https://tabelog.com/favicon.ico",
     "success": true,
     "error": null
+}
+
+// GET /api/groups/xy7k9m2p/themes
+{
+    "themes": [
+        {
+            "id": "th001",
+            "group_id": "xy7k9m2p",
+            "name": "花火を見たい",
+            "icon": "🎆",
+            "bookmark_count": 0,
+            "created_at": "2025-08-01T12:00:00Z",
+            "updated_at": "2025-08-01T12:00:00Z"
+        },
+        {
+            "id": "th003",
+            "group_id": "xy7k9m2p",
+            "name": "美味しいグルメを楽しむ",
+            "icon": "🍽️",
+            "bookmark_count": 2,
+            "created_at": "2025-08-01T12:30:00Z",
+            "updated_at": "2025-08-01T12:30:00Z"
+        }
+    ],
+    "total": 2
+}
+
+// GET /api/themes/th003
+{
+    "id": "th003",
+    "group_id": "xy7k9m2p",
+    "name": "美味しいグルメを楽しむ",
+    "icon": "🍽️",
+    "bookmark_count": 2,
+    "created_at": "2025-08-01T12:30:00Z",
+    "updated_at": "2025-08-01T12:30:00Z"
+}
+
+// POST /api/groups/xy7k9m2p/themes
+{
+    "id": "th004",
+    "group_id": "xy7k9m2p",
+    "name": "新しいテーマ",
+    "icon": "✨",
+    "bookmark_count": 0,
+    "created_at": "2025-08-01T13:00:00Z",
+    "updated_at": "2025-08-01T13:00:00Z"
 }
 ```
 
@@ -651,4 +803,119 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+```
+
+## 6. テーマ機能の画面設計
+
+### 6.1 テーマ管理ページ (/group/:groupId/themes)
+
+```
+┌─────────────────────────────────────┐
+│ ← テーマ管理                      │
+├─────────────────────────────────────┤
+│                                     │
+│  ┌───────────────────────────────────┐     │
+│  │  + 新しいテーマを作成        │     │
+│  └───────────────────────────────────┘     │
+│                                     │
+│  テーマ一覧                           │
+│                                     │
+│  ┌─ テーマカード ────────────────┐     │
+│  │ 🎆 花火を見たい                 │     │
+│  │ 関連ブックマーク: 0件            │     │
+│  │ 作成日: 2025/08/01              │     │
+│  │ [✏️編集] [🗑️削除]             │     │
+│  └─────────────────────────────────┘     │
+│                                     │
+│  ┌─ テーマカード ────────────────┐     │
+│  │ 🍽️ 美味しいグルメを楽しむ       │     │
+│  │ 関連ブックマーク: 2件            │     │
+│  │ 作成日: 2025/08/01              │     │
+│  │ [✏️編集] [🗑️削除]             │     │
+│  └─────────────────────────────────┘     │
+│                                     │
+│  ┌─ テーマカード ────────────────┐     │
+│  │ ♨️ 箱根旅行に行く               │     │
+│  │ 関連ブックマーク: 1件            │     │
+│  │ 作成日: 2025/08/02              │     │
+│  │ [✏️編集] [🗑️削除]             │     │
+│  └─────────────────────────────────┘     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### 6.2 テーマ作成ページ (/group/:groupId/themes/create)
+
+```
+┌─────────────────────────────────────┐
+│ ← テーマを作成                    │
+├─────────────────────────────────────┤
+│                                     │
+│  テーマ名 *                         │
+│  ┌─────────────────────────────────────┐ │
+│  │ 花火を見たい                   │ │
+│  └─────────────────────────────────────┘ │
+│                                     │
+│  アイコン（絵文字、任意）               │
+│  ┌─────────────────────────────────────┐ │
+│  │ 🎆                            │ │
+│  └─────────────────────────────────────┘ │
+│  ※ 花火、ハート、料理などの絵文字     │
+│                                     │
+│  ┌─────────────────────────────────────┐ │
+│  │  作成                         │ │
+│  └─────────────────────────────────────┘ │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### 6.3 テーマ編集ページ (/group/:groupId/themes/edit/:themeId)
+
+```
+┌─────────────────────────────────────┐
+│ ← テーマを編集                    │
+├─────────────────────────────────────┤
+│                                     │
+│  テーマ名 *                         │
+│  ┌─────────────────────────────────────┐ │
+│  │ 花火を見たい                   │ │
+│  └─────────────────────────────────────┘ │
+│                                     │
+│  アイコン（絵文字、任意）               │
+│  ┌─────────────────────────────────────┐ │
+│  │ 🎆                            │ │
+│  └─────────────────────────────────────┘ │
+│                                     │
+│  統計情報                           │
+│  ・ 関連ブックマーク数: 0件         │
+│  ・ 作成日: 2025/08/01               │
+│                                     │
+│  ┌─────────────────────────────────────┐ │
+│  │  更新                         │ │
+│  └─────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────┐ │
+│  │  削除                         │ │
+│  └─────────────────────────────────────┘ │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### 6.4 ブックマーク作成・編集ページのテーマ選択UI
+
+ブックマーク作成・編集ページには、興味度とメモの間にテーマ選択エリアを追加します。
+
+```
+│  興味度                             │
+│  ⭐ ⭐ ⭐ ⭐ ⭐ (1-5段階)           │
+│                                     │
+│  テーマ（任意）                       │
+│  ┌─────────────────────────────────────┐ │
+│  │ ☐ 🎆花火を見たい             │ │
+│  │ ☑ 🍽️美味しいグルメを楽しむ   │ │
+│  │ ☐ ♨️箱根旅行に行く           │ │
+│  └─────────────────────────────────────┘ │
+│  ※ 複数選択可能                   │
+│                                     │
+│  メモ                               │
+│  (以下略...)                        │
 ```

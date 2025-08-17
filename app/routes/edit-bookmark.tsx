@@ -3,13 +3,16 @@ import { useState, useEffect } from "react";
 import { Link, useParams, Form, useLoaderData, useActionData, useNavigation } from "react-router";
 import { getBookmark, updateBookmark, deleteBookmark } from "../services/bookmark.server";
 import { getGroup } from "../services/group.server";
+import { themeService } from "../services/theme";
 import { CATEGORIES } from "../lib/constants";
 import { isValidURL } from "../lib/utils";
 import type { Category } from "../lib/constants";
-import type { Bookmark } from "../entities/bookmark/bookmark";
+import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import type { Group } from "../entities/group/group";
+import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
 import { redirect } from "react-router";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -38,7 +41,12 @@ export async function loader({ params }: Route.LoaderArgs) {
       throw new Response("Group not found", { status: 404 });
     }
 
-    return Response.json({ bookmark, group });
+    const [themes, bookmarkThemes] = await Promise.all([
+      themeService.getThemesByGroupId(bookmark.groupId),
+      themeService.getThemesByBookmarkId(bookmarkId),
+    ]);
+
+    return Response.json({ bookmark, group, themes, bookmarkThemes });
   } catch (error) {
     console.error("Error loading bookmark:", error);
     throw new Response("Failed to load bookmark", { status: 500 });
@@ -67,6 +75,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       const address = formData.get("address")?.toString();
       const priority = Number(formData.get("priority")) || 3;
       const visited = formData.get("visited") === "on";
+      const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
       if (!title?.trim() || !url?.trim() || !category) {
         return Response.json({ error: "タイトル、URL、カテゴリは必須です" });
@@ -86,6 +95,9 @@ export async function action({ request, params }: Route.ActionArgs) {
         visited,
       });
 
+      // テーマとの関連付けを更新
+      await themeService.updateBookmarkThemes(bookmarkId, themeIds);
+
       return redirect(`/group/${groupId}`);
     }
   } catch (error) {
@@ -95,7 +107,12 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function EditBookmark() {
   const { groupId } = useParams();
-  const { bookmark, group } = useLoaderData() as { bookmark: Bookmark; group: Group };
+  const { bookmark, group, themes, bookmarkThemes } = useLoaderData() as { 
+    bookmark: BookmarkWithThemes; 
+    group: Group; 
+    themes: ThemeWithBookmarkCount[];
+    bookmarkThemes: any[];
+  };
   const actionData = useActionData() as { error?: string; success?: boolean } | undefined;
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -107,6 +124,9 @@ export default function EditBookmark() {
   const [priority, setPriority] = useState(bookmark.priority);
   const [memo, setMemo] = useState(bookmark.memo || "");
   const [visited, setVisited] = useState(bookmark.visited);
+  const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(
+    new Set(bookmarkThemes.map(theme => theme.id))
+  );
   
   // フロントエンドバリデーション状態（エンティティ関数を活用）
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -239,6 +259,61 @@ export default function EditBookmark() {
                   <span className="text-sm text-gray-500 dark:text-gray-400 w-16">({priority}/5)</span>
                 </div>
               </div>
+
+              {/* Themes */}
+              {themes.length > 0 && (
+                <div className="space-y-2">
+                  <Select
+                    label="テーマ（任意）"
+                    placeholder="テーマを選択..."
+                    selectionMode="multiple"
+                    selectedKeys={selectedThemeIds}
+                    onSelectionChange={(keys) => {
+                      setSelectedThemeIds(new Set(Array.from(keys).map(String)));
+                    }}
+                    variant="bordered"
+                    classNames={{
+                      trigger: "min-h-12",
+                      value: "flex flex-wrap gap-1",
+                    }}
+                    renderValue={(items) => (
+                      <div className="flex flex-wrap gap-1">
+                        {items.map((item) => {
+                          const theme = themes.find(t => t.id === item.key);
+                          return (
+                            <Chip
+                              key={item.key}
+                              color="secondary"
+                              variant="flat"
+                              size="sm"
+                              startContent={theme?.icon && <span>{theme.icon}</span>}
+                            >
+                              {theme?.name}
+                            </Chip>
+                          );
+                        })}
+                      </div>
+                    )}
+                  >
+                    {themes.map((theme) => (
+                      <SelectItem 
+                        key={theme.id} 
+                        textValue={theme.name}
+                        startContent={theme.icon && <span>{theme.icon}</span>}
+                      >
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {/* Hidden inputs for selected theme IDs */}
+                  {Array.from(selectedThemeIds).map((themeId) => (
+                    <input key={themeId} type="hidden" name="themeIds" value={themeId} />
+                  ))}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    ※ 複数選択可能
+                  </p>
+                </div>
+              )}
 
               {/* Memo */}
               <div>

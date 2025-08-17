@@ -1,18 +1,37 @@
 import type { Route } from "./+types/add-bookmark";
 import { useState, useCallback } from "react";
-import { Link, useParams, Form, useActionData, useNavigation } from "react-router";
+import { Link, useParams, Form, useActionData, useNavigation, useLoaderData } from "react-router";
 import { redirect } from "react-router";
 import { createBookmark } from "../services/bookmark.server";
+import { themeService } from "../services/theme";
 import { CATEGORIES } from "../lib/constants";
 import { isValidURL, debounce } from "../lib/utils";
 import type { Category } from "../lib/constants";
 import type { UrlMetadata } from "../lib/types";
+import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
+import { Button, Card, CardBody, CardHeader, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
     { title: `ブックマーク追加 - wanna-go` },
     { name: "description", content: "新しいブックマークを追加" },
   ];
+}
+
+export async function loader({ params }: Route.LoaderArgs) {
+  const { groupId } = params;
+  
+  if (!groupId) {
+    throw redirect("/");
+  }
+
+  try {
+    const themes = await themeService.getThemesByGroupId(groupId);
+    return Response.json({ themes });
+  } catch (error) {
+    console.error("Error loading themes:", error);
+    return Response.json({ themes: [] });
+  }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -33,6 +52,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const autoDescription = formData.get("autoDescription")?.toString();
   const autoImageUrl = formData.get("autoImageUrl")?.toString();
   const autoSiteName = formData.get("autoSiteName")?.toString();
+  const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
   if (!title?.trim() || !url?.trim() || !category) {
     return { error: "タイトル、URL、カテゴリは必須です" };
@@ -43,7 +63,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   try {
-    await createBookmark(groupId, {
+    const bookmark = await createBookmark(groupId, {
       title: title.trim(),
       url: url.trim(),
       category,
@@ -56,6 +76,11 @@ export async function action({ request, params }: Route.ActionArgs) {
       autoSiteName: autoSiteName || undefined,
     });
 
+    // テーマとの関連付け
+    if (themeIds.length > 0) {
+      await themeService.updateBookmarkThemes(bookmark.id, themeIds);
+    }
+
     return redirect(`/group/${groupId}`);
   } catch (error) {
     return { error: error instanceof Error ? error.message : "ブックマークの追加に失敗しました" };
@@ -67,6 +92,7 @@ export default function AddBookmark() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const { themes } = useLoaderData() as { themes: ThemeWithBookmarkCount[] };
   
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
@@ -75,6 +101,7 @@ export default function AddBookmark() {
   const [address, setAddress] = useState("");
   const [priority, setPriority] = useState(3);
   const [memo, setMemo] = useState("");
+  const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(new Set());
   
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
   const [metadata, setMetadata] = useState<UrlMetadata | null>(null);
@@ -122,21 +149,26 @@ export default function AddBookmark() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link 
+            <Button
+              as={Link}
               to={`/group/${groupId}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
+              variant="ghost"
+              size="sm"
+              className="mb-4"
+              startContent={<span>←</span>}
             >
-              ← ブックマークを追加
-            </Link>
+              ブックマークを追加
+            </Button>
           </div>
 
           {/* Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody className="p-6">
             <Form method="post" className="space-y-6">
               {/* Hidden metadata fields */}
               {metadata && (
@@ -148,162 +180,222 @@ export default function AddBookmark() {
                 </>
               )}
               {/* URL */}
-              <div>
-                <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  URL *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="url"
-                  id="url"
                   name="url"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
+                  label="URL"
                   placeholder="https://example.com"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  required
+                  variant="bordered"
+                  isRequired
                 />
-                <div className="mt-2 flex items-center gap-2">
-                  <button
+                <div className="flex items-center gap-2">
+                  <Button
                     type="button"
-                    onClick={() => url && fetchMetadata(url)}
-                    disabled={!url || !isValidURL(url) || isLoadingMetadata}
-                    className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded disabled:bg-gray-100 disabled:text-gray-400 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
+                    onPress={() => url && fetchMetadata(url)}
+                    isDisabled={!url || !isValidURL(url) || isLoadingMetadata}
+                    size="sm"
+                    variant="flat"
+                    color="primary"
                   >
                     URLから情報を取得
-                  </button>
-                  {isLoadingMetadata && <span className="text-sm text-gray-500 dark:text-gray-400">🔄取得中...</span>}
+                  </Button>
+                  {isLoadingMetadata && (
+                    <Chip size="sm" variant="flat">
+                      🔄取得中...
+                    </Chip>
+                  )}
                 </div>
               </div>
 
               {/* Title */}
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  タイトル *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="text"
-                  id="title"
                   name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  label="タイトル"
                   placeholder="美味しいラーメン店"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  variant="bordered"
                   maxLength={200}
-                  required
+                  isRequired
+                  description={
+                    metadata?.success && metadata.title 
+                      ? `自動取得: ${metadata.title}`
+                      : undefined
+                  }
                 />
-                {metadata?.success && metadata.title && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">(自動取得: {metadata.title})</p>
-                )}
               </div>
 
               {/* Description */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  説明 (自動取得)
-                </label>
-                <textarea
-                  id="description"
+              <div className="space-y-2">
+                <Textarea
                   name="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  label="説明 (自動取得)"
                   placeholder="説明文..."
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  variant="bordered"
+                  minRows={3}
                   maxLength={500}
                 />
               </div>
 
               {/* Category */}
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  カテゴリ *
-                </label>
-                <select
-                  id="category"
+              <div className="space-y-2">
+                <Select
                   name="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as Category)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  required
+                  selectedKeys={[category]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as Category;
+                    setCategory(value);
+                  }}
+                  label="カテゴリ"
+                  variant="bordered"
+                  isRequired
                 >
                   {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <SelectItem key={cat}>{cat}</SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Address */}
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  住所・場所（任意）
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="text"
-                  id="address"
                   name="address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
+                  label="住所・場所（任意）"
                   placeholder="東京都渋谷区上原1-2-3"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  variant="bordered"
                   maxLength={200}
                 />
               </div>
 
               {/* Priority */}
-              <div>
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-900 dark:text-slate-50">
                   興味度
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    id="priority"
-                    name="priority"
-                    min="1"
-                    max="5"
+                <div className="flex items-center gap-4">
+                  <Slider
+                    size="sm"
+                    step={1}
+                    minValue={1}
+                    maxValue={5}
                     value={priority}
-                    onChange={(e) => setPriority(Number(e.target.value))}
+                    onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
                     className="flex-1"
+                    color="primary"
                   />
-                  <span className="text-lg">{'⭐'.repeat(priority)}</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 w-16">({priority}/5)</span>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span key={i} className={i < priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+                        ★
+                      </span>
+                    ))}
+                  </div>
                 </div>
+                <input type="hidden" name="priority" value={priority} />
               </div>
 
+              {/* Themes */}
+              {themes.length > 0 && (
+                <div className="space-y-2">
+                  <Select
+                    label="テーマ（任意）"
+                    placeholder="テーマを選択..."
+                    selectionMode="multiple"
+                    selectedKeys={selectedThemeIds}
+                    onSelectionChange={(keys) => {
+                      setSelectedThemeIds(new Set(Array.from(keys).map(String)));
+                    }}
+                    variant="bordered"
+                    classNames={{
+                      trigger: "min-h-12",
+                      value: "flex flex-wrap gap-1",
+                    }}
+                    renderValue={(items) => (
+                      <div className="flex flex-wrap gap-1">
+                        {items.map((item) => {
+                          const theme = themes.find(t => t.id === item.key);
+                          return (
+                            <Chip
+                              key={item.key}
+                              color="secondary"
+                              variant="flat"
+                              size="sm"
+                              startContent={theme?.icon && <span>{theme.icon}</span>}
+                            >
+                              {theme?.name}
+                            </Chip>
+                          );
+                        })}
+                      </div>
+                    )}
+                  >
+                    {themes.map((theme) => (
+                      <SelectItem 
+                        key={theme.id} 
+                        textValue={theme.name}
+                        startContent={theme.icon && <span>{theme.icon}</span>}
+                      >
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {/* Hidden inputs for selected theme IDs */}
+                  {Array.from(selectedThemeIds).map((themeId) => (
+                    <input key={themeId} type="hidden" name="themeIds" value={themeId} />
+                  ))}
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    ※ 複数選択可能
+                  </p>
+                </div>
+              )}
+
               {/* Memo */}
-              <div>
-                <label htmlFor="memo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  メモ
-                </label>
-                <textarea
-                  id="memo"
+              <div className="space-y-2">
+                <Textarea
                   name="memo"
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
+                  label="メモ"
                   placeholder="友人おすすめ！"
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  variant="bordered"
+                  minRows={3}
                   maxLength={1000}
                 />
               </div>
 
               {/* Error Message */}
               {actionData?.error && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
-                  <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
-                </div>
+                <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                  <CardBody className="p-3">
+                    <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
+                  </CardBody>
+                </Card>
               )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                color="primary"
+                size="lg"
+                className="w-full"
+                isDisabled={isSubmitting}
+                isLoading={isSubmitting}
               >
                 {isSubmitting ? "保存中..." : "保存"}
-              </button>
+              </Button>
             </Form>
-          </div>
+            </CardBody>
+          </Card>
         </div>
       </div>
     </div>

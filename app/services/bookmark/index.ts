@@ -17,7 +17,7 @@ export type {
 } from './service';
 
 // エンティティとエラーも再エクスポート（フロントエンド用）
-export type { Bookmark } from '../../entities/bookmark/bookmark';
+export type { Bookmark, BookmarkWithThemes } from '../../entities/bookmark/bookmark';
 export type { BookmarkError } from '../../entities/bookmark/bookmark-errors';
 export {
   BookmarkNotFoundError,

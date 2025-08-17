@@ -15,6 +15,7 @@ model Group {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   bookmarks   Bookmark[]
+  themes      Theme[]
 
   @@map("groups")
 }
@@ -38,6 +39,7 @@ model Bookmark {
   updatedAt        DateTime  @updatedAt @map("updated_at")
   
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  bookmarkThemes BookmarkTheme[]
 
   @@index([groupId])
   @@index([category])
@@ -46,4 +48,34 @@ model Bookmark {
   @@index([createdAt])
   @@index([url])
   @@map("bookmarks")
+}
+
+model Theme {
+  id        String   @id
+  groupId   String   @map("group_id")
+  name      String
+  icon      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  bookmarkThemes BookmarkTheme[]
+
+  @@index([groupId])
+  @@index([createdAt])
+  @@map("themes")
+}
+
+model BookmarkTheme {
+  bookmarkId String   @map("bookmark_id")
+  themeId    String   @map("theme_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  bookmark Bookmark @relation(fields: [bookmarkId], references: [id], onDelete: Cascade)
+  theme    Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id([bookmarkId, themeId])
+  @@index([bookmarkId])
+  @@index([themeId])
+  @@map("bookmark_themes")
 }

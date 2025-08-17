@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { Button, Card, CardBody, CardHeader, Input, Chip } from "@heroui/react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -47,116 +48,163 @@ export default function Home() {
 
             {/* Primary CTA */}
             <div className="mb-12">
-              <Link
+              <Button
+                as={Link}
                 to="/create"
-                className="btn btn-primary btn-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                color="primary"
+                size="lg"
+                className="shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 text-lg px-8 py-3"
+                startContent={<span>✨</span>}
               >
-                <span className="text-lg">✨ 新しいグループを作成</span>
-              </Link>
+                新しいグループを作成
+              </Button>
             </div>
           </div>
 
           {/* Cards Section */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             {/* Join group card */}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title text-xl">既存グループに参加</h3>
-                <p className="card-description">
-                  グループIDを入力してメンバーに加わりましょう
-                </p>
-              </div>
-              <div className="card-content">
+            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div>
+                  <h3 className="text-xl font-semibold">既存グループに参加</h3>
+                  <p className="text-small text-default-500">
+                    グループIDを入力してメンバーに加わりましょう
+                  </p>
+                </div>
+              </CardHeader>
+              <CardBody className="pt-0">
                 <form onSubmit={handleJoinGroup} className="space-y-4">
-                  <input
+                  <Input
                     type="text"
                     value={groupId}
                     onChange={(e) => setGroupId(e.target.value)}
                     placeholder="例: xy7k9m2p"
-                    className="input"
                     maxLength={8}
+                    variant="bordered"
+                    classNames={{
+                      input: "text-small",
+                      inputWrapper: "h-10"
+                    }}
                   />
-                  <button
+                  <Button
                     type="submit"
-                    className="btn btn-secondary w-full"
+                    color="secondary"
+                    variant="flat"
+                    className="w-full"
+                    startContent={<span>🚀</span>}
                   >
-                    🚀 参加する
-                  </button>
+                    参加する
+                  </Button>
                 </form>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
 
             {/* Features card */}
-            <div className="card">
-              <div className="card-header">
-                <h3 className="card-title text-xl">主な機能</h3>
-                <p className="card-description">
-                  シンプルで使いやすい設計
-                </p>
-              </div>
-              <div className="card-content">
+            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div>
+                  <h3 className="text-xl font-semibold">主な機能</h3>
+                  <p className="text-small text-default-500">
+                    シンプルで使いやすい設計
+                  </p>
+                </div>
+              </CardHeader>
+              <CardBody className="pt-0">
                 <ul className="space-y-3">
                   <li className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-sm">
+                    <Chip
+                      size="sm"
+                      color="success"
+                      variant="flat"
+                      className="w-8 h-8 min-w-8 p-0"
+                    >
                       ✓
-                    </div>
-                    <span className="text-slate-900 dark:text-slate-50">アカウント不要</span>
+                    </Chip>
+                    <span>アカウント不要</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-sm">
+                    <Chip
+                      size="sm"
+                      color="primary"
+                      variant="flat"
+                      className="w-8 h-8 min-w-8 p-0"
+                    >
                       🔗
-                    </div>
-                    <span className="text-slate-900 dark:text-slate-50">URLで簡単共有</span>
+                    </Chip>
+                    <span>URLで簡単共有</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center text-sm">
+                    <Chip
+                      size="sm"
+                      color="secondary"
+                      variant="flat"
+                      className="w-8 h-8 min-w-8 p-0"
+                    >
                       📍
-                    </div>
-                    <span className="text-slate-900 dark:text-slate-50">地図で場所を確認</span>
+                    </Chip>
+                    <span>地図で場所を確認</span>
                   </li>
                 </ul>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           </div>
 
           {/* How it works */}
-          <div className="card">
-            <div className="card-header text-center">
-              <h3 className="card-title">使い方はとても簡単</h3>
-              <p className="card-description">3ステップで始められます</p>
-            </div>
-            <div className="card-content">
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardHeader className="pb-3 text-center">
+              <div className="w-full">
+                <h3 className="text-xl font-semibold">使い方はとても簡単</h3>
+                <p className="text-small text-default-500">3ステップで始められます</p>
+              </div>
+            </CardHeader>
+            <CardBody className="pt-0">
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-slate-900/10 dark:bg-slate-50/10 text-slate-900 dark:text-slate-50 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                  <Chip
+                    size="lg"
+                    color="default"
+                    variant="flat"
+                    className="w-12 h-12 mx-auto mb-4 text-2xl"
+                  >
                     1
-                  </div>
+                  </Chip>
                   <h4 className="font-semibold mb-2">グループ作成</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-default-500">
                     グループ名を入力して新しいリストを作成
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-slate-900/10 dark:bg-slate-50/10 text-slate-900 dark:text-slate-50 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                  <Chip
+                    size="lg"
+                    color="default"
+                    variant="flat"
+                    className="w-12 h-12 mx-auto mb-4 text-2xl"
+                  >
                     2
-                  </div>
+                  </Chip>
                   <h4 className="font-semibold mb-2">場所を追加</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-default-500">
                     行きたい場所のURLを貼り付けて保存
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-slate-900/10 dark:bg-slate-50/10 text-slate-900 dark:text-slate-50 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                  <Chip
+                    size="lg"
+                    color="default"
+                    variant="flat"
+                    className="w-12 h-12 mx-auto mb-4 text-2xl"
+                  >
                     3
-                  </div>
+                  </Chip>
                   <h4 className="font-semibold mb-2">みんなで共有</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-default-500">
                     グループURLを家族・友人に送信
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         </div>
       </div>
     </div>
