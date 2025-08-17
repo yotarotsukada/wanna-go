@@ -10,6 +10,7 @@ import type { Bookmark } from "../entities/bookmark/bookmark";
 import type { BookmarksResponse } from "../services/bookmark";
 import { BookmarkCard } from "../components/bookmark-card";
 import { redirect } from "react-router";
+import { Button, Card, CardBody, CardHeader, Input, Select, SelectItem } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -142,120 +143,132 @@ export default function GroupPage() {
               )}
             </div>
             <div className="flex gap-2">
-              <Link
+              <Button
+                as={Link}
                 to={`/group/${group.id}/settings`}
-                className="btn btn-ghost btn-sm"
-                title="グループ設定"
+                variant="ghost"
+                size="sm"
+                startContent={<span>⚙️</span>}
               >
-                ⚙️ 設定
-              </Link>
+                設定
+              </Button>
             </div>
           </div>
 
           {/* Add bookmark button */}
           <div className="mb-6">
-            <Link
+            <Button
+              as={Link}
               to={`/group/${group.id}/add`}
-              className="btn btn-primary shadow-md hover:shadow-lg transition-all duration-200"
+              color="primary"
+              className="shadow-md hover:shadow-lg transition-all duration-200"
+              startContent={<span>✨</span>}
             >
-              ✨ ブックマーク追加
-            </Link>
+              ブックマーク追加
+            </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="card text-center">
-            <div className="card-content py-4">
+          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody className="py-4">
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                 {bookmarksData.stats.total_count}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">総数</div>
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="card-content py-4">
+            </CardBody>
+          </Card>
+          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody className="py-4">
               <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
                 {bookmarksData.stats.visited_count}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">訪問済み</div>
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="card-content py-4">
+            </CardBody>
+          </Card>
+          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody className="py-4">
               <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
                 {bookmarksData.stats.unvisited_count}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">未訪問</div>
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="card-content py-4">
+            </CardBody>
+          </Card>
+          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody className="py-4">
               <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                 {bookmarksData.stats.avg_priority.toFixed(1)}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         </div>
 
         {/* Filters */}
-        <div className="card mb-8">
-          <div className="card-content">
+        <Card className="mb-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <CardBody>
             <div className="flex flex-wrap gap-4 items-center">
               {/* Category filter */}
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-slate-500 dark:text-slate-400">カテゴリ:</label>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => updateFilters({ category: e.target.value })}
-                  className="select min-w-[120px]"
+                <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">カテゴリ:</label>
+                <Select
+                  selectedKeys={[categoryFilter]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    updateFilters({ category: value });
+                  }}
+                  className="min-w-[120px]"
+                  size="sm"
+                  variant="bordered"
                 >
-                  <option value="all">全て</option>
+                  <SelectItem key="all">全て</SelectItem>
                   {CATEGORIES.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                    <SelectItem key={category}>{category}</SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Visited filter */}
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-slate-500 dark:text-slate-400">状態:</label>
-                <select
-                  value={visitedFilter}
-                  onChange={(e) => updateFilters({ visited: e.target.value })}
-                  className="select min-w-[120px]"
+                <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">状態:</label>
+                <Select
+                  selectedKeys={[visitedFilter]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    updateFilters({ visited: value });
+                  }}
+                  className="min-w-[120px]"
+                  size="sm"
+                  variant="bordered"
                 >
-                  <option value="all">全て</option>
-                  <option value="false">未訪問</option>
-                  <option value="true">訪問済み</option>
-                </select>
+                  <SelectItem key="all">全て</SelectItem>
+                  <SelectItem key="false">未訪問</SelectItem>
+                  <SelectItem key="true">訪問済み</SelectItem>
+                </Select>
               </div>
 
               {/* Search */}
               <div className="flex-1 min-w-0 max-w-md">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => updateFilters({ search: e.target.value })}
-                    placeholder="場所やメモで検索..."
-                    className="input pl-10"
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400">
-                    🔍
-                  </div>
-                </div>
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => updateFilters({ search: e.target.value })}
+                  placeholder="場所やメモで検索..."
+                  variant="bordered"
+                  size="sm"
+                  startContent={<span className="text-slate-500 dark:text-slate-400">🔍</span>}
+                />
               </div>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
         {/* Bookmarks */}
         <div className="space-y-6">
           {bookmarksData.bookmarks.length === 0 ? (
-            <div className="card text-center">
-              <div className="card-content py-16">
+            <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+              <CardBody className="py-16">
                 <div className="text-6xl mb-4">📍</div>
                 <h3 className="text-xl font-semibold mb-2">
                   {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
@@ -267,14 +280,16 @@ export default function GroupPage() {
                     ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
                     : "最初の行きたい場所を追加して、みんなで共有しましょう"}
                 </p>
-                <Link
+                <Button
+                  as={Link}
                   to={`/group/${group.id}/add`}
-                  className="btn btn-primary"
+                  color="primary"
+                  startContent={<span>✨</span>}
                 >
-                  ✨ ブックマークを追加
-                </Link>
-              </div>
-            </div>
+                  ブックマークを追加
+                </Button>
+              </CardBody>
+            </Card>
           ) : (
             bookmarksData.bookmarks.map(bookmark => (
               <BookmarkCard
