@@ -4,7 +4,8 @@ import {
   markAsVisited, 
   markAsUnvisited,
   updateAutoMetadata,
-  type Bookmark 
+  type Bookmark,
+  type BookmarkWithThemes 
 } from '../../entities/bookmark/bookmark';
 import type { Category } from '../../lib/constants';
 import { createBookmarkRepository } from './repository';
@@ -22,7 +23,7 @@ export interface BookmarkStats {
 
 // ブックマーク一覧レスポンス型
 export interface BookmarksResponse {
-  bookmarks: Bookmark[];
+  bookmarks: BookmarkWithThemes[];
   total: number;
   stats: BookmarkStats;
 }
