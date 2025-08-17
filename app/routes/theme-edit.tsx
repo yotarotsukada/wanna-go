@@ -8,6 +8,8 @@ import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
 import { formatDate } from "../lib/utils";
 import { Button, Card, CardBody, Input, Chip } from "@heroui/react";
+import { EmojiPicker } from "../components/emoji-picker";
+import { useState } from "react";
 
 interface LoaderData {
   group: Group;
@@ -118,6 +120,7 @@ export default function EditThemePage() {
   const actionData = useActionData<ActionData>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const [selectedEmoji, setSelectedEmoji] = useState(theme.icon || "");
 
   const handleDelete = () => {
     if (!confirm(`「${theme.name}」を削除しますか？`)) {
@@ -191,16 +194,18 @@ export default function EditThemePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Input
-                    type="text"
-                    name="icon"
-                    label="アイコン（絵文字、任意）"
-                    variant="bordered"
-                    maxLength={10}
-                    defaultValue={theme.icon || ""}
-                    isInvalid={!!actionData?.fieldErrors?.icon}
-                    errorMessage={actionData?.fieldErrors?.icon}
+                  <label className="text-sm font-medium text-default-700">
+                    アイコン（絵文字、任意）
+                  </label>
+                  <EmojiPicker
+                    value={selectedEmoji}
+                    onChange={setSelectedEmoji}
+                    placeholder="絵文字を選択してください"
                   />
+                  <input type="hidden" name="icon" value={selectedEmoji} />
+                  {actionData?.fieldErrors?.icon && (
+                    <p className="text-red-500 text-sm">{actionData.fieldErrors.icon}</p>
+                  )}
                 </div>
 
                 {/* 統計情報 */}
