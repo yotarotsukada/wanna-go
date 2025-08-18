@@ -9,6 +9,7 @@ import {
 } from '../../entities/bookmark/bookmark';
 import type { Category } from '../../lib/constants';
 import { createBookmarkRepository } from './repository';
+import { cache, generateCacheKey, getOrSet } from '../../lib/cache.server';
 
 // リポジトリインスタンス（シングルトン）
 const bookmarkRepo = createBookmarkRepository();
@@ -49,7 +50,13 @@ export const createBookmarkWorkflow = async (
     ...input
   });
   
-  return await bookmarkRepo.save(bookmark);
+  const result = await bookmarkRepo.save(bookmark);
+  
+  // キャッシュ無効化
+  const cacheKey = generateCacheKey('bookmarks', groupId);
+  cache.delete(cacheKey);
+  
+  return result;
 };
 
 // ブックマーク取得
@@ -62,7 +69,7 @@ export const getBookmarkByIdStrict = async (bookmarkId: string): Promise<Bookmar
   return await bookmarkRepo.getById(bookmarkId);
 };
 
-// グループのブックマーク一覧取得
+// グループのブックマーク一覧取得（効率化版+キャッシュ）
 export const getGroupBookmarksWorkflow = async (
   groupId: string,
   filters?: {
@@ -71,20 +78,36 @@ export const getGroupBookmarksWorkflow = async (
     search?: string;
   }
 ): Promise<BookmarksResponse> => {
-  const [bookmarks, counts, avgPriority] = await Promise.all([
-    bookmarkRepo.findByGroupId(groupId, filters),
-    bookmarkRepo.count(groupId),
-    bookmarkRepo.getAveragePriority(groupId)
-  ]);
+  // フィルターが適用されていない場合のみキャッシュを使用
+  const useCache = !filters?.category && !filters?.visited && !filters?.search;
+  
+  if (useCache) {
+    const cacheKey = generateCacheKey('bookmarks', groupId);
+    return await getOrSet(cacheKey, async () => {
+      const result = await bookmarkRepo.findByGroupIdWithStats(groupId, filters);
+      return {
+        bookmarks: result.bookmarks,
+        total: result.bookmarks.length,
+        stats: {
+          total_count: result.stats.total,
+          visited_count: result.stats.visited,
+          unvisited_count: result.stats.unvisited,
+          avg_priority: result.stats.avgPriority
+        }
+      };
+    }, 60000); // 1分キャッシュ
+  }
 
+  // フィルターが適用されている場合は毎回取得
+  const result = await bookmarkRepo.findByGroupIdWithStats(groupId, filters);
   return {
-    bookmarks,
-    total: bookmarks.length,
+    bookmarks: result.bookmarks,
+    total: result.bookmarks.length,
     stats: {
-      total_count: counts.total,
-      visited_count: counts.visited,
-      unvisited_count: counts.unvisited,
-      avg_priority: avgPriority
+      total_count: result.stats.total,
+      visited_count: result.stats.visited,
+      unvisited_count: result.stats.unvisited,
+      avg_priority: result.stats.avgPriority
     }
   };
 };
@@ -117,7 +140,13 @@ export const updateBookmarkWorkflow = async (
     updated = updates.visited ? markAsVisited(updated) : markAsUnvisited(updated);
   }
 
-  return await bookmarkRepo.save(updated);
+  const result = await bookmarkRepo.save(updated);
+  
+  // キャッシュ無効化
+  const cacheKey = generateCacheKey('bookmarks', bookmark.groupId);
+  cache.delete(cacheKey);
+  
+  return result;
 };
 
 // ブックマーク訪問状態変更ワークフロー
@@ -127,7 +156,13 @@ export const toggleBookmarkVisitedWorkflow = async (
 ): Promise<Bookmark> => {
   const bookmark = await bookmarkRepo.getById(bookmarkId);
   const updated = visited ? markAsVisited(bookmark) : markAsUnvisited(bookmark);
-  return await bookmarkRepo.save(updated);
+  const result = await bookmarkRepo.save(updated);
+  
+  // キャッシュ無効化
+  const cacheKey = generateCacheKey('bookmarks', bookmark.groupId);
+  cache.delete(cacheKey);
+  
+  return result;
 };
 
 // ブックマーク自動メタデータ更新ワークフロー
@@ -147,5 +182,12 @@ export const updateBookmarkMetadataWorkflow = async (
 
 // ブックマーク削除ワークフロー
 export const deleteBookmarkWorkflow = async (bookmarkId: string): Promise<void> => {
-  return await bookmarkRepo.delete(bookmarkId);
+  // 削除前にグループIDを取得
+  const bookmark = await bookmarkRepo.getById(bookmarkId);
+  
+  await bookmarkRepo.delete(bookmarkId);
+  
+  // キャッシュ無効化
+  const cacheKey = generateCacheKey('bookmarks', bookmark.groupId);
+  cache.delete(cacheKey);
 };
