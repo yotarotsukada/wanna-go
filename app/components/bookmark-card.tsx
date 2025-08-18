@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Button, Card, CardBody, CardHeader, Chip } from "@heroui/react";
+import { Button, Card, Chip } from "@heroui/react";
 import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import { formatDate } from "../lib/utils";
 import { MapPin, MessageCircle, ExternalLink, Check, Edit, Trash2 } from "lucide-react";
@@ -47,7 +47,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
 
   return (
     <Card className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-      <CardHeader className="flex-col items-start gap-2">
+      <div className="p-4 space-y-3">
         <div className="flex items-start justify-between w-full gap-3">
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
@@ -87,9 +87,6 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             </div>
           )}
         </div>
-      </CardHeader>
-
-      <CardBody className="space-y-3">
         {bookmark.address && (
           <div className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
             <MapPin size={16} className="flex-shrink-0 mt-0.5" />
@@ -162,7 +159,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             <Trash2 size={16} />
           </Button>
         </div>
-      </CardBody>
+      </div>
     </Card>
 
   );

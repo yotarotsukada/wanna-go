@@ -2,11 +2,13 @@ import type { Route } from "./+types/group";
 import { Link, useLoaderData, useSearchParams, useSubmit } from "react-router";
 import { getGroup } from "../services/group.server";
 import { getGroupBookmarks, toggleBookmarkVisited, deleteBookmark } from "../services/bookmark.server";
+import { themeService } from "../services/theme";
 import { CATEGORIES } from "../lib/constants";
 import { BookmarkCard } from "../components/bookmark-card";
+import { ThemeCard } from "../components/theme-card";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Select, SelectItem } from "@heroui/react";
-import { Target, Settings, Sparkles, Search } from "lucide-react";
+import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab } from "@heroui/react";
+import { Target, Settings, Sparkles, Search, Edit, Trash2 } from "lucide-react";
 
 export function meta({ params, data }: Route.MetaArgs) {
   const group = data?.group;
@@ -28,22 +30,24 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const category = url.searchParams.get("category") || "all";
   const visited = url.searchParams.get("visited") || "all";
   const search = url.searchParams.get("search") || "";
+  const tab = url.searchParams.get("tab") || "bookmarks";
 
   try {
-    const [group, bookmarksData] = await Promise.all([
+    const [group, bookmarksData, themes] = await Promise.all([
       getGroup(groupId),
       getGroupBookmarks(groupId, {
         category: category !== "all" ? category : undefined,
         visited: visited !== "all" ? visited : undefined,
         search: search || undefined,
       }),
+      themeService.getThemesByGroupId(groupId),
     ]);
 
     if (!group) {
       throw new Response("Group not found", { status: 404 });
     }
 
-    return { group, bookmarksData };
+    return { group, bookmarksData, themes, tab };
   } catch (error) {
     console.error("Error loading group data:", error);
     throw new Response("Failed to load group data", { status: 500 });
@@ -53,29 +57,38 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const bookmarkId = formData.get("bookmarkId")?.toString();
-
-  if (!bookmarkId) {
-    throw new Response("Bookmark ID is required", { status: 400 });
-  }
 
   try {
     if (intent === "toggle-visited") {
+      const bookmarkId = formData.get("bookmarkId")?.toString();
+      if (!bookmarkId) {
+        throw new Response("Bookmark ID is required", { status: 400 });
+      }
       const visited = formData.get("visited") === "true";
       await toggleBookmarkVisited(bookmarkId, visited);
     } else if (intent === "delete") {
+      const bookmarkId = formData.get("bookmarkId")?.toString();
+      if (!bookmarkId) {
+        throw new Response("Bookmark ID is required", { status: 400 });
+      }
       await deleteBookmark(bookmarkId);
+    } else if (intent === "delete-theme") {
+      const themeId = formData.get("themeId")?.toString();
+      if (!themeId) {
+        throw new Response("Theme ID is required", { status: 400 });
+      }
+      await themeService.deleteTheme(themeId);
     }
 
     return { success: true };
   } catch (error) {
-    console.error("Error updating bookmark:", error);
-    throw new Response("Failed to update bookmark", { status: 500 });
+    console.error("Error updating:", error);
+    throw new Response("Failed to update", { status: 500 });
   }
 }
 
 export default function GroupPage() {
-  const { group, bookmarksData } = useLoaderData<typeof loader>();
+  const { group, bookmarksData, themes, tab } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
   const submit = useSubmit();
   
@@ -83,6 +96,7 @@ export default function GroupPage() {
   const categoryFilter = searchParams.get("category") || "all";
   const visitedFilter = searchParams.get("visited") || "all";
   const searchQuery = searchParams.get("search") || "";
+  const currentTab = tab as string;
 
   const updateFilters = (newFilters: Record<string, string>) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -95,6 +109,17 @@ export default function GroupPage() {
       }
     });
     
+    setSearchParams(newSearchParams);
+  };
+
+  const handleTabChange = (key: string | number) => {
+    const tabKey = String(key);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (tabKey === "bookmarks") {
+      newSearchParams.delete("tab");
+    } else {
+      newSearchParams.set("tab", tabKey);
+    }
     setSearchParams(newSearchParams);
   };
 
@@ -120,6 +145,7 @@ export default function GroupPage() {
       );
     }
   };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -208,101 +234,167 @@ export default function GroupPage() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-          <CardBody>
-            <div className="flex flex-wrap gap-4 items-center">
-              {/* Category filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">カテゴリ:</label>
-                <Select
-                  selectedKeys={[categoryFilter]}
-                  onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as string;
-                    updateFilters({ category: value });
-                  }}
-                  className="min-w-[120px]"
-                  size="sm"
-                  variant="bordered"
-                >
-                  <SelectItem key="all">全て</SelectItem>
-                  <>
-                  {CATEGORIES.map(category => (
-                    <SelectItem key={category}>{category}</SelectItem>
-                    ))}
-                  </>
-                </Select>
-              </div>
+        {/* Tabs */}
+        <div className="mb-8">
+          <Tabs
+            selectedKey={currentTab}
+            onSelectionChange={handleTabChange}
+          >
+            <Tab key="bookmarks" title="ブックマーク一覧" />
+            <Tab key="themes" title="テーマ一覧" />
+          </Tabs>
+        </div>
 
-              {/* Visited filter */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">状態:</label>
-                <Select
-                  selectedKeys={[visitedFilter]}
-                  onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as string;
-                    updateFilters({ visited: value });
-                  }}
-                  className="min-w-[120px]"
-                  size="sm"
-                  variant="bordered"
-                >
-                  <SelectItem key="all">全て</SelectItem>
-                  <SelectItem key="false">未訪問</SelectItem>
-                  <SelectItem key="true">訪問済み</SelectItem>
-                </Select>
-              </div>
+        {/* Filters - Only show for bookmarks tab */}
+        {currentTab === "bookmarks" && (
+          <Card className="mb-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody>
+              <div className="flex flex-wrap gap-4 items-center">
+                {/* Category filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">カテゴリ:</label>
+                  <Select
+                    selectedKeys={[categoryFilter]}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string;
+                      updateFilters({ category: value });
+                    }}
+                    className="min-w-[120px]"
+                    size="sm"
+                    variant="bordered"
+                  >
+                    <SelectItem key="all">全て</SelectItem>
+                    <>
+                    {CATEGORIES.map(category => (
+                      <SelectItem key={category}>{category}</SelectItem>
+                      ))}
+                    </>
+                  </Select>
+                </div>
 
-              {/* Search */}
-              <div className="flex-1 min-w-0 max-w-md">
-                <Input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => updateFilters({ search: e.target.value })}
-                  placeholder="場所やメモで検索..."
-                  variant="bordered"
-                  size="sm"
-                  startContent={<Search size={16} className="text-slate-500 dark:text-slate-400" />}
-                />
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+                {/* Visited filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">状態:</label>
+                  <Select
+                    selectedKeys={[visitedFilter]}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string;
+                      updateFilters({ visited: value });
+                    }}
+                    className="min-w-[120px]"
+                    size="sm"
+                    variant="bordered"
+                  >
+                    <SelectItem key="all">全て</SelectItem>
+                    <SelectItem key="false">未訪問</SelectItem>
+                    <SelectItem key="true">訪問済み</SelectItem>
+                  </Select>
+                </div>
 
-        {/* Bookmarks */}
+                {/* Search */}
+                <div className="flex-1 min-w-0 max-w-md">
+                  <Input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => updateFilters({ search: e.target.value })}
+                    placeholder="場所やメモで検索..."
+                    variant="bordered"
+                    size="sm"
+                    startContent={<Search size={16} className="text-slate-500 dark:text-slate-400" />}
+                  />
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Add Theme button for themes tab */}
+        {currentTab === "themes" && (
+          <div className="mb-6">
+            <Button
+              as={Link}
+              to={`/group/${group.id}/themes/create`}
+              color="primary"
+              className="shadow-md hover:shadow-lg transition-all duration-200"
+              startContent={<Sparkles size={20} />}
+            >
+              テーマを作成
+            </Button>
+          </div>
+        )}
+
+        {/* Content */}
         <div className="space-y-6">
-          {bookmarksData.bookmarks.length === 0 ? (
-            <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardBody className="py-16">
-                <h3 className="text-xl font-semibold mb-2">
-                  {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-                    ? "条件に一致するブックマークがありません"
-                    : "まだブックマークがありません"}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 mb-6">
-                  {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-                    ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
-                    : "最初の行きたい場所を追加して、みんなで共有しましょう"}
-                </p>
-                <Button
-                  as={Link}
-                  to={`/group/${group.id}/add`}
-                  color="primary"
-                  startContent={<Sparkles size={20} />}
-                >
-                  ブックマークを追加
-                </Button>
-              </CardBody>
-            </Card>
+          {currentTab === "bookmarks" ? (
+            // Bookmarks content
+            <>
+              {bookmarksData.bookmarks.length === 0 ? (
+                <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                  <CardBody className="py-16">
+                    <h3 className="text-xl font-semibold mb-2">
+                      {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
+                        ? "条件に一致するブックマークがありません"
+                        : "まだブックマークがありません"}
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 mb-6">
+                      {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
+                        ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
+                        : "最初の行きたい場所を追加して、みんなで共有しましょう"}
+                    </p>
+                    <Button
+                      as={Link}
+                      to={`/group/${group.id}/add`}
+                      color="primary"
+                      startContent={<Sparkles size={20} />}
+                    >
+                      ブックマークを追加
+                    </Button>
+                  </CardBody>
+                </Card>
+              ) : (
+                bookmarksData.bookmarks.map(bookmark => (
+                  <BookmarkCard
+                    key={bookmark.id}
+                    bookmark={bookmark}
+                    onToggleVisited={handleToggleVisited}
+                    onDelete={handleDelete}
+                  />
+                ))
+              )}
+            </>
           ) : (
-            bookmarksData.bookmarks.map(bookmark => (
-              <BookmarkCard
-                key={bookmark.id}
-                bookmark={bookmark}
-                onToggleVisited={handleToggleVisited}
-                onDelete={handleDelete}
-              />
-            ))
+            // Themes content
+            <>
+              {themes.length === 0 ? (
+                <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                  <CardBody className="py-16">
+                    <h3 className="text-xl font-semibold mb-2">
+                      テーマがありません
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 mb-6">
+                      最初のテーマを作成して、ブックマークを整理しましょう
+                    </p>
+                    <Button
+                      as={Link}
+                      to={`/group/${group.id}/themes/create`}
+                      color="primary"
+                      startContent={<Sparkles size={20} />}
+                    >
+                      テーマを作成
+                    </Button>
+                  </CardBody>
+                </Card>
+              ) : (
+                themes.map(theme => (
+                  <ThemeCard
+                    key={theme.id}
+                    theme={theme}
+                    onToggleVisited={handleToggleVisited}
+                    onDelete={handleDelete}
+                  />
+                ))
+              )}
+            </>
           )}
         </div>
     </div>

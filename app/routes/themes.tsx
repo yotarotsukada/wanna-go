@@ -159,9 +159,7 @@ export default function ThemesPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
-                            {theme.icon && (
-                              <span className="text-2xl">{theme.icon}</span>
-                            )}
+                            <span className="text-2xl">{theme.icon || '🗺️'}</span>
                             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
                               {theme.name}
                             </h3>

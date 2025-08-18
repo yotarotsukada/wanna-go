@@ -164,4 +164,53 @@ export class ThemeRepository {
       }
     });
   }
+
+  async findBookmarksByThemeId(themeId: string): Promise<any[]> {
+    const bookmarkThemes = await this.db.bookmarkTheme.findMany({
+      where: { themeId },
+      include: {
+        bookmark: {
+          include: {
+            bookmarkThemes: {
+              include: {
+                theme: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        bookmark: {
+          createdAt: "desc",
+        },
+      },
+    });
+
+    return bookmarkThemes.map((bt) => ({
+      id: bt.bookmark.id,
+      groupId: bt.bookmark.groupId,
+      title: bt.bookmark.title,
+      url: bt.bookmark.url,
+      category: bt.bookmark.category,
+      priority: bt.bookmark.priority,
+      visited: bt.bookmark.visited,
+      visitedAt: bt.bookmark.visitedAt,
+      createdAt: bt.bookmark.createdAt,
+      updatedAt: bt.bookmark.updatedAt,
+      memo: bt.bookmark.memo,
+      address: bt.bookmark.address,
+      autoTitle: bt.bookmark.autoTitle,
+      autoDescription: bt.bookmark.autoDescription,
+      autoImageUrl: bt.bookmark.autoImageUrl,
+      autoSiteName: bt.bookmark.autoSiteName,
+      themes: bt.bookmark.bookmarkThemes.map((bth) => ({
+        id: bth.theme.id,
+        name: bth.theme.name,
+        icon: bth.theme.icon,
+        groupId: bth.theme.groupId,
+        createdAt: bth.theme.createdAt,
+        updatedAt: bth.theme.updatedAt,
+      })),
+    }));
+  }
 }
