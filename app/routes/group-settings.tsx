@@ -92,132 +92,169 @@ export default function GroupSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link 
+            <Button
+              as={Link}
               to={`/group/${group.id}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+              variant="ghost"
+              size="sm"
+              className="mb-4"
+              startContent={<span>←</span>}
             >
-              ← グループ設定
-            </Link>
+              グループ設定
+            </Button>
           </div>
 
           {/* Group Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              グループ情報
-            </h2>
-            
-            <Form method="post" className="space-y-4">
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm mb-6">
+            <CardHeader className="pb-4">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                グループ情報
+              </h2>
+            </CardHeader>
+            <CardBody className="pt-0">
+            <Form method="post" className="space-y-6">
               {/* Group Name */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  グループ名
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="text"
-                  id="name"
                   name="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  label="グループ名"
+                  placeholder="我が家の行きたいところ"
+                  variant="bordered"
                   maxLength={100}
-                  required
+                  isRequired
                 />
               </div>
 
               {/* Description */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  説明
-                </label>
-                <textarea
-                  id="description"
+              <div className="space-y-2">
+                <Textarea
                   name="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  label="説明"
+                  placeholder="家族で行きたい場所ややりたいことをまとめています"
+                  variant="bordered"
+                  minRows={3}
                   maxLength={500}
                 />
               </div>
 
               {/* Messages */}
               {actionData?.error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm">{actionData.error}</p>
-                </div>
+                <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                  <CardBody className="p-3">
+                    <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
+                  </CardBody>
+                </Card>
               )}
 
               {actionData?.success && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-600 text-sm">設定を更新しました</p>
-                </div>
+                <Card className="bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800">
+                  <CardBody className="p-3">
+                    <p className="text-green-600 dark:text-green-400 text-sm">設定を更新しました</p>
+                  </CardBody>
+                </Card>
               )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                color="primary"
+                size="lg"
+                className="w-full"
+                isDisabled={isSubmitting}
+                isLoading={isSubmitting}
               >
                 {isSubmitting ? "更新中..." : "設定を更新"}
-              </button>
+              </Button>
             </Form>
-          </div>
+            </CardBody>
+          </Card>
 
           {/* Sharing */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              共有
-            </h2>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                グループURL
-              </label>
-              <div className="flex gap-2">
-                <input
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm mb-6">
+            <CardHeader className="pb-4">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                共有
+              </h2>
+            </CardHeader>
+            <CardBody className="pt-0 space-y-4">
+              <div className="space-y-2">
+                <Input
                   type="text"
                   value={typeof window !== 'undefined' ? `${window.location.origin}/group/${group.id}` : `/group/${group.id}`}
-                  readOnly
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                  label="グループURL"
+                  variant="bordered"
+                  isReadOnly
+                  className="flex-1"
                 />
+                <div className="flex gap-2">
+                  <Button
+                    onPress={copyUrl}
+                    color="primary"
+                    variant="flat"
+                    size="sm"
+                  >
+                    URLをコピー
+                  </Button>
+                  <Button
+                    onPress={showQRCode}
+                    color="success"
+                    variant="flat"
+                    size="sm"
+                  >
+                    QRコード表示
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={copyUrl}
-                  className="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-medium transition-colors"
-                >
-                  URLをコピー
-                </button>
-                <button
-                  onClick={showQRCode}
-                  className="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-sm font-medium transition-colors"
-                >
-                  QRコード表示
-                </button>
-              </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
           {/* Statistics */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              統計情報
-            </h2>
-
-            <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-              <li>• 総ブックマーク数: {stats.total_count}件</li>
-              <li>• 訪問済み: {stats.visited_count}件</li>
-              <li>• 未訪問: {stats.unvisited_count}件</li>
-              <li>• 平均興味度: {stats.avg_priority.toFixed(1)}/5</li>
-              <li>• 作成日: {formatDate(group.createdAt)}</li>
-            </ul>
-          </div>
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                統計情報
+              </h2>
+            </CardHeader>
+            <CardBody className="pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <Chip color="default" variant="flat" size="sm">
+                    総ブックマーク数: {stats.total_count}件
+                  </Chip>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Chip color="success" variant="flat" size="sm">
+                    訪問済み: {stats.visited_count}件
+                  </Chip>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Chip color="warning" variant="flat" size="sm">
+                    未訪問: {stats.unvisited_count}件
+                  </Chip>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Chip color="primary" variant="flat" size="sm">
+                    平均興味度: {stats.avg_priority.toFixed(1)}/5
+                  </Chip>
+                </div>
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <Chip color="secondary" variant="flat" size="sm">
+                    作成日: {formatDate(group.createdAt)}
+                  </Chip>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       </div>
     </div>

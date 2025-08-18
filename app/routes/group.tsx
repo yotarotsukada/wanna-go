@@ -1,16 +1,13 @@
 import type { Route } from "./+types/group";
-import { useState } from "react";
 import { Link, useLoaderData, useSearchParams, useSubmit } from "react-router";
 import { getGroup } from "../services/group.server";
-import { getGroupBookmarks } from "../services/bookmark.server";
-import { updateBookmark, deleteBookmark } from "../services/bookmark.server";
+import { getGroupBookmarks, toggleBookmarkVisited, deleteBookmark } from "../services/bookmark.server";
 import { CATEGORIES } from "../lib/constants";
 import type { Group } from "../entities/group/group";
-import type { Bookmark } from "../entities/bookmark/bookmark";
 import type { BookmarksResponse } from "../services/bookmark";
 import { BookmarkCard } from "../components/bookmark-card";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, CardHeader, Input, Select, SelectItem } from "@heroui/react";
+import { Button, Card, CardBody, Input, Select, SelectItem } from "@heroui/react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -64,10 +61,7 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     if (intent === "toggle-visited") {
       const visited = formData.get("visited") === "true";
-      await updateBookmark(bookmarkId, {
-        visited,
-        visitedAt: visited ? new Date().toISOString() : undefined,
-      } as any);
+      await toggleBookmarkVisited(bookmarkId, visited);
     } else if (intent === "delete") {
       await deleteBookmark(bookmarkId);
     }
@@ -232,9 +226,11 @@ export default function GroupPage() {
                   variant="bordered"
                 >
                   <SelectItem key="all">全て</SelectItem>
+                  <>
                   {CATEGORIES.map(category => (
                     <SelectItem key={category}>{category}</SelectItem>
-                  ))}
+                    ))}
+                  </>
                 </Select>
               </div>
 

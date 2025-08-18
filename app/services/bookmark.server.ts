@@ -4,7 +4,8 @@ export {
   getBookmark,
   createBookmark,
   updateBookmark,
-  deleteBookmark
+  deleteBookmark,
+  toggleBookmarkVisited
 } from './bookmark';
 
 // 型定義の再エクスポート（後方互換性）
