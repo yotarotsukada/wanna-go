@@ -36,29 +36,29 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const tab = url.searchParams.get("tab") || "bookmarks";
 
   try {
-    // 重い処理（ブックマーク取得）をPromiseとして開始するが、awaitしない
+    // 最重要：グループ情報は即座に取得（404チェックのため）
+    const group = await getGroup(groupId);
+    
+    if (!group) {
+      throw new Response("Group not found", { status: 404 });
+    }
+
+    // 重い処理はPromiseとして開始するが、awaitしない
     const bookmarksDataPromise = getGroupBookmarks(groupId, {
       category: category !== "all" ? category : undefined,
       visited: visited !== "all" ? visited : undefined,
       search: search || undefined,
     });
-
-    // 軽い処理（グループ情報とテーマ）は即座に取得
-    const [group, themes] = await Promise.all([
-      getGroup(groupId),
-      themeService.getThemesByGroupId(groupId),
-    ]);
-
-    if (!group) {
-      throw new Response("Group not found", { status: 404 });
-    }
+    
+    // テーマもPromiseとして開始（ブックマークより軽いが分離）
+    const themesPromise = themeService.getThemesByGroupId(groupId);
 
     // React Router v7では、Promiseを直接返す
     return {
       group,
-      themes,
       tab,
       bookmarksDataPromise,
+      themesPromise,
     };
   } catch (error) {
     console.error("Error loading group data:", error);
@@ -271,9 +271,147 @@ function BookmarksList({
   );
 }
 
+// テーマ一覧コンポーネント
+function ThemesList({ 
+  themesPromise,
+  themeBookmarks,
+  loadingThemes,
+  fetchThemeBookmarks,
+  handleThemeEdit,
+  handleToggleVisited,
+  handleDelete,
+  onCreateOpen
+}: { 
+  themesPromise: Promise<any>;
+  themeBookmarks: Record<string, any[]>;
+  loadingThemes: Record<string, boolean>;
+  fetchThemeBookmarks: (themeId: string) => void;
+  handleThemeEdit: (theme: any) => void;
+  handleToggleVisited: (bookmarkId: string, visited: boolean) => void;
+  handleDelete: (bookmarkId: string) => void;
+  onCreateOpen: () => void;
+}) {
+  const themes = use(themesPromise);
+  
+  if (themes.length === 0) {
+    return (
+      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardBody className="py-16">
+          <h3 className="text-xl font-semibold mb-2">
+            テーマがありません
+          </h3>
+          <p className="text-slate-500 dark:text-slate-400 mb-6">
+            最初のテーマを作成して、ブックマークを整理しましょう
+          </p>
+          <Button
+            onPress={onCreateOpen}
+            color="primary"
+            startContent={<Plus size={20} />}
+          >
+            テーマを作成
+          </Button>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      {themes.map((theme: any) => (
+        <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <div className="p-4">
+            <Accordion
+              onSelectionChange={(keys) => {
+                const isOpen = Array.from(keys).includes(theme.id);
+                if (isOpen) {
+                  fetchThemeBookmarks(theme.id);
+                }
+              }}
+            >
+              <AccordionItem
+                key={theme.id}
+                aria-label={theme.name}
+                classNames={{
+                  title: "px-0 py-0",
+                  content: "px-0 pb-0 pt-3",
+                  trigger: "p-0",
+                  indicator: "hidden",
+                }}
+                title={
+                  <div className="flex items-start justify-between w-full gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+                        <span className="text-xl flex-shrink-0">{theme.icon || '🗺️'}</span>
+                        <span className="truncate">{theme.name}</span>
+                      </h3>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Chip 
+                          variant="flat" 
+                          color="primary"
+                          size="sm"
+                        >
+                          {theme.bookmarkCount}件のブックマーク
+                        </Chip>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          作成日: {formatDate(typeof theme.createdAt === 'string' ? theme.createdAt : theme.createdAt.toISOString())}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        onPress={() => handleThemeEdit(theme)}
+                        variant="ghost"
+                        size="sm"
+                        startContent={<Edit size={16} />}
+                      >
+                        編集
+                      </Button>
+                    </div>
+                  </div>
+                }
+              >
+                <div className="space-y-3">
+                  {loadingThemes[theme.id] ? (
+                    <div className="text-center py-8">
+                      <div className="text-slate-500 dark:text-slate-400">読み込み中...</div>
+                    </div>
+                  ) : themeBookmarks[theme.id]?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-slate-500 dark:text-slate-400">
+                        このテーマに紐づくブックマークはありません
+                      </div>
+                    </div>
+                  ) : themeBookmarks[theme.id] ? (
+                    <div className="space-y-4">
+                      {themeBookmarks[theme.id].map(bookmark => (
+                        <BookmarkCard
+                          key={bookmark.id}
+                          bookmark={bookmark}
+                          onToggleVisited={handleToggleVisited}
+                          onDelete={handleDelete}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-slate-500 dark:text-slate-400">
+                        クリックでブックマークを表示
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </Card>
+      ))}
+    </>
+  );
+}
+
 export default function GroupPage() {
   const data = useLoaderData<typeof loader>();
-  const { group, themes, tab, bookmarksDataPromise } = data;
+  const { group, tab, bookmarksDataPromise, themesPromise } = data;
   const [searchParams, setSearchParams] = useSearchParams();
   const submit = useSubmit();
   const actionData = useActionData<{ error?: string; success?: boolean }>();
@@ -577,117 +715,34 @@ export default function GroupPage() {
               />
             </Suspense>
           ) : (
-            // Themes content
-            <>
-              {themes.length === 0 ? (
-                <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardBody className="py-16">
-                    <h3 className="text-xl font-semibold mb-2">
-                      テーマがありません
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400 mb-6">
-                      最初のテーマを作成して、ブックマークを整理しましょう
-                    </p>
-                    <Button
-                      onPress={onCreateOpen}
-                      color="primary"
-                      startContent={<Plus size={20} />}
-                    >
-                      テーマを作成
-                    </Button>
-                  </CardBody>
-                </Card>
-              ) : (
-                themes.map(theme => (
-                  <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                    <div className="p-4">
-                      <Accordion
-                        onSelectionChange={(keys) => {
-                          const isOpen = Array.from(keys).includes(theme.id);
-                          if (isOpen) {
-                            fetchThemeBookmarks(theme.id);
-                          }
-                        }}
-                      >
-                        <AccordionItem
-                          key={theme.id}
-                          aria-label={theme.name}
-                          classNames={{
-                            title: "px-0 py-0",
-                            content: "px-0 pb-0 pt-3",
-                            trigger: "p-0",
-                            indicator: "hidden",
-                          }}
-                          title={
-                            <div className="flex items-start justify-between w-full gap-3">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
-                                  <span className="text-xl flex-shrink-0">{theme.icon || '🗺️'}</span>
-                                  <span className="truncate">{theme.name}</span>
-                                </h3>
-                                <div className="flex items-center gap-3 flex-wrap">
-                                  <Chip 
-                                    variant="flat" 
-                                    color="primary"
-                                    size="sm"
-                                  >
-                                    {theme.bookmarkCount}件のブックマーク
-                                  </Chip>
-                                  <span className="text-sm text-slate-500 dark:text-slate-400">
-                                    作成日: {formatDate(typeof theme.createdAt === 'string' ? theme.createdAt : theme.createdAt.toISOString())}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex gap-2 ml-4">
-                                <Button
-                                  onPress={() => handleThemeEdit(theme)}
-                                  variant="ghost"
-                                  size="sm"
-                                  startContent={<Edit size={16} />}
-                                >
-                                  編集
-                                </Button>
-                              </div>
-                            </div>
-                          }
-                        >
-                          <div className="space-y-3">
-                            {loadingThemes[theme.id] ? (
-                              <div className="text-center py-8">
-                                <div className="text-slate-500 dark:text-slate-400">読み込み中...</div>
-                              </div>
-                            ) : themeBookmarks[theme.id]?.length === 0 ? (
-                              <div className="text-center py-8">
-                                <div className="text-slate-500 dark:text-slate-400">
-                                  このテーマに紐づくブックマークはありません
-                                </div>
-                              </div>
-                            ) : themeBookmarks[theme.id] ? (
-                              <div className="space-y-4">
-                                {themeBookmarks[theme.id].map(bookmark => (
-                                  <BookmarkCard
-                                    key={bookmark.id}
-                                    bookmark={bookmark}
-                                    onToggleVisited={handleToggleVisited}
-                                    onDelete={handleDelete}
-                                  />
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-center py-8">
-                                <div className="text-slate-500 dark:text-slate-400">
-                                  クリックでブックマークを表示
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </AccordionItem>
-                      </Accordion>
-                    </div>
+            // Themes content with Suspense
+            <Suspense fallback={
+              <div className="space-y-6">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                    <CardBody className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-1/2"></div>
+                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+                        </div>
+                      </div>
+                    </CardBody>
                   </Card>
-                ))
-              )}
-            </>
+                ))}
+              </div>
+            }>
+              <ThemesList
+                themesPromise={themesPromise}
+                themeBookmarks={themeBookmarks}
+                loadingThemes={loadingThemes}
+                fetchThemeBookmarks={fetchThemeBookmarks}
+                handleThemeEdit={handleThemeEdit}
+                handleToggleVisited={handleToggleVisited}
+                handleDelete={handleDelete}
+                onCreateOpen={onCreateOpen}
+              />
+            </Suspense>
           )}
         </div>
         

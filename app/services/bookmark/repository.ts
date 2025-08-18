@@ -14,6 +14,22 @@ interface BookmarkRepository {
       search?: string;
     }
   ): Promise<BookmarkWithThemes[]>;
+  findByGroupIdWithStats(
+    groupId: string,
+    filters?: {
+      category?: string;
+      visited?: string;
+      search?: string;
+    }
+  ): Promise<{
+    bookmarks: BookmarkWithThemes[];
+    stats: {
+      total: number;
+      visited: number;
+      unvisited: number;
+      avgPriority: number;
+    };
+  }>;
   findByIdWithThemes(bookmarkId: string): Promise<BookmarkWithThemes | null>;
   save(bookmark: Bookmark): Promise<Bookmark>;
   delete(bookmarkId: string): Promise<void>;
@@ -133,6 +149,118 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
       }));
       return { ...bookmark, themes };
     });
+  },
+
+  // 効率的な統計情報付きブックマーク取得
+  async findByGroupIdWithStats(
+    groupId: string,
+    filters?: {
+      category?: string;
+      visited?: string;
+      search?: string;
+    }
+  ): Promise<{
+    bookmarks: BookmarkWithThemes[];
+    stats: {
+      total: number;
+      visited: number;
+      unvisited: number;
+      avgPriority: number;
+    };
+  }> {
+    const baseWhere = { groupId };
+    let filteredWhere: any = { groupId };
+
+    // フィルター条件を構築
+    if (filters?.category && filters.category !== 'all') {
+      filteredWhere.category = filters.category;
+    }
+
+    if (filters?.visited && filters.visited !== 'all') {
+      filteredWhere.visited = filters.visited === 'true';
+    }
+
+    if (filters?.search) {
+      filteredWhere.OR = [
+        { title: { contains: filters.search, mode: 'insensitive' } },
+        { memo: { contains: filters.search, mode: 'insensitive' } },
+        { address: { contains: filters.search, mode: 'insensitive' } }
+      ];
+    }
+
+    // 並列実行で最適化
+    const [bookmarks, globalStats, filteredAvgPriority] = await Promise.all([
+      // フィルター済みブックマーク一覧
+      db.bookmark.findMany({
+        where: filteredWhere,
+        include: {
+          bookmarkThemes: {
+            include: {
+              theme: true
+            },
+            orderBy: {
+              theme: {
+                createdAt: 'asc'
+              }
+            }
+          }
+        },
+        orderBy: [
+          { priority: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      }),
+      // グループ全体の統計（フィルター無し）
+      db.bookmark.groupBy({
+        by: ['visited'],
+        where: baseWhere,
+        _count: true,
+        _avg: { priority: true }
+      }),
+      // フィルター適用時の平均優先度（表示されているもののみ）
+      db.bookmark.aggregate({
+        where: filteredWhere,
+        _avg: { priority: true }
+      })
+    ]);
+
+    // 統計情報を計算
+    const stats = globalStats.reduce(
+      (acc, group) => {
+        const count = group._count;
+        if (group.visited) {
+          acc.visited = count;
+        } else {
+          acc.unvisited = count;
+        }
+        acc.total += count;
+        return acc;
+      },
+      { total: 0, visited: 0, unvisited: 0, avgPriority: 0 }
+    );
+
+    // 平均優先度を設定（全体の平均を使用）
+    const globalAvgPriority = globalStats.reduce((sum, group) => sum + (group._avg.priority || 0) * group._count, 0) / stats.total;
+    stats.avgPriority = Number(globalAvgPriority.toFixed(1)) || 0;
+
+    // ブックマークを変換
+    const bookmarksWithThemes = bookmarks.map(model => {
+      const bookmark = bookmarkFromJson(model);
+      const themes = model.bookmarkThemes.map(bt => ({
+        id: bt.theme.id,
+        groupId: bt.theme.groupId,
+        name: bt.theme.name,
+        icon: bt.theme.icon,
+        createdAt: bt.theme.createdAt,
+        updatedAt: bt.theme.updatedAt
+      }));
+      return { ...bookmark, themes };
+    });
+
+    return {
+      bookmarks: bookmarksWithThemes,
+      stats
+    };
   },
 
   async save(bookmark: Bookmark): Promise<Bookmark> {

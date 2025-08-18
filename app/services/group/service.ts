@@ -1,6 +1,7 @@
 import { createGroup, updateGroupInfo, type Group } from '../../entities/group/group';
 import { DuplicateGroupIdError } from '../../entities/group/group-errors';
 import { createGroupRepository } from './repository';
+import { cache, generateCacheKey, getOrSet } from '../../lib/cache.server';
 
 // リポジトリインスタンス（シングルトン）
 const groupRepo = createGroupRepository();
@@ -47,9 +48,12 @@ export const createGroupWorkflow = async (input: {
   return await groupRepo.save(group);
 };
 
-// グループ取得
+// グループ取得（キャッシュ付き）
 export const getGroupById = async (groupId: string): Promise<Group | null> => {
-  return await groupRepo.findById(groupId);
+  const cacheKey = generateCacheKey('group', groupId);
+  return await getOrSet(cacheKey, async () => {
+    return await groupRepo.findById(groupId);
+  }, 300000); // 5分キャッシュ（グループ情報はあまり変更されない）
 };
 
 // グループ更新ワークフロー
