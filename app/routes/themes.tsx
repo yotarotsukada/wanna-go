@@ -27,7 +27,7 @@ export async function loader({ params }: Route.LoaderArgs) {
       themeService.getThemesByGroupId(groupId),
     ]);
 
-    return Response.json({ group, themes });
+    return { group, themes };
   } catch (error) {
     console.error("Error loading themes:", error);
     throw new Response("Failed to load themes", { status: 500 });
@@ -38,7 +38,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const { groupId } = params;
   
   if (!groupId) {
-    return Response.json({ error: "Group ID is required" }, { status: 400 });
+    throw new Response("Group ID is required", { status: 400 });
   }
 
   if (request.method === "DELETE") {
@@ -46,19 +46,19 @@ export async function action({ request, params }: Route.ActionArgs) {
     const themeId = formData.get("themeId") as string;
 
     if (!themeId) {
-      return Response.json({ error: "Theme ID is required" }, { status: 400 });
+      return { error: "Theme ID is required" };
     }
 
     try {
       await themeService.deleteTheme(themeId);
-      return Response.json({ success: true });
+      return { success: true };
     } catch (error) {
       console.error("Error deleting theme:", error);
-      return Response.json({ error: "Failed to delete theme" }, { status: 500 });
+      return { error: "Failed to delete theme" };
     }
   }
 
-  return Response.json({ error: "Method not allowed" }, { status: 405 });
+  throw new Response("Method not allowed", { status: 405 });
 };
 
 export default function ThemesPage() {

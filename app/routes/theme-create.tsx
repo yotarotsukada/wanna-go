@@ -34,7 +34,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     if (!group) {
       throw new Response("Group not found", { status: 404 });
     }
-    return Response.json({ group });
+    return { group };
   } catch (error) {
     console.error("Error loading group:", error);
     throw new Response("Failed to load group", { status: 500 });
@@ -45,7 +45,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const { groupId } = params;
   
   if (!groupId) {
-    return Response.json({ error: "Group ID is required" }, { status: 400 });
+    throw new Response("Group ID is required", { status: 400 });
   }
 
   const formData = await request.formData();
@@ -62,7 +62,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (Object.keys(fieldErrors).length > 0) {
-    return Response.json({ fieldErrors }, { status: 400 });
+    return { fieldErrors };
   }
 
   try {
@@ -77,10 +77,10 @@ export async function action({ request, params }: Route.ActionArgs) {
     console.error("Error creating theme:", error);
     
     if (error instanceof ThemeValidationError) {
-      return Response.json({ error: error.message }, { status: 400 });
+      return { error: error.message };
     }
     
-    return Response.json({ error: "テーマの作成に失敗しました" }, { status: 500 });
+    return { error: "テーマの作成に失敗しました" };
   }
 };
 
