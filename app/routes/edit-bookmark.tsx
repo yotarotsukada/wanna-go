@@ -12,7 +12,8 @@ import type { Group } from "../entities/group/group";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
+import { ArrowLeft } from "lucide-react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -162,7 +163,7 @@ export default function EditBookmark() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               ブックマークを編集
             </Button>

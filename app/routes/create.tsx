@@ -4,6 +4,7 @@ import { Link, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { createGroup } from "../services/group.server";
 import { Button, Card, CardBody, CardHeader, Input, Textarea, Chip } from "@heroui/react";
+import { ArrowLeft, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -52,7 +53,7 @@ export default function Create() {
               variant="ghost"
               size="sm"
               className="mb-6 hover:translate-x-1 transition-transform"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               wanna-goに戻る
             </Button>
@@ -73,7 +74,7 @@ export default function Create() {
               <Card className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800">
                 <CardBody className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="text-blue-600 dark:text-blue-400 text-xl mt-0.5">💡</div>
+                    <div className="text-blue-600 dark:text-blue-400 text-xl mt-0.5"><Lightbulb size={20} /></div>
                     <div>
                       <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
                         自動でグループIDを生成
@@ -129,7 +130,7 @@ export default function Create() {
                   <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
                     <CardBody className="p-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-red-600 dark:text-red-400 text-lg">⚠️</span>
+                        <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
                         <p className="text-red-700 dark:text-red-300 font-medium">{actionData.error}</p>
                       </div>
                     </CardBody>
@@ -144,7 +145,7 @@ export default function Create() {
                   className="w-full shadow-lg hover:shadow-xl transition-all duration-300"
                   isDisabled={isSubmitting || !name.trim()}
                   isLoading={isSubmitting}
-                  startContent={!isSubmitting ? <span>✨</span> : undefined}
+                  startContent={!isSubmitting ? <Sparkles size={20} /> : undefined}
                 >
                   {isSubmitting ? "作成中..." : "グループを作成する"}
                 </Button>

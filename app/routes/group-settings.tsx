@@ -8,6 +8,7 @@ import type { Group } from "../entities/group/group";
 import type { BookmarksResponse } from "../services/bookmark";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, CardHeader, Input, Textarea, Chip } from "@heroui/react";
+import { ArrowLeft } from "lucide-react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -102,7 +103,7 @@ export default function GroupSettings() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               グループ設定
             </Button>

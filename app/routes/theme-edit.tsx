@@ -8,6 +8,7 @@ import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
 import { formatDate } from "../lib/utils";
 import { Button, Card, CardBody, Input, Chip } from "@heroui/react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { EmojiPicker } from "../components/emoji-picker";
 import { useState } from "react";
 
@@ -152,7 +153,7 @@ export default function EditThemePage() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               テーマを編集
             </Button>
@@ -257,7 +258,7 @@ export default function EditThemePage() {
                   color="danger"
                   isDisabled={theme.bookmarkCount > 0}
                   title={theme.bookmarkCount > 0 ? "関連するブックマークがあるため削除できません" : "テーマを削除"}
-                  startContent={<span>🗑️</span>}
+                  startContent={<Trash2 size={16} />}
                 >
                   テーマを削除
                 </Button>

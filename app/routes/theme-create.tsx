@@ -6,6 +6,7 @@ import { getGroup } from "../services/group.server";
 import type { Group } from "../entities/group/group";
 import { ThemeValidationError } from "../entities/theme/theme-errors";
 import { Button, Card, CardBody, Input } from "@heroui/react";
+import { ArrowLeft } from "lucide-react";
 import { EmojiPicker } from "../components/emoji-picker";
 import { useState } from "react";
 
@@ -101,7 +102,7 @@ export default function CreateThemePage() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               テーマを作成
             </Button>
