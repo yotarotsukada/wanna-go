@@ -10,7 +10,7 @@ import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
 import { Settings, Sparkles, Search, Edit, Plus } from "lucide-react";
 import { formatDate } from "../lib/utils";
-import { useState } from "react";
+import { useState, Suspense, use } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
 
 export function meta({ params, data }: Route.MetaArgs) {
@@ -36,13 +36,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const tab = url.searchParams.get("tab") || "bookmarks";
 
   try {
-    const [group, bookmarksData, themes] = await Promise.all([
+    // 重い処理（ブックマーク取得）をPromiseとして開始するが、awaitしない
+    const bookmarksDataPromise = getGroupBookmarks(groupId, {
+      category: category !== "all" ? category : undefined,
+      visited: visited !== "all" ? visited : undefined,
+      search: search || undefined,
+    });
+
+    // 軽い処理（グループ情報とテーマ）は即座に取得
+    const [group, themes] = await Promise.all([
       getGroup(groupId),
-      getGroupBookmarks(groupId, {
-        category: category !== "all" ? category : undefined,
-        visited: visited !== "all" ? visited : undefined,
-        search: search || undefined,
-      }),
       themeService.getThemesByGroupId(groupId),
     ]);
 
@@ -50,7 +53,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       throw new Response("Group not found", { status: 404 });
     }
 
-    return { group, bookmarksData, themes, tab };
+    // React Router v7では、Promiseを直接返す
+    return {
+      group,
+      themes,
+      tab,
+      bookmarksDataPromise,
+    };
   } catch (error) {
     console.error("Error loading group data:", error);
     throw new Response("Failed to load group data", { status: 500 });
@@ -136,8 +145,135 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 }
 
+// ブックマークスケルトンコンポーネント
+function BookmarksSkeleton() {
+  return (
+    <div className="space-y-6">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <CardBody className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-3/4"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+              </div>
+              <div className="w-16 h-8 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            </div>
+            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full mb-2"></div>
+            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+          </CardBody>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ブックマーク統計情報コンポーネント
+function BookmarksStats({ bookmarksDataPromise }: { bookmarksDataPromise: Promise<any> }) {
+  const bookmarksData = use(bookmarksDataPromise);
+  
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardBody className="py-4">
+          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+            {bookmarksData.stats.total_count}
+          </div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">総数</div>
+        </CardBody>
+      </Card>
+      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardBody className="py-4">
+          <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+            {bookmarksData.stats.visited_count}
+          </div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">訪問済み</div>
+        </CardBody>
+      </Card>
+      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardBody className="py-4">
+          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
+            {bookmarksData.stats.unvisited_count}
+          </div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">未訪問</div>
+        </CardBody>
+      </Card>
+      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardBody className="py-4">
+          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+            {bookmarksData.stats.avg_priority.toFixed(1)}
+          </div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
+// ブックマーク一覧コンポーネント
+function BookmarksList({ 
+  bookmarksDataPromise, 
+  group, 
+  searchQuery, 
+  categoryFilter, 
+  visitedFilter,
+  handleToggleVisited,
+  handleDelete 
+}: { 
+  bookmarksDataPromise: Promise<any>;
+  group: any;
+  searchQuery: string;
+  categoryFilter: string;
+  visitedFilter: string;
+  handleToggleVisited: (bookmarkId: string, visited: boolean) => void;
+  handleDelete: (bookmarkId: string) => void;
+}) {
+  const bookmarksData = use(bookmarksDataPromise);
+  
+  if (bookmarksData.bookmarks.length === 0) {
+    return (
+      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardBody className="py-16">
+          <h3 className="text-xl font-semibold mb-2">
+            {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
+              ? "条件に一致するブックマークがありません"
+              : "まだブックマークがありません"}
+          </h3>
+          <p className="text-slate-500 dark:text-slate-400 mb-6">
+            {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
+              ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
+              : "最初の行きたい場所を追加して、みんなで共有しましょう"}
+          </p>
+          <Button
+            as={Link}
+            to={`/group/${group.id}/add`}
+            color="primary"
+            startContent={<Sparkles size={20} />}
+          >
+            ブックマークを追加
+          </Button>
+        </CardBody>
+      </Card>
+    );
+  }
+  
+  return (
+    <div className="space-y-6">
+      {bookmarksData.bookmarks.map((bookmark: any) => (
+        <BookmarkCard
+          key={bookmark.id}
+          bookmark={bookmark}
+          onToggleVisited={handleToggleVisited}
+          onDelete={handleDelete}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function GroupPage() {
-  const { group, bookmarksData, themes, tab } = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
+  const { group, themes, tab, bookmarksDataPromise } = data;
   const [searchParams, setSearchParams] = useSearchParams();
   const submit = useSubmit();
   const actionData = useActionData<{ error?: string; success?: boolean }>();
@@ -308,41 +444,25 @@ export default function GroupPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="py-4">
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                {bookmarksData.stats.total_count}
+        {/* Stats Cards - only show for bookmarks tab */}
+        {currentTab === "bookmarks" && (
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
+                    <CardBody className="py-4">
+                      <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-1"></div>
+                      <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto"></div>
+                    </CardBody>
+                  </Card>
+                ))}
               </div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">総数</div>
-            </CardBody>
-          </Card>
-          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="py-4">
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-                {bookmarksData.stats.visited_count}
-              </div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">訪問済み</div>
-            </CardBody>
-          </Card>
-          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="py-4">
-              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-                {bookmarksData.stats.unvisited_count}
-              </div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">未訪問</div>
-            </CardBody>
-          </Card>
-          <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="py-4">
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                {bookmarksData.stats.avg_priority.toFixed(1)}
-              </div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
-            </CardBody>
-          </Card>
-        </div>
+            }
+          >
+            <BookmarksStats bookmarksDataPromise={bookmarksDataPromise} />
+          </Suspense>
+        )}
 
         {/* Tabs */}
         <div className="mb-8">
@@ -444,42 +564,18 @@ export default function GroupPage() {
         {/* Content */}
         <div className="space-y-6">
           {currentTab === "bookmarks" ? (
-            // Bookmarks content
-            <>
-              {bookmarksData.bookmarks.length === 0 ? (
-                <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                  <CardBody className="py-16">
-                    <h3 className="text-xl font-semibold mb-2">
-                      {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-                        ? "条件に一致するブックマークがありません"
-                        : "まだブックマークがありません"}
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400 mb-6">
-                      {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-                        ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
-                        : "最初の行きたい場所を追加して、みんなで共有しましょう"}
-                    </p>
-                    <Button
-                      as={Link}
-                      to={`/group/${group.id}/add`}
-                      color="primary"
-                      startContent={<Sparkles size={20} />}
-                    >
-                      ブックマークを追加
-                    </Button>
-                  </CardBody>
-                </Card>
-              ) : (
-                bookmarksData.bookmarks.map(bookmark => (
-                  <BookmarkCard
-                    key={bookmark.id}
-                    bookmark={bookmark}
-                    onToggleVisited={handleToggleVisited}
-                    onDelete={handleDelete}
-                  />
-                ))
-              )}
-            </>
+            // Bookmarks content with Suspense
+            <Suspense fallback={<BookmarksSkeleton />}>
+              <BookmarksList
+                bookmarksDataPromise={bookmarksDataPromise}
+                group={group}
+                searchQuery={searchQuery}
+                categoryFilter={categoryFilter}
+                visitedFilter={visitedFilter}
+                handleToggleVisited={handleToggleVisited}
+                handleDelete={handleDelete}
+              />
+            </Suspense>
           ) : (
             // Themes content
             <>
