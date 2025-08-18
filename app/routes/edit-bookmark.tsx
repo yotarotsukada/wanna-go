@@ -12,7 +12,8 @@ import type { Group } from "../entities/group/group";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
+import { ArrowLeft } from "lucide-react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -46,7 +47,7 @@ export async function loader({ params }: Route.LoaderArgs) {
       themeService.getThemesByBookmarkId(bookmarkId),
     ]);
 
-    return Response.json({ bookmark, group, themes, bookmarkThemes });
+    return { bookmark, group, themes, bookmarkThemes };
   } catch (error) {
     console.error("Error loading bookmark:", error);
     throw new Response("Failed to load bookmark", { status: 500 });
@@ -59,7 +60,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const intent = formData.get("intent");
 
   if (!bookmarkId) {
-    return Response.json({ error: "Bookmark ID is required" }, { status: 400 });
+    throw new Response("Bookmark ID is required", { status: 400 });
   }
 
   try {
@@ -74,15 +75,14 @@ export async function action({ request, params }: Route.ActionArgs) {
       const memo = formData.get("memo")?.toString();
       const address = formData.get("address")?.toString();
       const priority = Number(formData.get("priority")) || 3;
-      const visited = formData.get("visited") === "on";
       const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
       if (!title?.trim() || !url?.trim() || !category) {
-        return Response.json({ error: "タイトル、URL、カテゴリは必須です" });
+        return { error: "タイトル、URL、カテゴリは必須です" };
       }
 
       if (!isValidURL(url)) {
-        return Response.json({ error: "有効なURLを入力してください" });
+        return { error: "有効なURLを入力してください" };
       }
 
       await updateBookmark(bookmarkId, {
@@ -92,7 +92,6 @@ export async function action({ request, params }: Route.ActionArgs) {
         memo: memo?.trim() || undefined,
         address: address?.trim() || undefined,
         priority,
-        visited,
       });
 
       // テーマとの関連付けを更新
@@ -101,7 +100,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       return redirect(`/group/${groupId}`);
     }
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "操作に失敗しました" });
+    return { error: error instanceof Error ? error.message : "操作に失敗しました" };
   }
 }
 
@@ -123,7 +122,6 @@ export default function EditBookmark() {
   const [address, setAddress] = useState(bookmark.address || "");
   const [priority, setPriority] = useState(bookmark.priority);
   const [memo, setMemo] = useState(bookmark.memo || "");
-  const [visited, setVisited] = useState(bookmark.visited);
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(
     new Set(bookmarkThemes.map(theme => theme.id))
   );
@@ -155,109 +153,113 @@ export default function EditBookmark() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link 
+            <Button
+              as={Link}
               to={`/group/${groupId}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
+              variant="ghost"
+              size="sm"
+              className="mb-4"
+              startContent={<ArrowLeft size={16} />}
             >
-              ← ブックマークを編集
-            </Link>
+              ブックマークを編集
+            </Button>
           </div>
 
           {/* Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <CardBody className="p-6">
             <Form method="post" className="space-y-6">
               {/* URL */}
-              <div>
-                <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  URL *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="url"
-                  id="url"
                   name="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  required
+                  label="URL"
+                  placeholder="https://example.com"
+                  variant="bordered"
+                  isRequired
                 />
               </div>
 
               {/* Title */}
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  タイトル *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="text"
-                  id="title"
                   name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  label="タイトル"
+                  placeholder="美味しいラーメン店"
+                  variant="bordered"
                   maxLength={200}
-                  required
+                  isRequired
                 />
               </div>
 
               {/* Category */}
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  カテゴリ *
-                </label>
-                <select
-                  id="category"
+              <div className="space-y-2">
+                <Select
                   name="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as Category)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  required
+                  selectedKeys={[category]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as Category;
+                    setCategory(value);
+                  }}
+                  label="カテゴリ"
+                  variant="bordered"
+                  isRequired
                 >
                   {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <SelectItem key={cat}>{cat}</SelectItem>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Address */}
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  住所・場所（任意）
-                </label>
-                <input
+              <div className="space-y-2">
+                <Input
                   type="text"
-                  id="address"
                   name="address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  label="住所・場所（任意）"
+                  placeholder="東京都渋谷区上原1-2-3"
+                  variant="bordered"
                   maxLength={200}
                 />
               </div>
 
               {/* Priority */}
-              <div>
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-900 dark:text-slate-50">
                   興味度
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    id="priority"
-                    name="priority"
-                    min="1"
-                    max="5"
+                <div className="flex items-center gap-4">
+                  <Slider
+                    size="sm"
+                    step={1}
+                    minValue={1}
+                    maxValue={5}
                     value={priority}
-                    onChange={(e) => setPriority(Number(e.target.value))}
+                    onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
                     className="flex-1"
+                    color="primary"
                   />
-                  <span className="text-lg">{'⭐'.repeat(priority)}</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 w-16">({priority}/5)</span>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span key={i} className={i < priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+                        ★
+                      </span>
+                    ))}
+                  </div>
                 </div>
+                <input type="hidden" name="priority" value={priority} />
               </div>
 
               {/* Themes */}
@@ -316,72 +318,60 @@ export default function EditBookmark() {
               )}
 
               {/* Memo */}
-              <div>
-                <label htmlFor="memo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  メモ
-                </label>
-                <textarea
-                  id="memo"
+              <div className="space-y-2">
+                <Textarea
                   name="memo"
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  label="メモ"
+                  placeholder="友人おすすめ！"
+                  variant="bordered"
+                  minRows={3}
                   maxLength={1000}
                 />
               </div>
 
-              {/* Visited */}
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="visited"
-                    checked={visited}
-                    onChange={(e) => setVisited(e.target.checked)}
-                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
-                  />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    ☑️ 訪問しました
-                  </span>
-                </label>
-              </div>
 
               {/* Error Message */}
               {actionData?.error && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
-                  <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
-                </div>
+                <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                  <CardBody className="p-3">
+                    <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
+                  </CardBody>
+                </Card>
               )}
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <button
+                <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                  color="primary"
+                  size="lg"
+                  className="w-full"
+                  isDisabled={isSubmitting}
+                  isLoading={isSubmitting}
                 >
                   {isSubmitting ? "更新中..." : "更新"}
-                </button>
+                </Button>
                 
-                <button
+                <Button
                   type="submit"
                   name="intent"
                   value="delete"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
-                  onClick={(e) => {
-                    if (!confirm("このブックマークを削除しますか？")) {
-                      e.preventDefault();
-                    }
+                  color="danger"
+                  size="lg"
+                  className="w-full"
+                  onPress={() => {
+                    return confirm("このブックマークを削除しますか？");
                   }}
                 >
                   削除
-                </button>
+                </Button>
               </div>
             </Form>
-          </div>
+            </CardBody>
+          </Card>
         </div>
-      </div>
     </div>
   );
 }

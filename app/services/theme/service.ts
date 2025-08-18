@@ -60,4 +60,8 @@ export class ThemeService {
   async updateBookmarkThemes(bookmarkId: string, themeIds: string[]): Promise<void> {
     return this.themeRepository.updateBookmarkThemes(bookmarkId, themeIds);
   }
+
+  async getBookmarksByThemeId(themeId: string): Promise<any[]> {
+    return this.themeRepository.findBookmarksByThemeId(themeId);
+  }
 }
