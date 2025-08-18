@@ -28,10 +28,10 @@ export async function loader({ params }: Route.LoaderArgs) {
 
   try {
     const themes = await themeService.getThemesByGroupId(groupId);
-    return Response.json({ themes });
+    return { themes };
   } catch (error) {
     console.error("Error loading themes:", error);
-    return Response.json({ themes: [] });
+    return { themes: [] };
   }
 }
 

@@ -46,7 +46,7 @@ export async function loader({ params }: Route.LoaderArgs) {
       throw new Response("Theme does not belong to this group", { status: 404 });
     }
 
-    return Response.json({ group, theme });
+    return { group, theme };
   } catch (error) {
     console.error("Error loading theme:", error);
     
@@ -62,7 +62,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const { groupId, themeId } = params;
   
   if (!groupId || !themeId) {
-    return Response.json({ error: "Group ID and Theme ID are required" }, { status: 400 });
+    throw new Response("Group ID and Theme ID are required", { status: 400 });
   }
 
   const formData = await request.formData();
@@ -74,7 +74,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       return redirect(`/group/${groupId}/themes`);
     } catch (error) {
       console.error("Error deleting theme:", error);
-      return Response.json({ error: "テーマの削除に失敗しました" }, { status: 500 });
+      throw new Response("テーマの削除に失敗しました", { status: 500 });
     }
   }
 
@@ -91,7 +91,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   }
 
   if (Object.keys(fieldErrors).length > 0) {
-    return Response.json({ fieldErrors }, { status: 400 });
+    return { fieldErrors };
   }
 
   try {
@@ -105,14 +105,14 @@ export async function action({ request, params }: Route.ActionArgs) {
     console.error("Error updating theme:", error);
     
     if (error instanceof ThemeValidationError) {
-      return Response.json({ error: error.message }, { status: 400 });
+      return { error: error.message };
     }
     
     if (error instanceof ThemeNotFoundError) {
-      return Response.json({ error: "テーマが見つかりません" }, { status: 404 });
+      throw new Response("テーマが見つかりません", { status: 404 });
     }
     
-    return Response.json({ error: "テーマの更新に失敗しました" }, { status: 500 });
+    return { error: "テーマの更新に失敗しました" };
   }
 };
 

@@ -34,7 +34,7 @@ export async function loader({ params }: Route.LoaderArgs) {
       throw new Response("Group not found", { status: 404 });
     }
 
-    return Response.json({ group, stats: bookmarksData.stats });
+    return { group, stats: bookmarksData.stats };
   } catch (error) {
     console.error("Error loading group data:", error);
     throw new Response("Failed to load group data", { status: 500 });
@@ -46,14 +46,14 @@ export async function action({ request, params }: Route.ActionArgs) {
   const formData = await request.formData();
 
   if (!groupId) {
-    return Response.json({ error: "Group ID is required" }, { status: 400 });
+    throw new Response("Group ID is required", { status: 400 });
   }
 
   const name = formData.get("name")?.toString();
   const description = formData.get("description")?.toString();
 
   if (!name?.trim()) {
-    return Response.json({ error: "グループ名は必須です" });
+    return { error: "グループ名は必須です" };
   }
 
   try {
@@ -62,9 +62,9 @@ export async function action({ request, params }: Route.ActionArgs) {
       description: description?.trim() || undefined,
     });
 
-    return Response.json({ success: true });
+    return { success: true };
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "更新に失敗しました" });
+    return { error: error instanceof Error ? error.message : "更新に失敗しました" };
   }
 }
 

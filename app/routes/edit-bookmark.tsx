@@ -47,7 +47,7 @@ export async function loader({ params }: Route.LoaderArgs) {
       themeService.getThemesByBookmarkId(bookmarkId),
     ]);
 
-    return Response.json({ bookmark, group, themes, bookmarkThemes });
+    return { bookmark, group, themes, bookmarkThemes };
   } catch (error) {
     console.error("Error loading bookmark:", error);
     throw new Response("Failed to load bookmark", { status: 500 });
@@ -60,7 +60,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const intent = formData.get("intent");
 
   if (!bookmarkId) {
-    return Response.json({ error: "Bookmark ID is required" }, { status: 400 });
+    throw new Response("Bookmark ID is required", { status: 400 });
   }
 
   try {
@@ -78,11 +78,11 @@ export async function action({ request, params }: Route.ActionArgs) {
       const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
       if (!title?.trim() || !url?.trim() || !category) {
-        return Response.json({ error: "タイトル、URL、カテゴリは必須です" });
+        return { error: "タイトル、URL、カテゴリは必須です" };
       }
 
       if (!isValidURL(url)) {
-        return Response.json({ error: "有効なURLを入力してください" });
+        return { error: "有効なURLを入力してください" };
       }
 
       await updateBookmark(bookmarkId, {
@@ -100,7 +100,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       return redirect(`/group/${groupId}`);
     }
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "操作に失敗しました" });
+    return { error: error instanceof Error ? error.message : "操作に失敗しました" };
   }
 }
 

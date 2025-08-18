@@ -3,17 +3,17 @@ import { Link, useLoaderData, useSearchParams, useSubmit } from "react-router";
 import { getGroup } from "../services/group.server";
 import { getGroupBookmarks, toggleBookmarkVisited, deleteBookmark } from "../services/bookmark.server";
 import { CATEGORIES } from "../lib/constants";
-import type { Group } from "../entities/group/group";
-import type { BookmarksResponse } from "../services/bookmark";
 import { BookmarkCard } from "../components/bookmark-card";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem } from "@heroui/react";
 import { Target, Settings, Sparkles, Search } from "lucide-react";
 
-export function meta({ params }: Route.MetaArgs) {
+export function meta({ params, data }: Route.MetaArgs) {
+  const group = data?.group;
+  
   return [
-    { title: `グループ ${params.groupId} - wanna-go` },
-    { name: "description", content: "行きたい場所のブックマーク一覧" },
+    { title: `${group?.name || `グループ ${params.groupId}`} - wanna-go` },
+    { name: "description", content: group?.description || "行きたい場所のブックマーク一覧" },
   ];
 }
 
@@ -43,7 +43,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       throw new Response("Group not found", { status: 404 });
     }
 
-    return Response.json({ group, bookmarksData });
+    return { group, bookmarksData };
   } catch (error) {
     console.error("Error loading group data:", error);
     throw new Response("Failed to load group data", { status: 500 });
@@ -56,7 +56,7 @@ export async function action({ request }: Route.ActionArgs) {
   const bookmarkId = formData.get("bookmarkId")?.toString();
 
   if (!bookmarkId) {
-    return Response.json({ error: "Bookmark ID is required" }, { status: 400 });
+    throw new Response("Bookmark ID is required", { status: 400 });
   }
 
   try {
@@ -67,15 +67,15 @@ export async function action({ request }: Route.ActionArgs) {
       await deleteBookmark(bookmarkId);
     }
 
-    return Response.json({ success: true });
+    return { success: true };
   } catch (error) {
     console.error("Error updating bookmark:", error);
-    return Response.json({ error: "Failed to update bookmark" }, { status: 500 });
+    throw new Response("Failed to update bookmark", { status: 500 });
   }
 }
 
 export default function GroupPage() {
-  const { group, bookmarksData } = useLoaderData() as { group: Group; bookmarksData: BookmarksResponse };
+  const { group, bookmarksData } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
   const submit = useSubmit();
   
