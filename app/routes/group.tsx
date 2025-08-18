@@ -8,7 +8,7 @@ import { BookmarkCard } from "../components/bookmark-card";
 import { EmojiPicker } from "../components/emoji-picker";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
-import { Settings, Sparkles, Search, Edit, Trash2, Plus } from "lucide-react";
+import { Settings, Sparkles, Search, Edit, Plus } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import { useState } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
@@ -209,15 +209,17 @@ export default function GroupPage() {
     }
   };
 
-  const handleThemeDelete = (themeId: string, themeName: string) => {
-    if (confirm(`「${themeName}」を削除しますか？`)) {
+  const handleThemeDelete = () => {
+    if (selectedTheme && confirm(`「${selectedTheme.name}」を削除しますか？`)) {
       submit(
         {
           intent: "delete-theme",
-          themeId,
+          themeId: selectedTheme.id,
         },
         { method: "post" }
       );
+      onEditClose();
+      setSelectedTheme(null);
     }
   };
 
@@ -549,17 +551,6 @@ export default function GroupPage() {
                                 >
                                   編集
                                 </Button>
-                                <Button
-                                  onPress={() => handleThemeDelete(theme.id, theme.name)}
-                                  color="danger"
-                                  variant="ghost"
-                                  size="sm"
-                                  isDisabled={theme.bookmarkCount > 0}
-                                  title={theme.bookmarkCount > 0 ? "関連するブックマークがあるため削除できません" : "テーマを削除"}
-                                  isIconOnly
-                                >
-                                  <Trash2 size={16} />
-                                </Button>
                               </div>
                             </div>
                           }
@@ -605,7 +596,7 @@ export default function GroupPage() {
         </div>
         
         {/* Create Theme Modal */}
-        <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="lg">
+        <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="lg" placement="center">
           <ModalContent>
             <Form onSubmit={handleCreateTheme}>
               <ModalHeader className="flex flex-col gap-1">
@@ -656,7 +647,7 @@ export default function GroupPage() {
         </Modal>
 
         {/* Edit Theme Modal */}
-        <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg">
+        <Modal isOpen={isEditOpen} onClose={onEditClose} size="lg" placement="center">
           <ModalContent>
             <Form onSubmit={handleEditTheme}>
               <ModalHeader className="flex flex-col gap-1">
@@ -703,17 +694,30 @@ export default function GroupPage() {
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button color="danger" variant="flat" onPress={onEditClose}>
-                  キャンセル
-                </Button>
-                <Button 
-                  color="primary" 
-                  type="submit"
-                  isDisabled={isSubmitting}
-                  isLoading={isSubmitting}
-                >
-                  更新
-                </Button>
+                <div className="flex justify-between w-full">
+                  <Button
+                    color="danger"
+                    variant="solid"
+                    onPress={handleThemeDelete}
+                    isDisabled={selectedTheme?.bookmarkCount > 0}
+                    title={selectedTheme?.bookmarkCount > 0 ? "関連するブックマークがあるため削除できません" : "テーマを削除"}
+                  >
+                    削除
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button color="default" variant="flat" onPress={onEditClose}>
+                      キャンセル
+                    </Button>
+                    <Button 
+                      color="primary" 
+                      type="submit"
+                      isDisabled={isSubmitting}
+                      isLoading={isSubmitting}
+                    >
+                      更新
+                    </Button>
+                  </div>
+                </div>
                 <input type="hidden" name="intent" value="edit-theme" />
               </ModalFooter>
             </Form>
