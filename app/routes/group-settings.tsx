@@ -8,6 +8,7 @@ import type { Group } from "../entities/group/group";
 import type { BookmarksResponse } from "../services/bookmark";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, CardHeader, Input, Textarea, Chip } from "@heroui/react";
+import { ArrowLeft } from "lucide-react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -92,8 +93,7 @@ export default function GroupSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -103,7 +103,7 @@ export default function GroupSettings() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               グループ設定
             </Button>
@@ -256,7 +256,6 @@ export default function GroupSettings() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </div>
   );
 }

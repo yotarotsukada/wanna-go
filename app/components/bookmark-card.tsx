@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Button, Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import { formatDate } from "../lib/utils";
+import { MapPin, MessageCircle, ExternalLink, Check, Edit, Trash2 } from "lucide-react";
 
 interface BookmarkCardProps {
   bookmark: BookmarkWithThemes;
@@ -47,13 +48,13 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
   return (
     <Card className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
       <CardHeader className="flex-col items-start gap-2">
-        <div className="flex items-start justify-between w-full">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2">
-              <span className="text-xl">{emoji}</span>
+        <div className="flex items-start justify-between w-full gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+              <span className="text-xl flex-shrink-0">{emoji}</span>
               <span className="truncate">{bookmark.title}</span>
             </h3>
-            <div className="flex items-center gap-3 flex-wrap mt-2">
+            <div className="flex items-center gap-3 flex-wrap">
               <Chip color={categoryColor} variant="flat" size="sm">
                 {bookmark.category}
               </Chip>
@@ -62,8 +63,9 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
               </div>
             </div>
             {bookmark.themes && bookmark.themes.length > 0 && (
-              <div className="mt-2 flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-slate-500 dark:text-slate-400">テーマ:</span>
+              <div className="mt-2">
+                <span className="text-sm text-slate-500 dark:text-slate-400 block mb-1">テーマ:</span>
+                <div className="flex gap-1 flex-wrap">
                 {bookmark.themes.map((theme) => (
                   <Chip
                     key={theme.id}
@@ -75,11 +77,12 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
                     {theme.name}
                   </Chip>
                 ))}
+                </div>
               </div>
             )}
           </div>
           {bookmark.visited && (
-            <div className="ml-3 flex-shrink-0">
+            <div className="flex-shrink-0">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             </div>
           )}
@@ -89,14 +92,14 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
       <CardBody className="space-y-3">
         {bookmark.address && (
           <div className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <span className="text-base">📍</span>
+            <MapPin size={16} className="flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">{bookmark.address}</span>
           </div>
         )}
 
         {bookmark.memo && (
           <div className="flex items-start gap-2 text-sm">
-            <span className="text-base text-slate-500 dark:text-slate-400">💭</span>
+            <MessageCircle size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
             <div className="text-slate-900 dark:text-slate-50 leading-relaxed bg-slate-100/50 dark:bg-slate-800/50 p-3 rounded-md flex-1">
               {bookmark.memo}
             </div>
@@ -104,7 +107,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
         )}
 
         <div className="flex items-start gap-2 text-sm">
-          <span className="text-base text-slate-500 dark:text-slate-400">🔗</span>
+          <ExternalLink size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
           <a
             href={bookmark.url}
             target="_blank"
@@ -120,7 +123,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             color="success"
             variant="flat"
             size="sm"
-            startContent={<span>✅</span>}
+            startContent={<Check size={16} />}
             className="w-fit"
           >
             {formatDate(bookmark.visitedAt)}に訪問済み
@@ -136,7 +139,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             size="sm"
             className="flex-1"
           >
-            {bookmark.visited ? '未訪問に戻す' : '✓ 訪問済みにする'}
+            {bookmark.visited ? '未訪問に戻す' : '訪問済みにする'}
           </Button>
           
           <Button
@@ -144,7 +147,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             to={`/group/${bookmark.groupId}/edit/${bookmark.id}`}
             variant="ghost"
             size="sm"
-            startContent={<span>✏️</span>}
+            startContent={<Edit size={16} />}
           >
             編集
           </Button>
@@ -156,7 +159,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             size="sm"
             isIconOnly
           >
-            🗑️
+            <Trash2 size={16} />
           </Button>
         </div>
       </CardBody>

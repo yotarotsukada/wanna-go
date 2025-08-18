@@ -8,6 +8,7 @@ import type { BookmarksResponse } from "../services/bookmark";
 import { BookmarkCard } from "../components/bookmark-card";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem } from "@heroui/react";
+import { Target, Settings, Sparkles, Search } from "lucide-react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -121,8 +122,7 @@ export default function GroupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-6">
@@ -142,7 +142,7 @@ export default function GroupPage() {
                 to={`/group/${group.id}/themes`}
                 variant="ghost"
                 size="sm"
-                startContent={<span>🎯</span>}
+                startContent={<Target size={16} />}
               >
                 テーマ管理
               </Button>
@@ -151,7 +151,7 @@ export default function GroupPage() {
                 to={`/group/${group.id}/settings`}
                 variant="ghost"
                 size="sm"
-                startContent={<span>⚙️</span>}
+                startContent={<Settings size={16} />}
               >
                 設定
               </Button>
@@ -165,7 +165,7 @@ export default function GroupPage() {
               to={`/group/${group.id}/add`}
               color="primary"
               className="shadow-md hover:shadow-lg transition-all duration-200"
-              startContent={<span>✨</span>}
+              startContent={<Sparkles size={20} />}
             >
               ブックマーク追加
             </Button>
@@ -262,7 +262,7 @@ export default function GroupPage() {
                   placeholder="場所やメモで検索..."
                   variant="bordered"
                   size="sm"
-                  startContent={<span className="text-slate-500 dark:text-slate-400">🔍</span>}
+                  startContent={<Search size={16} className="text-slate-500 dark:text-slate-400" />}
                 />
               </div>
             </div>
@@ -274,7 +274,6 @@ export default function GroupPage() {
           {bookmarksData.bookmarks.length === 0 ? (
             <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
               <CardBody className="py-16">
-                <div className="text-6xl mb-4">📍</div>
                 <h3 className="text-xl font-semibold mb-2">
                   {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
                     ? "条件に一致するブックマークがありません"
@@ -289,7 +288,7 @@ export default function GroupPage() {
                   as={Link}
                   to={`/group/${group.id}/add`}
                   color="primary"
-                  startContent={<span>✨</span>}
+                  startContent={<Sparkles size={20} />}
                 >
                   ブックマークを追加
                 </Button>
@@ -306,7 +305,6 @@ export default function GroupPage() {
             ))
           )}
         </div>
-      </div>
     </div>
   );
 }

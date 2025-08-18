@@ -7,6 +7,7 @@ import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import type { Group } from "../entities/group/group";
 import { formatDate } from "../lib/utils";
 import { Button, Card, CardBody, CardHeader, Chip } from "@heroui/react";
+import { ArrowLeft, Sparkles, Edit, Trash2 } from "lucide-react";
 
 interface LoaderData {
   group: Group;
@@ -91,8 +92,7 @@ export default function ThemesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -102,7 +102,7 @@ export default function ThemesPage() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               テーマ管理
             </Button>
@@ -120,7 +120,7 @@ export default function ThemesPage() {
               to={`/group/${group.id}/themes/create`}
               color="primary"
               className="shadow-md hover:shadow-lg transition-all duration-200"
-              startContent={<span>✨</span>}
+              startContent={<Sparkles size={20} />}
             >
               新しいテーマを作成
             </Button>
@@ -135,7 +135,6 @@ export default function ThemesPage() {
             {themes.length === 0 ? (
               <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                 <CardBody className="py-16">
-                  <div className="text-6xl mb-4 opacity-50">🎯</div>
                   <h3 className="text-xl font-semibold mb-2">
                     テーマがありません
                   </h3>
@@ -146,7 +145,7 @@ export default function ThemesPage() {
                     as={Link}
                     to={`/group/${group.id}/themes/create`}
                     color="primary"
-                    startContent={<span>✨</span>}
+                    startContent={<Sparkles size={20} />}
                   >
                     テーマを作成
                   </Button>
@@ -188,18 +187,18 @@ export default function ThemesPage() {
                             to={`/group/${group.id}/themes/edit/${theme.id}`}
                             variant="flat"
                             size="sm"
-                            startContent={<span>✏️</span>}
+                            startContent={<Edit size={16} />}
                           >
                             編集
                           </Button>
                           <Button
-                            onClick={() => handleDelete(theme.id, theme.name)}
+                            onPress={() => handleDelete(theme.id, theme.name)}
                             variant="flat"
                             color="danger"
                             size="sm"
                             isDisabled={theme.bookmarkCount > 0}
                             title={theme.bookmarkCount > 0 ? "関連するブックマークがあるため削除できません" : "テーマを削除"}
-                            startContent={<span>🗑️</span>}
+                            startContent={<Trash2 size={16} />}
                           >
                             削除
                           </Button>
@@ -212,7 +211,6 @@ export default function ThemesPage() {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }

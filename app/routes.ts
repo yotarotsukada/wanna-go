@@ -10,7 +10,6 @@ export default [
   route("/group/:groupId/themes", "routes/themes.tsx"),
   route("/group/:groupId/themes/create", "routes/theme-create.tsx"),
   route("/group/:groupId/themes/edit/:themeId", "routes/theme-edit.tsx"),
-  route("/about", "routes/about.tsx"),
   
   // API Routes
   // route("/api/groups/:groupId/themes", "routes/api.themes.ts"),

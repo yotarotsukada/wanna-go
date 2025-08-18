@@ -6,6 +6,7 @@ import { getGroup } from "../services/group.server";
 import type { Group } from "../entities/group/group";
 import { ThemeValidationError } from "../entities/theme/theme-errors";
 import { Button, Card, CardBody, Input } from "@heroui/react";
+import { ArrowLeft } from "lucide-react";
 import { EmojiPicker } from "../components/emoji-picker";
 import { useState } from "react";
 
@@ -91,8 +92,7 @@ export default function CreateThemePage() {
   const [selectedEmoji, setSelectedEmoji] = useState("");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -102,7 +102,7 @@ export default function CreateThemePage() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               テーマを作成
             </Button>
@@ -184,7 +184,6 @@ export default function CreateThemePage() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </div>
   );
 }

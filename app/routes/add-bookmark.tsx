@@ -9,7 +9,8 @@ import { isValidURL, debounce } from "../lib/utils";
 import type { Category } from "../lib/constants";
 import type { UrlMetadata } from "../lib/types";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
-import { Button, Card, CardBody, CardHeader, Input, Textarea, Select, SelectItem, Slider, Chip, Checkbox } from "@heroui/react";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
+import { ArrowLeft, RotateCw } from "lucide-react";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -149,8 +150,7 @@ export default function AddBookmark() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -160,7 +160,7 @@ export default function AddBookmark() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               ブックマークを追加
             </Button>
@@ -204,7 +204,7 @@ export default function AddBookmark() {
                   </Button>
                   {isLoadingMetadata && (
                     <Chip size="sm" variant="flat">
-                      🔄取得中...
+                      <RotateCw size={16} className="animate-spin" /> 取得中...
                     </Chip>
                   )}
                 </div>
@@ -397,7 +397,6 @@ export default function AddBookmark() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </div>
   );
 }

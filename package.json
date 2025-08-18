@@ -22,6 +22,7 @@
     "cheerio": "^1.1.2",
     "framer-motion": "^12.23.12",
     "isbot": "^5.1.27",
+    "lucide-react": "^0.539.0",
     "node-fetch": "^3.3.2",
     "prisma": "^6.14.0",
     "react": "^19.1.0",

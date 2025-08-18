@@ -8,6 +8,7 @@ import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
 import { formatDate } from "../lib/utils";
 import { Button, Card, CardBody, Input, Chip } from "@heroui/react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { EmojiPicker } from "../components/emoji-picker";
 import { useState } from "react";
 
@@ -142,8 +143,7 @@ export default function EditThemePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -153,7 +153,7 @@ export default function EditThemePage() {
               variant="ghost"
               size="sm"
               className="mb-4"
-              startContent={<span>←</span>}
+              startContent={<ArrowLeft size={16} />}
             >
               テーマを編集
             </Button>
@@ -258,7 +258,7 @@ export default function EditThemePage() {
                   color="danger"
                   isDisabled={theme.bookmarkCount > 0}
                   title={theme.bookmarkCount > 0 ? "関連するブックマークがあるため削除できません" : "テーマを削除"}
-                  startContent={<span>🗑️</span>}
+                  startContent={<Trash2 size={16} />}
                 >
                   テーマを削除
                 </Button>
@@ -271,7 +271,6 @@ export default function EditThemePage() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </div>
   );
 }

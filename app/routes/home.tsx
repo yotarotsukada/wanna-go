@@ -2,6 +2,7 @@ import type { Route } from "./+types/home";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button, Card, CardBody, CardHeader, Input, Chip } from "@heroui/react";
+import { MapPin, Users, Link as LinkIcon, Check, Sparkles, Rocket } from "lucide-react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -22,8 +23,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">
@@ -54,7 +54,7 @@ export default function Home() {
                 color="primary"
                 size="lg"
                 className="shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 text-lg px-8 py-3"
-                startContent={<span>✨</span>}
+                startContent={<Sparkles size={20} />}
               >
                 新しいグループを作成
               </Button>
@@ -92,7 +92,7 @@ export default function Home() {
                     color="secondary"
                     variant="flat"
                     className="w-full"
-                    startContent={<span>🚀</span>}
+                    startContent={<Rocket size={16} />}
                   >
                     参加する
                   </Button>
@@ -117,9 +117,9 @@ export default function Home() {
                       size="sm"
                       color="success"
                       variant="flat"
-                      className="w-8 h-8 min-w-8 p-0"
+                      className="w-8 h-8 min-w-8 p-0 flex items-center justify-center"
                     >
-                      ✓
+                      <Check size={14} />
                     </Chip>
                     <span>アカウント不要</span>
                   </li>
@@ -128,9 +128,9 @@ export default function Home() {
                       size="sm"
                       color="primary"
                       variant="flat"
-                      className="w-8 h-8 min-w-8 p-0"
+                      className="w-8 h-8 min-w-8 p-0 flex items-center justify-center"
                     >
-                      🔗
+                      <LinkIcon size={14} />
                     </Chip>
                     <span>URLで簡単共有</span>
                   </li>
@@ -139,9 +139,9 @@ export default function Home() {
                       size="sm"
                       color="secondary"
                       variant="flat"
-                      className="w-8 h-8 min-w-8 p-0"
+                      className="w-8 h-8 min-w-8 p-0 flex items-center justify-center"
                     >
-                      📍
+                      <MapPin size={14} />
                     </Chip>
                     <span>地図で場所を確認</span>
                   </li>
@@ -206,7 +206,6 @@ export default function Home() {
             </CardBody>
           </Card>
         </div>
-      </div>
     </div>
   );
 }
