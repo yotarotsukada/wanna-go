@@ -121,8 +121,7 @@ export default function GroupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-6">
@@ -306,7 +305,6 @@ export default function GroupPage() {
             ))
           )}
         </div>
-      </div>
     </div>
   );
 }

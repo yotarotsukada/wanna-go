@@ -91,8 +91,7 @@ export default function ThemesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -212,7 +211,6 @@ export default function ThemesPage() {
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }
