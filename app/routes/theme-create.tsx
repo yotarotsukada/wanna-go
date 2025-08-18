@@ -57,8 +57,8 @@ export async function action({ request, params }: Route.ActionArgs) {
   
   if (!name || name.trim().length === 0) {
     fieldErrors.name = "テーマ名は必須です";
-  } else if (name.trim().length > 50) {
-    fieldErrors.name = "テーマ名は50文字以内で入力してください";
+  } else if (name.trim().length > 20) {
+    fieldErrors.name = "テーマ名は20文字以内で入力してください";
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -136,7 +136,7 @@ export default function CreateThemePage() {
                     placeholder="例: 花火を見たい"
                     variant="bordered"
                     isRequired
-                    maxLength={50}
+                    maxLength={20}
                     isInvalid={!!actionData?.fieldErrors?.name}
                     errorMessage={actionData?.fieldErrors?.name}
                   />

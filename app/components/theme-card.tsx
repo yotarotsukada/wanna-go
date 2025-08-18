@@ -77,7 +77,7 @@ export function ThemeCard({ theme, onToggleVisited, onDelete }: ThemeCardProps) 
                   <Button
                     as={Link}
                     to={`/group/${theme.groupId}/themes/edit/${theme.id}`}
-                    variant="flat"
+                    variant="ghost"
                     size="sm"
                     startContent={<Edit size={16} />}
                   >
@@ -101,13 +101,12 @@ export function ThemeCard({ theme, onToggleVisited, onDelete }: ThemeCardProps) 
               ) : (
                 <div className="space-y-4">
                   {bookmarks.map(bookmark => (
-                    <div key={bookmark.id} className="pl-4 border-l-2 border-slate-200 dark:border-slate-700">
-                      <BookmarkCard
-                        bookmark={bookmark}
-                        onToggleVisited={onToggleVisited}
-                        onDelete={onDelete}
-                      />
-                    </div>
+                    <BookmarkCard
+                      key={bookmark.id}
+                      bookmark={bookmark}
+                      onToggleVisited={onToggleVisited}
+                      onDelete={onDelete}
+                    />
                   ))}
                 </div>
               )}

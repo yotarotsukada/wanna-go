@@ -75,6 +75,16 @@ export function meta({ params, data }: Route.MetaArgs) {
 }
 ```
 
+#### APIルート登録
+- **重要**: APIルートファイルを作成したら `routes.ts` への登録が必須
+- ファイル名: `api.*.ts` → ルートパス: `/api/*`
+- パラメータ: `$paramName` → `:paramName`
+
+```typescript
+// routes.ts での登録例
+route("/api/theme/:themeId/bookmarks", "routes/api.theme.$themeId.bookmarks.ts"),
+```
+
 ### 2. データベース (SQLite)
 
 #### 主要テーブル
@@ -175,6 +185,7 @@ if (!name?.trim()) {
 - **loader/action戻り値**: 必ずオブジェクト直接返却
 - **Response.json**: APIルート以外では使用禁止
 - **meta関数**: `data?.property` でアクセス
+- **APIルート**: 作成後は必ず `routes.ts` に登録
 
 ## 機能概要
 

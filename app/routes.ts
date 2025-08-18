@@ -12,8 +12,7 @@ export default [
   route("/group/:groupId/themes/edit/:themeId", "routes/theme-edit.tsx"),
   
   // API Routes
-  // route("/api/groups/:groupId/themes", "routes/api.themes.ts"),
-  // route("/api/themes/:themeId", "routes/api.theme.ts"),
+  route("/api/theme/:themeId/bookmarks", "routes/api.theme.$themeId.bookmarks.ts"),
   route("/api/url-metadata", "routes/api.url-metadata.ts"),
   
   // DevTools や well-known パスを無視するためのキャッチオール

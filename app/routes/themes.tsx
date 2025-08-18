@@ -6,7 +6,7 @@ import { getGroup } from "../services/group.server";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import type { Group } from "../entities/group/group";
 import { formatDate } from "../lib/utils";
-import { Button, Card, CardBody, CardHeader, Chip } from "@heroui/react";
+import { Button, Card, Chip } from "@heroui/react";
 import { ArrowLeft, Sparkles, Edit, Trash2 } from "lucide-react";
 
 interface LoaderData {
@@ -152,20 +152,17 @@ export default function ThemesPage() {
                 </CardBody>
               </Card>
             ) : (
-              <div className="grid gap-4">
+              <div className="space-y-6">
                 {themes.map((theme) => (
-                  <Card key={theme.id} className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:shadow-lg transition-all duration-200">
-                    <CardBody className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="text-2xl">{theme.icon || '🗺️'}</span>
-                            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-                              {theme.name}
-                            </h3>
-                          </div>
-                          
-                          <div className="flex items-center gap-4">
+                  <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between w-full gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+                            <span className="text-xl flex-shrink-0">{theme.icon || '🗺️'}</span>
+                            <span className="truncate">{theme.name}</span>
+                          </h3>
+                          <div className="flex items-center gap-3 flex-wrap">
                             <Chip 
                               variant="flat" 
                               color="primary"
@@ -178,12 +175,11 @@ export default function ThemesPage() {
                             </span>
                           </div>
                         </div>
-                        
                         <div className="flex gap-2 ml-4">
                           <Button
                             as={Link}
                             to={`/group/${group.id}/themes/edit/${theme.id}`}
-                            variant="flat"
+                            variant="ghost"
                             size="sm"
                             startContent={<Edit size={16} />}
                           >
@@ -191,18 +187,18 @@ export default function ThemesPage() {
                           </Button>
                           <Button
                             onPress={() => handleDelete(theme.id, theme.name)}
-                            variant="flat"
                             color="danger"
+                            variant="ghost"
                             size="sm"
                             isDisabled={theme.bookmarkCount > 0}
                             title={theme.bookmarkCount > 0 ? "関連するブックマークがあるため削除できません" : "テーマを削除"}
-                            startContent={<Trash2 size={16} />}
+                            isIconOnly
                           >
-                            削除
+                            <Trash2 size={16} />
                           </Button>
                         </div>
                       </div>
-                    </CardBody>
+                    </div>
                   </Card>
                 ))}
               </div>
