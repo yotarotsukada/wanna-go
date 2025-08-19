@@ -10,7 +10,7 @@ import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
 import { Settings, Sparkles, Search, Edit, Plus } from "lucide-react";
 import { formatDate } from "../lib/utils";
-import { useState, Suspense, use } from "react";
+import { useState, Suspense, use, useMemo } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
 
 export function meta({ params, data }: Route.MetaArgs) {
@@ -30,9 +30,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   const url = new URL(request.url);
-  const category = url.searchParams.get("category") || "all";
-  const visited = url.searchParams.get("visited") || "all";
-  const search = url.searchParams.get("search") || "";
   const tab = url.searchParams.get("tab") || "bookmarks";
 
   try {
@@ -43,12 +40,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       throw new Response("Group not found", { status: 404 });
     }
 
-    // 重い処理はPromiseとして開始するが、awaitしない
-    const bookmarksDataPromise = getGroupBookmarks(groupId, {
-      category: category !== "all" ? category : undefined,
-      visited: visited !== "all" ? visited : undefined,
-      search: search || undefined,
-    });
+    // 全ブックマークを取得（フィルタなし）
+    const bookmarksDataPromise = getGroupBookmarks(groupId);
     
     // テーマもPromiseとして開始（ブックマークより軽いが分離）
     const themesPromise = themeService.getThemesByGroupId(groupId);
@@ -168,16 +161,94 @@ function BookmarksSkeleton() {
   );
 }
 
-// ブックマーク統計情報コンポーネント
-function BookmarksStats({ bookmarksDataPromise }: { bookmarksDataPromise: Promise<any> }) {
+// フィルタリング関数
+function filterBookmarks(bookmarks: any[], searchQuery: string, categoryFilter: string, visitedFilter: string) {
+  return bookmarks.filter((bookmark) => {
+    // 検索クエリフィルタ
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const titleMatch = bookmark.title.toLowerCase().includes(query);
+      const memoMatch = bookmark.memo?.toLowerCase().includes(query) || false;
+      const addressMatch = bookmark.address?.toLowerCase().includes(query) || false;
+      const autoTitleMatch = bookmark.autoTitle?.toLowerCase().includes(query) || false;
+      const autoDescriptionMatch = bookmark.autoDescription?.toLowerCase().includes(query) || false;
+      
+      if (!titleMatch && !memoMatch && !addressMatch && !autoTitleMatch && !autoDescriptionMatch) {
+        return false;
+      }
+    }
+    
+    // カテゴリフィルタ
+    if (categoryFilter !== "all" && bookmark.category !== categoryFilter) {
+      return false;
+    }
+    
+    // 訪問状態フィルタ
+    if (visitedFilter !== "all") {
+      const isVisited = bookmark.visited;
+      if (visitedFilter === "true" && !isVisited) return false;
+      if (visitedFilter === "false" && isVisited) return false;
+    }
+    
+    return true;
+  });
+}
+
+// 統計計算関数
+function calculateStats(bookmarks: any[]) {
+  const totalCount = bookmarks.length;
+  const visitedCount = bookmarks.filter(b => b.visited).length;
+  const unvisitedCount = totalCount - visitedCount;
+  const avgPriority = totalCount > 0 ? bookmarks.reduce((sum, b) => sum + b.priority, 0) / totalCount : 0;
+  
+  return {
+    total_count: totalCount,
+    visited_count: visitedCount,
+    unvisited_count: unvisitedCount,
+    avg_priority: avgPriority
+  };
+}
+
+// ブックマーク統計コンテナ（Suspense内で使用）
+function BookmarksStatsContainer({
+  bookmarksDataPromise,
+  searchQuery,
+  categoryFilter,
+  visitedFilter
+}: {
+  bookmarksDataPromise: Promise<any>;
+  searchQuery: string;
+  categoryFilter: string;
+  visitedFilter: string;
+}) {
   const bookmarksData = use(bookmarksDataPromise);
+  
+  const filteredBookmarks = useMemo(() => {
+    return filterBookmarks(
+      bookmarksData.bookmarks,
+      searchQuery,
+      categoryFilter,
+      visitedFilter
+    );
+  }, [bookmarksData.bookmarks, searchQuery, categoryFilter, visitedFilter]);
+  
+  return <BookmarksStats filteredBookmarks={filteredBookmarks} />;
+}
+
+// ブックマーク統計情報コンポーネント
+function BookmarksStats({ 
+  filteredBookmarks 
+}: { 
+  filteredBookmarks: any[];
+}) {
+  const stats = calculateStats(filteredBookmarks);
   
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-            {bookmarksData.stats.total_count}
+            {stats.total_count}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">総数</div>
         </CardBody>
@@ -185,7 +256,7 @@ function BookmarksStats({ bookmarksDataPromise }: { bookmarksDataPromise: Promis
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-            {bookmarksData.stats.visited_count}
+            {stats.visited_count}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">訪問済み</div>
         </CardBody>
@@ -193,7 +264,7 @@ function BookmarksStats({ bookmarksDataPromise }: { bookmarksDataPromise: Promis
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-            {bookmarksData.stats.unvisited_count}
+            {stats.unvisited_count}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">未訪問</div>
         </CardBody>
@@ -201,7 +272,7 @@ function BookmarksStats({ bookmarksDataPromise }: { bookmarksDataPromise: Promis
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-            {bookmarksData.stats.avg_priority.toFixed(1)}
+            {stats.avg_priority.toFixed(1)}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
         </CardBody>
@@ -210,16 +281,16 @@ function BookmarksStats({ bookmarksDataPromise }: { bookmarksDataPromise: Promis
   );
 }
 
-// ブックマーク一覧コンポーネント
-function BookmarksList({ 
-  bookmarksDataPromise, 
-  group, 
-  searchQuery, 
-  categoryFilter, 
+// ブックマークコンテンツコンポーネント（Suspense内で使用）
+function BookmarksContent({
+  bookmarksDataPromise,
+  group,
+  searchQuery,
+  categoryFilter,
   visitedFilter,
   handleToggleVisited,
-  handleDelete 
-}: { 
+  handleDelete
+}: {
   bookmarksDataPromise: Promise<any>;
   group: any;
   searchQuery: string;
@@ -230,7 +301,47 @@ function BookmarksList({
 }) {
   const bookmarksData = use(bookmarksDataPromise);
   
-  if (bookmarksData.bookmarks.length === 0) {
+  const filteredBookmarks = useMemo(() => {
+    return filterBookmarks(
+      bookmarksData.bookmarks,
+      searchQuery,
+      categoryFilter,
+      visitedFilter
+    );
+  }, [bookmarksData.bookmarks, searchQuery, categoryFilter, visitedFilter]);
+  
+  return (
+    <BookmarksList
+      filteredBookmarks={filteredBookmarks}
+      group={group}
+      searchQuery={searchQuery}
+      categoryFilter={categoryFilter}
+      visitedFilter={visitedFilter}
+      handleToggleVisited={handleToggleVisited}
+      handleDelete={handleDelete}
+    />
+  );
+}
+
+// ブックマーク一覧コンポーネント
+function BookmarksList({ 
+  filteredBookmarks,
+  group, 
+  searchQuery, 
+  categoryFilter, 
+  visitedFilter,
+  handleToggleVisited,
+  handleDelete 
+}: { 
+  filteredBookmarks: any[];
+  group: any;
+  searchQuery: string;
+  categoryFilter: string;
+  visitedFilter: string;
+  handleToggleVisited: (bookmarkId: string, visited: boolean) => void;
+  handleDelete: (bookmarkId: string) => void;
+}) {
+  if (filteredBookmarks.length === 0) {
     return (
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <CardBody className="py-16">
@@ -259,7 +370,7 @@ function BookmarksList({
   
   return (
     <div className="space-y-6">
-      {bookmarksData.bookmarks.map((bookmark: any) => (
+      {filteredBookmarks.map((bookmark: any) => (
         <BookmarkCard
           key={bookmark.id}
           bookmark={bookmark}
@@ -434,6 +545,7 @@ export default function GroupPage() {
   const visitedFilter = searchParams.get("visited") || "all";
   const searchQuery = searchParams.get("search") || "";
   const currentTab = tab as string;
+  
 
   const updateFilters = (newFilters: Record<string, string>) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -598,7 +710,12 @@ export default function GroupPage() {
               </div>
             }
           >
-            <BookmarksStats bookmarksDataPromise={bookmarksDataPromise} />
+            <BookmarksStatsContainer 
+              bookmarksDataPromise={bookmarksDataPromise}
+              searchQuery={searchQuery}
+              categoryFilter={categoryFilter}
+              visitedFilter={visitedFilter}
+            />
           </Suspense>
         )}
 
@@ -704,7 +821,7 @@ export default function GroupPage() {
           {currentTab === "bookmarks" ? (
             // Bookmarks content with Suspense
             <Suspense fallback={<BookmarksSkeleton />}>
-              <BookmarksList
+              <BookmarksContent
                 bookmarksDataPromise={bookmarksDataPromise}
                 group={group}
                 searchQuery={searchQuery}
