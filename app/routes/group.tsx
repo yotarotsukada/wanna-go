@@ -7,9 +7,10 @@ import { themeService } from "../services/theme";
 import { CATEGORIES } from "../lib/constants";
 import { BookmarkCard } from "../components/bookmark-card";
 import { EmojiPicker } from "../components/emoji-picker";
+import { MapView } from "../components/map-view";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
-import { Settings, Sparkles, Search, Edit, Plus } from "lucide-react";
+import { Settings, Sparkles, Search, Edit, Plus, MapPin } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import { useState, Suspense, use, useMemo, useEffect, useRef, useCallback } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
@@ -534,6 +535,22 @@ function ThemesList({
   );
 }
 
+// 地図表示コンテナコンポーネント（Suspense内で使用）
+function MapViewContainer({
+  bookmarksDataPromise
+}: {
+  bookmarksDataPromise: Promise<any>;
+}) {
+  const bookmarksData = use(bookmarksDataPromise);
+  
+  return (
+    <MapView 
+      bookmarks={bookmarksData.bookmarks}
+      className="w-full"
+    />
+  );
+}
+
 export default function GroupPage() {
   const data = useLoaderData<typeof loader>();
   const { group, bookmarksDataPromise, themesPromise } = data;
@@ -753,6 +770,7 @@ export default function GroupPage() {
           >
             <Tab key="bookmarks" title="ブックマーク一覧" />
             <Tab key="themes" title="テーマ一覧" />
+            <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図表示</span>} />
           </Tabs>
         </div>
 
@@ -857,7 +875,7 @@ export default function GroupPage() {
                 handleDelete={handleDelete}
               />
             </Suspense>
-          ) : (
+          ) : currentTab === "themes" ? (
             // Themes content with Suspense
             <Suspense fallback={
               <div className="space-y-6">
@@ -886,7 +904,18 @@ export default function GroupPage() {
                 onCreateOpen={onCreateOpen}
               />
             </Suspense>
-          )}
+          ) : currentTab === "map" ? (
+            // Map content with Suspense
+            <Suspense fallback={
+              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
+                <CardBody className="p-6">
+                  <div className="w-full h-96 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                </CardBody>
+              </Card>
+            }>
+              <MapViewContainer bookmarksDataPromise={bookmarksDataPromise} />
+            </Suspense>
+          ) : null}
         </div>
         
         {/* Create Theme Modal */}
