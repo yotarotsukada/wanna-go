@@ -230,12 +230,12 @@ function calculateStats(bookmarks: any[]) {
 // ブックマーク統計コンテナ（Suspense内で使用）
 function BookmarksStatsContainer({
   bookmarksDataPromise,
-  localSearchQuery,
+  searchQuery,
   categoryFilter,
   visitedFilter
 }: {
   bookmarksDataPromise: Promise<any>;
-  localSearchQuery: string;
+  searchQuery: string;
   categoryFilter: string;
   visitedFilter: string;
 }) {
@@ -244,11 +244,11 @@ function BookmarksStatsContainer({
   const filteredBookmarks = useMemo(() => {
     return filterBookmarks(
       bookmarksData.bookmarks,
-      localSearchQuery,
+      searchQuery,
       categoryFilter,
       visitedFilter
     );
-  }, [bookmarksData.bookmarks, localSearchQuery, categoryFilter, visitedFilter]);
+  }, [bookmarksData.bookmarks, searchQuery, categoryFilter, visitedFilter]);
   
   return <BookmarksStats filteredBookmarks={filteredBookmarks} />;
 }
@@ -303,7 +303,7 @@ function BookmarksStats({
 function BookmarksContent({
   bookmarksDataPromise,
   group,
-  localSearchQuery,
+  searchQuery,
   categoryFilter,
   visitedFilter,
   handleToggleVisited,
@@ -311,7 +311,7 @@ function BookmarksContent({
 }: {
   bookmarksDataPromise: Promise<any>;
   group: any;
-  localSearchQuery: string;
+  searchQuery: string;
   categoryFilter: string;
   visitedFilter: string;
   handleToggleVisited: (bookmarkId: string, visited: boolean) => void;
@@ -322,17 +322,17 @@ function BookmarksContent({
   const filteredBookmarks = useMemo(() => {
     return filterBookmarks(
       bookmarksData.bookmarks,
-      localSearchQuery,
+      searchQuery,
       categoryFilter,
       visitedFilter
     );
-  }, [bookmarksData.bookmarks, localSearchQuery, categoryFilter, visitedFilter]);
+  }, [bookmarksData.bookmarks, searchQuery, categoryFilter, visitedFilter]);
   
   return (
     <BookmarksList
       filteredBookmarks={filteredBookmarks}
       group={group}
-      searchQuery={localSearchQuery}
+      searchQuery={searchQuery}
       categoryFilter={categoryFilter}
       visitedFilter={visitedFilter}
       handleToggleVisited={handleToggleVisited}
@@ -582,6 +582,9 @@ export default function GroupPage() {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const debouncedSearchQuery = useDebounce(localSearchQuery, 500); // 500msデバウンス
   
+  // 検索中かどうかの状態
+  const isSearching = localSearchQuery !== searchQuery;
+  
   
   // URLパラメータが変わったらローカル状態を更新
   useEffect(() => {
@@ -744,7 +747,7 @@ export default function GroupPage() {
           >
             <BookmarksStatsContainer 
               bookmarksDataPromise={bookmarksDataPromise}
-              localSearchQuery={localSearchQuery}
+              searchQuery={searchQuery}
               categoryFilter={categoryFilter}
               visitedFilter={visitedFilter}
             />
@@ -817,7 +820,7 @@ export default function GroupPage() {
                     placeholder="場所やメモで検索..."
                     variant="bordered"
                     size="sm"
-                    startContent={<Search size={16} className="text-slate-500 dark:text-slate-400" />}
+                    startContent={<Search size={16} className={`text-slate-500 dark:text-slate-400 ${isSearching ? 'animate-pulse' : ''}`} />}
                   />
                 </div>
               </div>
@@ -856,7 +859,7 @@ export default function GroupPage() {
               <BookmarksContent
                 bookmarksDataPromise={bookmarksDataPromise}
                 group={group}
-                localSearchQuery={localSearchQuery}
+                searchQuery={searchQuery}
                 categoryFilter={categoryFilter}
                 visitedFilter={visitedFilter}
                 handleToggleVisited={handleToggleVisited}
