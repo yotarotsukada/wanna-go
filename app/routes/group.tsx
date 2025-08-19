@@ -729,30 +729,28 @@ export default function GroupPage() {
           </div>
         </div>
 
-        {/* Stats Cards - only show for bookmarks tab */}
-        {currentTab === "bookmarks" && (
-          <Suspense
-            fallback={
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {[1, 2, 3, 4].map((i) => (
-                  <Card key={i} className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
-                    <CardBody className="py-4">
-                      <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-1"></div>
-                      <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto"></div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
-            }
-          >
-            <BookmarksStatsContainer 
-              bookmarksDataPromise={bookmarksDataPromise}
-              searchQuery={searchQuery}
-              categoryFilter={categoryFilter}
-              visitedFilter={visitedFilter}
-            />
-          </Suspense>
-        )}
+        {/* Stats Cards */}
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
+                  <CardBody className="py-4">
+                    <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-1"></div>
+                    <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto"></div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          }
+        >
+          <BookmarksStatsContainer 
+            bookmarksDataPromise={bookmarksDataPromise}
+            searchQuery=""
+            categoryFilter="all"
+            visitedFilter="all"
+          />
+        </Suspense>
 
         {/* Tabs */}
         <div className="mb-8">
