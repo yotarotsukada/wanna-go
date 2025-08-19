@@ -79,9 +79,15 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
                     console.log('Clicked bookmark:', bookmark.title);
                   }}
                 >
-                  <div className="text-2xl bg-white rounded-full p-1 shadow-lg border-2 border-gray-300">
-                    {CATEGORY_PIN_EMOJIS[bookmark.category]}
-                  </div>
+                  <Pin
+                    background="#dc2626"
+                    borderColor="#b91c1c"
+                    glyphColor="white"
+                  >
+                    <div className="text-lg text-white">
+                      {CATEGORY_PIN_EMOJIS[bookmark.category]}
+                    </div>
+                  </Pin>
                 </AdvancedMarker>
               ))}
             </Map>
