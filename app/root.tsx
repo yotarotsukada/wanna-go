@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 import { HeroUIProvider } from "@heroui/react";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -44,11 +45,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <HeroUIProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-        <Outlet />
-      </div>
-    </HeroUIProvider>
+    <NuqsAdapter>
+      <HeroUIProvider>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+          <Outlet />
+        </div>
+      </HeroUIProvider>
+    </NuqsAdapter>
   );
 }
 
