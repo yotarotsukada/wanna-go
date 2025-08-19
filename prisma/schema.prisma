@@ -28,6 +28,9 @@ model Bookmark {
   category         String
   memo             String?
   address          String?
+  latitude         Float?
+  longitude        Float?
+  placeName        String?   @map("place_name")
   priority         Int       @default(3)
   visited          Boolean   @default(false)
   visitedAt        DateTime? @map("visited_at")

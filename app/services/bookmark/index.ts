@@ -39,6 +39,7 @@ export {
   normalizeMemo,
   normalizeAddress,
   normalizeAutoData,
+  normalizeCoordinate,
   generateBookmarkId,
   bookmarkToJson,
   bookmarkFromJson,

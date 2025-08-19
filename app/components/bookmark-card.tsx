@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { Button, Card, Chip } from "@heroui/react";
 import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import { formatDate } from "../lib/utils";
-import { MapPin, MessageCircle, ExternalLink, Check, Edit, Trash2 } from "lucide-react";
+import { MapPin, MessageCircle, ExternalLink, Check, Edit, Trash2, Navigation } from "lucide-react";
 
 interface BookmarkCardProps {
   bookmark: BookmarkWithThemes;
@@ -42,6 +42,18 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
   const handleDelete = () => {
     if (confirm('このブックマークを削除しますか？')) {
       onDelete(bookmark.id);
+    }
+  };
+
+  const generateGoogleMapsUrl = () => {
+    if (!bookmark.latitude || !bookmark.longitude) return null;
+    return `https://www.google.com/maps?q=${bookmark.latitude},${bookmark.longitude}`;
+  };
+
+  const handleOpenInMaps = () => {
+    const mapsUrl = generateGoogleMapsUrl();
+    if (mapsUrl) {
+      window.open(mapsUrl, '_blank');
     }
   };
 
@@ -138,6 +150,18 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
           >
             {bookmark.visited ? '未訪問に戻す' : '訪問済みにする'}
           </Button>
+          
+          {bookmark.latitude && bookmark.longitude && (
+            <Button
+              onPress={handleOpenInMaps}
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              color="primary"
+            >
+              <Navigation size={16} />
+            </Button>
+          )}
           
           <Button
             as={Link}
