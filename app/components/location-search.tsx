@@ -68,9 +68,11 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
       const data = await response.json();
       
       if (data.success && data.results) {
+        // 既存の結果のIDセットを事前に作成
+        const existingIds = new Set(allResults.map(r => r.place_id));
+        
         // 新しい検索結果を既存の結果に追加（重複除去）
         setAllResults(prev => {
-          const existingIds = new Set(prev.map(r => r.place_id));
           const newResults = data.results.filter((r: any) => {
             // place_idでの重複チェック
             if (existingIds.has(r.place_id)) return false;
@@ -88,6 +90,7 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
           });
           return [...prev, ...newResults];
         });
+        
         // フィルタリング済みの結果をsetResultsに設定
         const filteredResults = data.results.filter((r: any) => {
           // place_idでの重複チェック
