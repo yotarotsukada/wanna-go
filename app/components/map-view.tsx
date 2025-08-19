@@ -30,15 +30,76 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
     );
   }
 
-  // 地図の中心点を計算（全ブックマークの座標の平均）
-  const centerLat = bookmarksWithCoordinates.reduce((sum, b) => sum + b.latitude!, 0) / bookmarksWithCoordinates.length;
-  const centerLng = bookmarksWithCoordinates.reduce((sum, b) => sum + b.longitude!, 0) / bookmarksWithCoordinates.length;
+  // 地図の境界を計算（全ピンが見えるように、マージンを考慮）
+  const calculateMapBounds = () => {
+    if (bookmarksWithCoordinates.length === 0) return null;
+    
+    if (bookmarksWithCoordinates.length === 1) {
+      // 1つのピンの場合は中心にして適度なズーム
+      return {
+        center: { 
+          lat: bookmarksWithCoordinates[0].latitude!, 
+          lng: bookmarksWithCoordinates[0].longitude! 
+        },
+        zoom: 15
+      };
+    }
 
+    // 複数のピンがある場合は境界を計算
+    const lats = bookmarksWithCoordinates.map(b => b.latitude!);
+    const lngs = bookmarksWithCoordinates.map(b => b.longitude!);
+    
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    
+    // マージンを追加（境界の10%の余白）
+    const latMargin = Math.max((maxLat - minLat) * 0.1, 0.001); // 最小マージン設定
+    const lngMargin = Math.max((maxLng - minLng) * 0.1, 0.001);
+    
+    const bounds = {
+      north: maxLat + latMargin,
+      south: minLat - latMargin,
+      east: maxLng + lngMargin,
+      west: minLng - lngMargin
+    };
+    
+    // 中心点を計算
+    const center = {
+      lat: (bounds.north + bounds.south) / 2,
+      lng: (bounds.east + bounds.west) / 2
+    };
+    
+    // 地図サイズに基づいてズームレベルを計算
+    const latDiff = bounds.north - bounds.south;
+    const lngDiff = bounds.east - bounds.west;
+    
+    // より正確なズーム計算（Google Mapsの仕様に基づく）
+    // 1度 ≈ 111km、地図の幅を基準にズームを計算
+    const maxDiff = Math.max(latDiff, lngDiff);
+    
+    let zoom = 15;
+    if (maxDiff >= 10) zoom = 6;      // 国レベル
+    else if (maxDiff >= 5) zoom = 7;   // 地方レベル
+    else if (maxDiff >= 2) zoom = 8;   // 県レベル
+    else if (maxDiff >= 1) zoom = 9;   // 広域市レベル
+    else if (maxDiff >= 0.5) zoom = 10; // 市レベル
+    else if (maxDiff >= 0.2) zoom = 11; // 区レベル
+    else if (maxDiff >= 0.1) zoom = 12; // 地区レベル
+    else if (maxDiff >= 0.05) zoom = 13; // 町レベル
+    else if (maxDiff >= 0.02) zoom = 14; // 詳細レベル
+    else zoom = 15; // 最詳細レベル
+    
+    return { center, zoom, bounds };
+  };
+
+  const mapConfig = calculateMapBounds();
+  
   // デフォルトの中心点（日本の中心付近）
   const defaultCenter = { lat: 36.2048, lng: 138.2529 };
-  const mapCenter = bookmarksWithCoordinates.length > 0 
-    ? { lat: centerLat, lng: centerLng }
-    : defaultCenter;
+  const mapCenter = mapConfig?.center || defaultCenter;
+  const mapZoom = mapConfig?.zoom || 6;
 
   if (!googleMapsApiKey) {
     return (
@@ -62,7 +123,7 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
           <div className="w-full h-96 md:h-[500px] lg:h-[600px] relative">
             <Map
               defaultCenter={mapCenter}
-              defaultZoom={10}
+              defaultZoom={mapZoom}
               className="w-full h-full rounded-lg"
               mapId="bookmark-map"
             >
@@ -83,11 +144,7 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
                     background="#dc2626"
                     borderColor="#b91c1c"
                     glyphColor="white"
-                  >
-                    <div className="text-lg text-white">
-                      {CATEGORY_PIN_EMOJIS[bookmark.category]}
-                    </div>
-                  </Pin>
+                  />
                 </AdvancedMarker>
               ))}
             </Map>
