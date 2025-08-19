@@ -15,8 +15,8 @@ interface PlaceResult {
 }
 
 interface LocationSearchProps {
-  onLocationSelect: (location: { latitude: number; longitude: number; address: string; placeName: string }) => void;
-  defaultLocation?: { latitude: number; longitude: number; address?: string; placeName?: string } | null;
+  onLocationSelect: (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => void;
+  defaultLocation?: { latitude: number; longitude: number; address?: string; placeName?: string; placeId?: string } | null;
   className?: string;
 }
 
@@ -25,14 +25,14 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<PlaceResult[]>([]);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string>(
-    defaultLocation ? `default-${defaultLocation.latitude}-${defaultLocation.longitude}` : ''
+    defaultLocation ? (defaultLocation.placeId || `default-${defaultLocation.latitude}-${defaultLocation.longitude}`) : ''
   );
 
   // デフォルトの場所がある場合は結果に追加
   const [allResults, setAllResults] = useState<PlaceResult[]>(() => {
     if (defaultLocation) {
       return [{
-        place_id: `default-${defaultLocation.latitude}-${defaultLocation.longitude}`,
+        place_id: defaultLocation.placeId || `default-${defaultLocation.latitude}-${defaultLocation.longitude}`,
         name: defaultLocation.placeName || '現在の場所',
         formatted_address: defaultLocation.address || '',
         geometry: {
@@ -119,7 +119,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
             latitude: firstPlace.geometry.location.lat,
             longitude: firstPlace.geometry.location.lng,
             address: firstPlace.formatted_address,
-            placeName: firstPlace.name
+            placeName: firstPlace.name,
+            placeId: firstPlace.place_id
           });
         }
       } else {
@@ -143,7 +144,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
       latitude: place.geometry.location.lat,
       longitude: place.geometry.location.lng,
       address: place.formatted_address,
-      placeName: place.name
+      placeName: place.name,
+      placeId: place.place_id
     });
   };
 
@@ -153,7 +155,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
       latitude: 0,
       longitude: 0,
       address: '',
-      placeName: ''
+      placeName: '',
+      placeId: undefined
     });
   };
 

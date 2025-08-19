@@ -46,8 +46,19 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
   };
 
   const generateGoogleMapsUrl = () => {
-    if (!bookmark.latitude || !bookmark.longitude) return null;
-    return `https://www.google.com/maps?q=${bookmark.latitude},${bookmark.longitude}`;
+    if (bookmark.latitude && bookmark.longitude && bookmark.placeId) {
+      // 座標とplace_idの両方がある場合
+      return `https://www.google.com/maps/search/?api=1&query=${bookmark.latitude}%2C${bookmark.longitude}&query_place_id=${bookmark.placeId}`;
+    }
+    if (bookmark.placeId) {
+      // place_idのみの場合
+      return `https://www.google.com/maps/search/?api=1&query_place_id=${bookmark.placeId}`;
+    }
+    if (bookmark.latitude && bookmark.longitude) {
+      // 座標のみの場合（古いデータ用フォールバック）
+      return `https://www.google.com/maps?q=${bookmark.latitude},${bookmark.longitude}`;
+    }
+    return null;
   };
 
   const handleOpenInMaps = () => {
@@ -151,7 +162,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
             {bookmark.visited ? '未訪問に戻す' : '訪問済みにする'}
           </Button>
           
-          {bookmark.latitude && bookmark.longitude && (
+          {(bookmark.placeId || (bookmark.latitude && bookmark.longitude)) && (
             <Button
               onPress={handleOpenInMaps}
               variant="ghost"

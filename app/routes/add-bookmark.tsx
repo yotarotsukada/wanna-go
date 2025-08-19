@@ -52,6 +52,7 @@ export async function action({ request, params }: Route.ActionArgs) {
   const latitude = formData.get("latitude") ? Number(formData.get("latitude")) : undefined;
   const longitude = formData.get("longitude") ? Number(formData.get("longitude")) : undefined;
   const placeName = formData.get("placeName")?.toString();
+  const placeId = formData.get("placeId")?.toString();
   const priority = Number(formData.get("priority")) || 3;
   const autoTitle = formData.get("autoTitle")?.toString();
   const autoDescription = formData.get("autoDescription")?.toString();
@@ -77,6 +78,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       latitude,
       longitude,
       placeName: placeName?.trim() || undefined,
+      placeId: placeId?.trim() || undefined,
       priority,
       autoTitle: autoTitle || undefined,
       autoDescription: autoDescription || undefined,
@@ -110,6 +112,7 @@ export default function AddBookmark() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [placeName, setPlaceName] = useState("");
+  const [placeId, setPlaceId] = useState("");
   const [priority, setPriority] = useState(3);
   const [memo, setMemo] = useState("");
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(new Set());
@@ -158,11 +161,12 @@ export default function AddBookmark() {
     }
   };
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string }) => {
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
     setLatitude(location.latitude);
     setLongitude(location.longitude);
     setAddress(location.address);
     setPlaceName(location.placeName);
+    setPlaceId(location.placeId || "");
   };
 
 
@@ -297,6 +301,9 @@ export default function AddBookmark() {
                 )}
                 {placeName && (
                   <input type="hidden" name="placeName" value={placeName} />
+                )}
+                {placeId && (
+                  <input type="hidden" name="placeId" value={placeId} />
                 )}
               </div>
 

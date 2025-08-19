@@ -277,6 +277,7 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
         latitude: data.latitude,
         longitude: data.longitude,
         placeName: data.placeName,
+        placeId: data.placeId,
         priority: data.priority,
         visited: data.visited,
         visitedAt: data.visitedAt,

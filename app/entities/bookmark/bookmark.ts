@@ -19,6 +19,7 @@ export interface Bookmark {
   readonly latitude: number | null;
   readonly longitude: number | null;
   readonly placeName: string | null;
+  readonly placeId: string | null;
   readonly priority: number;
   readonly visited: boolean;
   readonly visitedAt: string | null;
@@ -101,6 +102,7 @@ export const createBookmark = (input: {
   latitude?: number;
   longitude?: number;
   placeName?: string;
+  placeId?: string;
   priority?: number;
   autoTitle?: string;
   autoDescription?: string;
@@ -120,6 +122,7 @@ export const createBookmark = (input: {
     latitude: normalizeCoordinate(input.latitude),
     longitude: normalizeCoordinate(input.longitude),
     placeName: normalizeAutoData(input.placeName),
+    placeId: normalizeAutoData(input.placeId),
     priority: validatePriority(input.priority ?? 3),
     visited: false,
     visitedAt: null,
@@ -144,6 +147,7 @@ export const updateBookmark = (
     latitude?: number;
     longitude?: number;
     placeName?: string;
+    placeId?: string;
     priority?: number;
   }
 ): Bookmark => ({
@@ -156,6 +160,7 @@ export const updateBookmark = (
   latitude: normalizeCoordinate(updates.latitude),
   longitude: normalizeCoordinate(updates.longitude),
   placeName: normalizeAutoData(updates.placeName),
+  placeId: normalizeAutoData(updates.placeId),
   priority: validatePriority(updates.priority ?? bookmark.priority),
   updatedAt: new Date().toISOString()
 });
@@ -205,6 +210,7 @@ export const bookmarkToJson = (bookmark: Bookmark) => ({
   latitude: bookmark.latitude,
   longitude: bookmark.longitude,
   placeName: bookmark.placeName,
+  placeId: bookmark.placeId,
   priority: bookmark.priority,
   visited: bookmark.visited,
   visitedAt: bookmark.visitedAt,
@@ -227,6 +233,7 @@ export const bookmarkFromJson = (data: any): Bookmark => ({
   latitude: normalizeCoordinate(data.latitude),
   longitude: normalizeCoordinate(data.longitude),
   placeName: normalizeAutoData(data.placeName),
+  placeId: normalizeAutoData(data.placeId),
   priority: validatePriority(data.priority),
   visited: Boolean(data.visited),
   visitedAt: data.visitedAt,

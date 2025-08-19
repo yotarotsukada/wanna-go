@@ -1,7 +1,9 @@
-import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
-import { Card, CardBody } from '@heroui/react';
+import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
+import { Card, CardBody, Button, Chip } from '@heroui/react';
 import { CATEGORY_PIN_EMOJIS } from '../lib/constants';
+import { ExternalLink, MapPin, Star, Clock } from 'lucide-react';
 import type { BookmarkWithThemes } from '../entities/bookmark/bookmark';
+import { useState, useEffect } from 'react';
 
 interface MapViewProps {
   bookmarks: BookmarkWithThemes[];
@@ -10,6 +12,24 @@ interface MapViewProps {
 }
 
 export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps) {
+  // 選択されたブックマーク（InfoWindow表示用）
+  const [selectedBookmark, setSelectedBookmark] = useState<BookmarkWithThemes | null>(null);
+
+  // InfoWindowの閉じるボタンのmask-image用背景色設定
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .gm-style .gm-style-iw button span {
+        background-color: #666 !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // 座標を持つブックマークのみフィルタ
   const bookmarksWithCoordinates = bookmarks.filter(
     (bookmark) => bookmark.latitude !== null && bookmark.longitude !== null
@@ -126,6 +146,7 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
               defaultZoom={mapZoom}
               className="w-full h-full rounded-lg"
               mapId="bookmark-map"
+              onClick={() => setSelectedBookmark(null)}
             >
               {bookmarksWithCoordinates.map((bookmark) => (
                 <AdvancedMarker
@@ -136,17 +157,36 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
                   }}
                   title={bookmark.title}
                   onClick={() => {
-                    // マーカークリック時の処理（将来的に詳細表示等を追加可能）
-                    console.log('Clicked bookmark:', bookmark.title);
+                    setSelectedBookmark(bookmark);
                   }}
                 >
                   <Pin
-                    background="#dc2626"
-                    borderColor="#b91c1c"
+                    background={bookmark.visited ? "#16a34a" : "#dc2626"}
+                    borderColor={bookmark.visited ? "#15803d" : "#b91c1c"}
                     glyphColor="white"
                   />
                 </AdvancedMarker>
               ))}
+
+              {/* InfoWindow for selected bookmark */}
+              {selectedBookmark && (
+                <InfoWindow
+                  position={{
+                    lat: selectedBookmark.latitude!,
+                    lng: selectedBookmark.longitude!
+                  }}
+                  onCloseClick={() => setSelectedBookmark(null)}
+                  maxWidth={300}
+                  pixelOffset={[0, -40]}
+                  headerContent={
+                    <div className="font-semibold text-base text-slate-900 truncate">
+                      {selectedBookmark.title}
+                    </div>
+                  }
+                >
+                  <BookmarkInfoContent bookmark={selectedBookmark} />
+                </InfoWindow>
+              )}
             </Map>
           </div>
         </APIProvider>
@@ -162,61 +202,114 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
   );
 }
 
-// マーカー情報表示用のコンポーネント（将来的に使用予定）
-interface MarkerInfoProps {
+// InfoWindow内のブックマーク情報表示コンテンツ
+interface BookmarkInfoContentProps {
   bookmark: BookmarkWithThemes;
-  onClose: () => void;
 }
 
-export function MarkerInfo({ bookmark, onClose }: MarkerInfoProps) {
+function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
   return (
-    <Card className="max-w-sm">
-      <CardBody className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="text-lg font-semibold">{bookmark.title}</h3>
-          <button 
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-xl"
+    <div className="min-w-0 max-w-xs">
+      <div className="space-y-3">
+        {/* 自動取得されたタイトル（メインタイトルと異なる場合のみ表示） */}
+        {bookmark.autoTitle && bookmark.autoTitle !== bookmark.title && (
+          <div>
+            <p className="text-xs text-slate-600 truncate">
+              {bookmark.autoTitle}
+            </p>
+          </div>
+        )}
+
+        {/* カテゴリと訪問状況 */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Chip
+            variant="flat"
+            color="primary"
+            size="sm"
+            startContent={<span>{CATEGORY_PIN_EMOJIS[bookmark.category]}</span>}
           >
-            ×
-          </button>
+            {bookmark.category}
+          </Chip>
+          <Chip
+            variant="flat"
+            color={bookmark.visited ? "success" : "warning"}
+            size="sm"
+            startContent={bookmark.visited ? <Clock size={12} /> : <Clock size={12} />}
+          >
+            {bookmark.visited ? "訪問済み" : "未訪問"}
+          </Chip>
         </div>
-        
-        <div className="space-y-2 text-sm">
-          <p className="flex items-center gap-2">
-            <span>{CATEGORY_PIN_EMOJIS[bookmark.category]}</span>
-            <span className="text-slate-600 dark:text-slate-400">{bookmark.category}</span>
-          </p>
-          
-          {bookmark.address && (
-            <p className="text-slate-600 dark:text-slate-400">
-              📍 {bookmark.address}
-            </p>
-          )}
-          
-          {bookmark.memo && (
-            <p className="text-slate-600 dark:text-slate-400">
-              📝 {bookmark.memo}
-            </p>
-          )}
-          
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            興味度: {bookmark.priority}/5 | 
-            {bookmark.visited ? ' 訪問済み ✅' : ' 未訪問 ⏳'}
-          </p>
+
+        {/* 興味度 */}
+        <div className="flex items-center gap-1">
+          <Star size={14} className="text-yellow-500" />
+          <span className="text-sm text-slate-700">{bookmark.priority}/5</span>
         </div>
-        
-        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-          <a 
-            href={bookmark.url} 
-            target="_blank" 
+
+        {/* 住所 */}
+        {bookmark.address && (
+          <div className="flex items-start gap-2">
+            <MapPin size={14} className="text-slate-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-slate-700 break-words">
+              {bookmark.address}
+            </p>
+          </div>
+        )}
+
+        {/* メモ */}
+        {bookmark.memo && (
+          <div className="border-t border-slate-200 pt-2">
+            <p className="text-sm text-slate-600 break-words">
+              {bookmark.memo}
+            </p>
+          </div>
+        )}
+
+        {/* 自動取得された説明 */}
+        {bookmark.autoDescription && (
+          <div className="border-t border-slate-200 pt-2">
+            <p className="text-xs text-slate-500 break-words line-clamp-3">
+              {bookmark.autoDescription}
+            </p>
+          </div>
+        )}
+
+        {/* テーマ情報 */}
+        {bookmark.themes && bookmark.themes.length > 0 && (
+          <div className="border-t border-slate-200 pt-2">
+            <div className="flex flex-wrap gap-1">
+              {bookmark.themes.map((theme) => (
+                <Chip
+                  key={theme.id}
+                  variant="flat"
+                  color="secondary"
+                  size="sm"
+                  className="text-xs"
+                >
+                  {theme.icon} {theme.name}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* アクション */}
+        <div className="flex gap-2 pt-2 border-t border-slate-200">
+          <Button
+            as="a"
+            href={bookmark.url}
+            target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+            size="sm"
+            color="primary"
+            variant="flat"
+            startContent={<ExternalLink size={14} />}
+            className="flex-1 text-xs"
           >
-            詳細を見る →
-          </a>
+            詳細を見る
+          </Button>
         </div>
-      </CardBody>
-    </Card>
+      </div>
+    </div>
   );
 }

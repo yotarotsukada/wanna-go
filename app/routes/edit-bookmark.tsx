@@ -78,6 +78,7 @@ export async function action({ request, params }: Route.ActionArgs) {
       const latitude = formData.get("latitude") ? Number(formData.get("latitude")) : undefined;
       const longitude = formData.get("longitude") ? Number(formData.get("longitude")) : undefined;
       const placeName = formData.get("placeName")?.toString();
+      const placeId = formData.get("placeId")?.toString();
       const priority = Number(formData.get("priority")) || 3;
       const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
@@ -98,6 +99,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         latitude,
         longitude,
         placeName: placeName?.trim() || undefined,
+        placeId: placeId?.trim() || undefined,
         priority,
       });
 
@@ -130,6 +132,7 @@ export default function EditBookmark() {
   const [latitude, setLatitude] = useState<number | null>(bookmark.latitude);
   const [longitude, setLongitude] = useState<number | null>(bookmark.longitude);
   const [placeName, setPlaceName] = useState(bookmark.placeName || "");
+  const [placeId, setPlaceId] = useState(bookmark.placeId || "");
   const [priority, setPriority] = useState(bookmark.priority);
   const [memo, setMemo] = useState(bookmark.memo || "");
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(
@@ -162,11 +165,12 @@ export default function EditBookmark() {
     }
   };
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string }) => {
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
     setLatitude(location.latitude);
     setLongitude(location.longitude);
     setAddress(location.address);
     setPlaceName(location.placeName);
+    setPlaceId(location.placeId || "");
   };
 
   return (
@@ -246,7 +250,8 @@ export default function EditBookmark() {
                     latitude, 
                     longitude,
                     address: bookmark.address || '',
-                    placeName: bookmark.placeName || bookmark.title
+                    placeName: bookmark.placeName || bookmark.title,
+                    placeId: bookmark.placeId || undefined
                   } : null}
                 />
                 {latitude && longitude && (
@@ -260,6 +265,9 @@ export default function EditBookmark() {
                 )}
                 {placeName && (
                   <input type="hidden" name="placeName" value={placeName} />
+                )}
+                {placeId && (
+                  <input type="hidden" name="placeId" value={placeId} />
                 )}
               </div>
 
