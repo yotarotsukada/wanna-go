@@ -7,9 +7,10 @@ import { themeService } from "../services/theme";
 import { CATEGORIES } from "../lib/constants";
 import { BookmarkCard } from "../components/bookmark-card";
 import { EmojiPicker } from "../components/emoji-picker";
+import { MapView } from "../components/map-view";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
-import { Settings, Sparkles, Search, Edit, Plus } from "lucide-react";
+import { Settings, Sparkles, Search, Edit, Plus, MapPin, Bookmark, Palette } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import { useState, Suspense, use, useMemo, useEffect, useRef, useCallback } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
@@ -61,11 +62,15 @@ export async function loader({ params }: Route.LoaderArgs) {
     // テーマもPromiseとして開始（ブックマークより軽いが分離）
     const themesPromise = themeService.getThemesByGroupId(groupId);
 
+    // Google Maps APIキーをサーバー側で取得（セキュア）
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+
     // React Router v7では、Promiseを直接返す
     return {
       group,
       bookmarksDataPromise,
       themesPromise,
+      googleMapsApiKey,
     };
   } catch (error) {
     console.error("Error loading group data:", error);
@@ -534,9 +539,28 @@ function ThemesList({
   );
 }
 
+// 地図表示コンテナコンポーネント（Suspense内で使用）
+function MapViewContainer({
+  bookmarksDataPromise,
+  googleMapsApiKey
+}: {
+  bookmarksDataPromise: Promise<any>;
+  googleMapsApiKey: string;
+}) {
+  const bookmarksData = use(bookmarksDataPromise);
+  
+  return (
+    <MapView 
+      bookmarks={bookmarksData.bookmarks}
+      googleMapsApiKey={googleMapsApiKey}
+      className="w-full"
+    />
+  );
+}
+
 export default function GroupPage() {
   const data = useLoaderData<typeof loader>();
-  const { group, bookmarksDataPromise, themesPromise } = data;
+  const { group, bookmarksDataPromise, themesPromise, googleMapsApiKey } = data;
   const submit = useSubmit();
   const actionData = useActionData<{ error?: string; success?: boolean }>();
   const navigation = useNavigation();
@@ -751,8 +775,9 @@ export default function GroupPage() {
             selectedKey={currentTab}
             onSelectionChange={handleTabChange}
           >
-            <Tab key="bookmarks" title="ブックマーク一覧" />
-            <Tab key="themes" title="テーマ一覧" />
+            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク一覧</span>} />
+            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ一覧</span>} />
+            <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図</span>} />
           </Tabs>
         </div>
 
@@ -857,7 +882,7 @@ export default function GroupPage() {
                 handleDelete={handleDelete}
               />
             </Suspense>
-          ) : (
+          ) : currentTab === "themes" ? (
             // Themes content with Suspense
             <Suspense fallback={
               <div className="space-y-6">
@@ -886,7 +911,21 @@ export default function GroupPage() {
                 onCreateOpen={onCreateOpen}
               />
             </Suspense>
-          )}
+          ) : currentTab === "map" ? (
+            // Map content with Suspense
+            <Suspense fallback={
+              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
+                <CardBody className="p-6">
+                  <div className="w-full h-96 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                </CardBody>
+              </Card>
+            }>
+              <MapViewContainer 
+                bookmarksDataPromise={bookmarksDataPromise} 
+                googleMapsApiKey={googleMapsApiKey}
+              />
+            </Suspense>
+          ) : null}
         </div>
         
         {/* Create Theme Modal */}

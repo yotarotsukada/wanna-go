@@ -16,6 +16,10 @@ export interface Bookmark {
   readonly category: Category;
   readonly memo: string | null;
   readonly address: string | null;
+  readonly latitude: number | null;
+  readonly longitude: number | null;
+  readonly placeName: string | null;
+  readonly placeId: string | null;
   readonly priority: number;
   readonly visited: boolean;
   readonly visitedAt: string | null;
@@ -78,6 +82,11 @@ export const normalizeAutoData = (data?: string): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+export const normalizeCoordinate = (coordinate?: number): number | null => {
+  if (coordinate === undefined || coordinate === null || isNaN(coordinate)) return null;
+  return coordinate;
+};
+
 // ID生成関数（冪等）
 export const generateBookmarkId = (): string => 
   'bm' + Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -90,6 +99,10 @@ export const createBookmark = (input: {
   category: Category;
   memo?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
+  placeName?: string;
+  placeId?: string;
   priority?: number;
   autoTitle?: string;
   autoDescription?: string;
@@ -106,6 +119,10 @@ export const createBookmark = (input: {
     category: input.category,
     memo: normalizeMemo(input.memo),
     address: normalizeAddress(input.address),
+    latitude: normalizeCoordinate(input.latitude),
+    longitude: normalizeCoordinate(input.longitude),
+    placeName: normalizeAutoData(input.placeName),
+    placeId: normalizeAutoData(input.placeId),
     priority: validatePriority(input.priority ?? 3),
     visited: false,
     visitedAt: null,
@@ -127,6 +144,10 @@ export const updateBookmark = (
     category: Category;
     memo?: string;
     address?: string;
+    latitude?: number;
+    longitude?: number;
+    placeName?: string;
+    placeId?: string;
     priority?: number;
   }
 ): Bookmark => ({
@@ -136,6 +157,10 @@ export const updateBookmark = (
   category: updates.category,
   memo: normalizeMemo(updates.memo),
   address: normalizeAddress(updates.address),
+  latitude: normalizeCoordinate(updates.latitude),
+  longitude: normalizeCoordinate(updates.longitude),
+  placeName: normalizeAutoData(updates.placeName),
+  placeId: normalizeAutoData(updates.placeId),
   priority: validatePriority(updates.priority ?? bookmark.priority),
   updatedAt: new Date().toISOString()
 });
@@ -182,6 +207,10 @@ export const bookmarkToJson = (bookmark: Bookmark) => ({
   category: bookmark.category,
   memo: bookmark.memo,
   address: bookmark.address,
+  latitude: bookmark.latitude,
+  longitude: bookmark.longitude,
+  placeName: bookmark.placeName,
+  placeId: bookmark.placeId,
   priority: bookmark.priority,
   visited: bookmark.visited,
   visitedAt: bookmark.visitedAt,
@@ -201,6 +230,10 @@ export const bookmarkFromJson = (data: any): Bookmark => ({
   category: data.category,
   memo: normalizeMemo(data.memo),
   address: normalizeAddress(data.address),
+  latitude: normalizeCoordinate(data.latitude),
+  longitude: normalizeCoordinate(data.longitude),
+  placeName: normalizeAutoData(data.placeName),
+  placeId: normalizeAutoData(data.placeId),
   priority: validatePriority(data.priority),
   visited: Boolean(data.visited),
   visitedAt: data.visitedAt,
