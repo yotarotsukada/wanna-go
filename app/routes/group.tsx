@@ -1,5 +1,6 @@
 import type { Route } from "./+types/group";
-import { Link, useLoaderData, useSearchParams, useSubmit, Form, useActionData, useNavigation } from "react-router";
+import { Link, useLoaderData, useSubmit, Form, useActionData, useNavigation } from "react-router";
+import { useQueryState, parseAsString } from "nuqs";
 import { getGroup } from "../services/group.server";
 import { getGroupBookmarks, toggleBookmarkVisited, deleteBookmark } from "../services/bookmark.server";
 import { themeService } from "../services/theme";
@@ -540,7 +541,6 @@ function ThemesList({
 export default function GroupPage() {
   const data = useLoaderData<typeof loader>();
   const { group, tab, bookmarksDataPromise, themesPromise } = data;
-  const [searchParams, setSearchParams] = useSearchParams();
   const submit = useSubmit();
   const actionData = useActionData<{ error?: string; success?: boolean }>();
   const navigation = useNavigation();
@@ -557,65 +557,51 @@ export default function GroupPage() {
   const [themeBookmarks, setThemeBookmarks] = useState<Record<string, any[]>>({});
   const [loadingThemes, setLoadingThemes] = useState<Record<string, boolean>>({});
   
-  // Filters from URL params
-  const categoryFilter = searchParams.get("category") || "all";
-  const visitedFilter = searchParams.get("visited") || "all";
-  const searchQuery = searchParams.get("search") || "";
-  const currentTab = tab as string;
+  // nuqsを使ったURL状態管理（ページ再読み込みなし）
+  const [categoryFilter, setCategoryFilter] = useQueryState(
+    "category",
+    parseAsString.withDefault("all")
+  );
+  const [visitedFilter, setVisitedFilter] = useQueryState(
+    "visited",
+    parseAsString.withDefault("all")
+  );
+  const [searchQuery, setSearchQuery] = useQueryState(
+    "search",
+    parseAsString.withDefault("")
+  );
+  const [currentTabParam, setCurrentTabParam] = useQueryState(
+    "tab",
+    parseAsString.withDefault("bookmarks")
+  );
+  
+  // 現在のタブを取得（nuqsからとloaderからのフォールバック）
+  const currentTab = currentTabParam || (tab as string);
   
   // ローカル検索入力状態とデバウンス
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const debouncedSearchQuery = useDebounce(localSearchQuery, 500); // 500msデバウンス
   
-  const updateFilters = useCallback((newFilters: Record<string, string>) => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    
-    Object.entries(newFilters).forEach(([key, value]) => {
-      if (value === "all" || value === "") {
-        newSearchParams.delete(key);
-      } else {
-        newSearchParams.set(key, value);
-      }
-    });
-    
-    setSearchParams(newSearchParams);
-  }, [searchParams, setSearchParams]);
   
   // URLパラメータが変わったらローカル状態を更新
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
   
-  // デバウンスされた検索クエリでURLパラメータを更新
-  const updateSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // デバウンスされた検索クエリでURLパラメータを更新（nuqs使用）
   useEffect(() => {
-    // ローカル状態とURLパラメータが異なる場合のURL更新
     if (debouncedSearchQuery !== searchQuery) {
-      if (updateSearchTimeoutRef.current) {
-        clearTimeout(updateSearchTimeoutRef.current);
-      }
-      
-      updateSearchTimeoutRef.current = setTimeout(() => {
-        updateFilters({ search: debouncedSearchQuery });
-      }, 100);
+      setSearchQuery(debouncedSearchQuery || null);
     }
-    
-    return () => {
-      if (updateSearchTimeoutRef.current) {
-        clearTimeout(updateSearchTimeoutRef.current);
-      }
-    };
-  }, [debouncedSearchQuery, searchQuery, updateFilters]);
+  }, [debouncedSearchQuery, searchQuery, setSearchQuery]);
 
   const handleTabChange = (key: string | number) => {
     const tabKey = String(key);
-    const newSearchParams = new URLSearchParams(searchParams);
     if (tabKey === "bookmarks") {
-      newSearchParams.delete("tab");
+      setCurrentTabParam(null);
     } else {
-      newSearchParams.set("tab", tabKey);
+      setCurrentTabParam(tabKey);
     }
-    setSearchParams(newSearchParams);
   };
 
   const handleToggleVisited = (bookmarkId: string, visited: boolean) => {
@@ -788,7 +774,7 @@ export default function GroupPage() {
                     selectedKeys={[categoryFilter]}
                     onSelectionChange={(keys) => {
                       const value = Array.from(keys)[0] as string;
-                      updateFilters({ category: value });
+                      setCategoryFilter(value === "all" ? null : value);
                     }}
                     className="min-w-[120px]"
                     size="sm"
@@ -810,7 +796,7 @@ export default function GroupPage() {
                     selectedKeys={[visitedFilter]}
                     onSelectionChange={(keys) => {
                       const value = Array.from(keys)[0] as string;
-                      updateFilters({ visited: value });
+                      setVisitedFilter(value === "all" ? null : value);
                     }}
                     className="min-w-[120px]"
                     size="sm"
