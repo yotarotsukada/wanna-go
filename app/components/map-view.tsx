@@ -1,7 +1,7 @@
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 import { Card, CardBody, Button, Chip } from '@heroui/react';
 import { CATEGORY_PIN_EMOJIS } from '../lib/constants';
-import { ExternalLink, MapPin, Clock } from 'lucide-react';
+import { ExternalLink, MapPin, Clock, Navigation } from 'lucide-react';
 import type { BookmarkWithThemes } from '../entities/bookmark/bookmark';
 import { useState, useEffect } from 'react';
 
@@ -190,13 +190,6 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
             </Map>
           </div>
         </APIProvider>
-        
-        {/* マップの下に統計情報を表示 */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700">
-          <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
-            📍 {bookmarksWithCoordinates.length}件のブックマークが地図に表示されています
-          </p>
-        </div>
       </CardBody>
     </Card>
   );
@@ -322,7 +315,7 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
             target="_blank"
             rel="noopener noreferrer"
             size="sm"
-            color="primary"
+            color="default"
             variant="flat"
             startContent={<ExternalLink size={14} />}
             className="flex-1 text-xs"
@@ -336,9 +329,9 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
               target="_blank"
               rel="noopener noreferrer"
               size="sm"
-              color="secondary"
+              color="primary"
               variant="flat"
-              startContent={<MapPin size={14} />}
+              startContent={<Navigation size={14} />}
               className="flex-1 text-xs"
             >
               地図で見る
