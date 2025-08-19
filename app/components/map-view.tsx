@@ -5,12 +5,11 @@ import type { BookmarkWithThemes } from '../entities/bookmark/bookmark';
 
 interface MapViewProps {
   bookmarks: BookmarkWithThemes[];
+  googleMapsApiKey: string;
   className?: string;
 }
 
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
-
-export function MapView({ bookmarks, className }: MapViewProps) {
+export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps) {
   // 座標を持つブックマークのみフィルタ
   const bookmarksWithCoordinates = bookmarks.filter(
     (bookmark) => bookmark.latitude !== null && bookmark.longitude !== null
@@ -41,7 +40,7 @@ export function MapView({ bookmarks, className }: MapViewProps) {
     ? { lat: centerLat, lng: centerLng }
     : defaultCenter;
 
-  if (!GOOGLE_MAPS_API_KEY) {
+  if (!googleMapsApiKey) {
     return (
       <Card className={`bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm ${className || ''}`}>
         <CardBody className="p-16 text-center">
@@ -59,7 +58,7 @@ export function MapView({ bookmarks, className }: MapViewProps) {
   return (
     <Card className={`bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm ${className || ''}`}>
       <CardBody className="p-0">
-        <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+        <APIProvider apiKey={googleMapsApiKey}>
           <div className="w-full h-96 md:h-[500px] lg:h-[600px] relative">
             <Map
               defaultCenter={mapCenter}

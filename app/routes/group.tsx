@@ -62,11 +62,15 @@ export async function loader({ params }: Route.LoaderArgs) {
     // テーマもPromiseとして開始（ブックマークより軽いが分離）
     const themesPromise = themeService.getThemesByGroupId(groupId);
 
+    // Google Maps APIキーをサーバー側で取得（セキュア）
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+
     // React Router v7では、Promiseを直接返す
     return {
       group,
       bookmarksDataPromise,
       themesPromise,
+      googleMapsApiKey,
     };
   } catch (error) {
     console.error("Error loading group data:", error);
@@ -537,15 +541,18 @@ function ThemesList({
 
 // 地図表示コンテナコンポーネント（Suspense内で使用）
 function MapViewContainer({
-  bookmarksDataPromise
+  bookmarksDataPromise,
+  googleMapsApiKey
 }: {
   bookmarksDataPromise: Promise<any>;
+  googleMapsApiKey: string;
 }) {
   const bookmarksData = use(bookmarksDataPromise);
   
   return (
     <MapView 
       bookmarks={bookmarksData.bookmarks}
+      googleMapsApiKey={googleMapsApiKey}
       className="w-full"
     />
   );
@@ -553,7 +560,7 @@ function MapViewContainer({
 
 export default function GroupPage() {
   const data = useLoaderData<typeof loader>();
-  const { group, bookmarksDataPromise, themesPromise } = data;
+  const { group, bookmarksDataPromise, themesPromise, googleMapsApiKey } = data;
   const submit = useSubmit();
   const actionData = useActionData<{ error?: string; success?: boolean }>();
   const navigation = useNavigation();
@@ -913,7 +920,10 @@ export default function GroupPage() {
                 </CardBody>
               </Card>
             }>
-              <MapViewContainer bookmarksDataPromise={bookmarksDataPromise} />
+              <MapViewContainer 
+                bookmarksDataPromise={bookmarksDataPromise} 
+                googleMapsApiKey={googleMapsApiKey}
+              />
             </Suspense>
           ) : null}
         </div>
