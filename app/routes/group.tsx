@@ -10,7 +10,7 @@ import { EmojiPicker } from "../components/emoji-picker";
 import { MapView } from "../components/map-view";
 import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
-import { Settings, Sparkles, Search, Edit, Plus, MapPin } from "lucide-react";
+import { Settings, Sparkles, Search, Edit, Plus, MapPin, Bookmark, Palette } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import { useState, Suspense, use, useMemo, useEffect, useRef, useCallback } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
@@ -775,9 +775,9 @@ export default function GroupPage() {
             selectedKey={currentTab}
             onSelectionChange={handleTabChange}
           >
-            <Tab key="bookmarks" title="ブックマーク一覧" />
-            <Tab key="themes" title="テーマ一覧" />
-            <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図表示</span>} />
+            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク一覧</span>} />
+            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ一覧</span>} />
+            <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図</span>} />
           </Tabs>
         </div>
 
