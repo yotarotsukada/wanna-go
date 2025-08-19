@@ -38,6 +38,10 @@ export const createBookmarkWorkflow = async (
     category: Category;
     memo?: string;
     address?: string;
+    latitude?: number;
+    longitude?: number;
+    placeName?: string;
+    placeId?: string;
     priority?: number;
     autoTitle?: string;
     autoDescription?: string;
@@ -121,6 +125,10 @@ export const updateBookmarkWorkflow = async (
     category: Category;
     memo?: string;
     address?: string;
+    latitude?: number;
+    longitude?: number;
+    placeName?: string;
+    placeId?: string;
     priority?: number;
     visited?: boolean;
   }
@@ -132,6 +140,10 @@ export const updateBookmarkWorkflow = async (
     category: updates.category,
     memo: updates.memo,
     address: updates.address,
+    latitude: updates.latitude,
+    longitude: updates.longitude,
+    placeName: updates.placeName,
+    placeId: updates.placeId,
     priority: updates.priority
   });
 

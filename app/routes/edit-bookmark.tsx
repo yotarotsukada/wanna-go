@@ -12,8 +12,9 @@ import type { Group } from "../entities/group/group";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
-import { ArrowLeft } from "lucide-react";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Divider } from "@heroui/react";
+import { ArrowLeft, MapPin } from "lucide-react";
+import { LocationSearch } from "../components/location-search";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -74,6 +75,10 @@ export async function action({ request, params }: Route.ActionArgs) {
       const category = formData.get("category")?.toString() as Category;
       const memo = formData.get("memo")?.toString();
       const address = formData.get("address")?.toString();
+      const latitude = formData.get("latitude") ? Number(formData.get("latitude")) : undefined;
+      const longitude = formData.get("longitude") ? Number(formData.get("longitude")) : undefined;
+      const placeName = formData.get("placeName")?.toString();
+      const placeId = formData.get("placeId")?.toString();
       const priority = Number(formData.get("priority")) || 3;
       const themeIds = formData.getAll("themeIds").map(id => id.toString()).filter(Boolean);
 
@@ -91,6 +96,10 @@ export async function action({ request, params }: Route.ActionArgs) {
         category,
         memo: memo?.trim() || undefined,
         address: address?.trim() || undefined,
+        latitude,
+        longitude,
+        placeName: placeName?.trim() || undefined,
+        placeId: placeId?.trim() || undefined,
         priority,
       });
 
@@ -120,6 +129,10 @@ export default function EditBookmark() {
   const [title, setTitle] = useState(bookmark.title);
   const [category, setCategory] = useState<Category>(bookmark.category);
   const [address, setAddress] = useState(bookmark.address || "");
+  const [latitude, setLatitude] = useState<number | null>(bookmark.latitude);
+  const [longitude, setLongitude] = useState<number | null>(bookmark.longitude);
+  const [placeName, setPlaceName] = useState(bookmark.placeName || "");
+  const [placeId, setPlaceId] = useState(bookmark.placeId || "");
   const [priority, setPriority] = useState(bookmark.priority);
   const [memo, setMemo] = useState(bookmark.memo || "");
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(
@@ -150,6 +163,14 @@ export default function EditBookmark() {
         [field]: error instanceof Error ? error.message : '入力エラー' 
       }));
     }
+  };
+
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
+    setLatitude(location.latitude);
+    setLongitude(location.longitude);
+    setAddress(location.address);
+    setPlaceName(location.placeName);
+    setPlaceId(location.placeId || "");
   };
 
   return (
@@ -221,18 +242,33 @@ export default function EditBookmark() {
                 </Select>
               </div>
 
-              {/* Address */}
+              {/* Location Search */}
               <div className="space-y-2">
-                <Input
-                  type="text"
-                  name="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  label="住所・場所（任意）"
-                  placeholder="東京都渋谷区上原1-2-3"
-                  variant="bordered"
-                  maxLength={200}
+                <LocationSearch
+                  onLocationSelect={handleLocationSelect}
+                  defaultLocation={latitude && longitude ? { 
+                    latitude, 
+                    longitude,
+                    address: bookmark.address || '',
+                    placeName: bookmark.placeName || bookmark.title,
+                    placeId: bookmark.placeId || undefined
+                  } : null}
                 />
+                {latitude && longitude && (
+                  <>
+                    <input type="hidden" name="latitude" value={latitude} />
+                    <input type="hidden" name="longitude" value={longitude} />
+                  </>
+                )}
+                {address && (
+                  <input type="hidden" name="address" value={address} />
+                )}
+                {placeName && (
+                  <input type="hidden" name="placeName" value={placeName} />
+                )}
+                {placeId && (
+                  <input type="hidden" name="placeId" value={placeId} />
+                )}
               </div>
 
               {/* Priority */}

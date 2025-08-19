@@ -11,6 +11,7 @@ export default [
   // API Routes
   route("/api/theme/:themeId/bookmarks", "routes/api.theme.$themeId.bookmarks.ts"),
   route("/api/url-metadata", "routes/api.url-metadata.ts"),
+  route("/api/places-search", "routes/api.places-search.ts"),
   
   // DevTools や well-known パスを無視するためのキャッチオール
   route("/.well-known/*", "routes/well-known.tsx"),

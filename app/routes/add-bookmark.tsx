@@ -9,8 +9,9 @@ import { isValidURL, debounce } from "../lib/utils";
 import type { Category } from "../lib/constants";
 import type { UrlMetadata } from "../lib/types";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
-import { ArrowLeft, RotateCw } from "lucide-react";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Divider } from "@heroui/react";
+import { ArrowLeft, RotateCw, MapPin } from "lucide-react";
+import { LocationSearch } from "../components/location-search";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -48,6 +49,10 @@ export async function action({ request, params }: Route.ActionArgs) {
   const category = formData.get("category")?.toString() as Category;
   const memo = formData.get("memo")?.toString();
   const address = formData.get("address")?.toString();
+  const latitude = formData.get("latitude") ? Number(formData.get("latitude")) : undefined;
+  const longitude = formData.get("longitude") ? Number(formData.get("longitude")) : undefined;
+  const placeName = formData.get("placeName")?.toString();
+  const placeId = formData.get("placeId")?.toString();
   const priority = Number(formData.get("priority")) || 3;
   const autoTitle = formData.get("autoTitle")?.toString();
   const autoDescription = formData.get("autoDescription")?.toString();
@@ -70,6 +75,10 @@ export async function action({ request, params }: Route.ActionArgs) {
       category,
       memo: memo?.trim() || undefined,
       address: address?.trim() || undefined,
+      latitude,
+      longitude,
+      placeName: placeName?.trim() || undefined,
+      placeId: placeId?.trim() || undefined,
       priority,
       autoTitle: autoTitle || undefined,
       autoDescription: autoDescription || undefined,
@@ -100,6 +109,10 @@ export default function AddBookmark() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Category>("レストラン");
   const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [placeName, setPlaceName] = useState("");
+  const [placeId, setPlaceId] = useState("");
   const [priority, setPriority] = useState(3);
   const [memo, setMemo] = useState("");
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(new Set());
@@ -146,6 +159,14 @@ export default function AddBookmark() {
     if (value && isValidURL(value)) {
       fetchMetadata(value);
     }
+  };
+
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
+    setLatitude(location.latitude);
+    setLongitude(location.longitude);
+    setAddress(location.address);
+    setPlaceName(location.placeName);
+    setPlaceId(location.placeId || "");
   };
 
 
@@ -263,18 +284,27 @@ export default function AddBookmark() {
                 </Select>
               </div>
 
-              {/* Address */}
+              {/* Location Search */}
               <div className="space-y-2">
-                <Input
-                  type="text"
-                  name="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  label="住所・場所（任意）"
-                  placeholder="東京都渋谷区上原1-2-3"
-                  variant="bordered"
-                  maxLength={200}
+                <LocationSearch
+                  onLocationSelect={handleLocationSelect}
+                  defaultLocation={latitude && longitude ? { latitude, longitude } : null}
                 />
+                {latitude && longitude && (
+                  <>
+                    <input type="hidden" name="latitude" value={latitude} />
+                    <input type="hidden" name="longitude" value={longitude} />
+                  </>
+                )}
+                {address && (
+                  <input type="hidden" name="address" value={address} />
+                )}
+                {placeName && (
+                  <input type="hidden" name="placeName" value={placeName} />
+                )}
+                {placeId && (
+                  <input type="hidden" name="placeId" value={placeId} />
+                )}
               </div>
 
               {/* Priority */}
