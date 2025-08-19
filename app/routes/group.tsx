@@ -10,8 +10,25 @@ import { redirect } from "react-router";
 import { Button, Card, CardBody, Input, Select, SelectItem, Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Accordion, AccordionItem, Chip } from "@heroui/react";
 import { Settings, Sparkles, Search, Edit, Plus } from "lucide-react";
 import { formatDate } from "../lib/utils";
-import { useState, Suspense, use, useMemo } from "react";
+import { useState, Suspense, use, useMemo, useEffect, useRef, useCallback } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
+
+// デバウンスカスタムフック
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export function meta({ params, data }: Route.MetaArgs) {
   const group = data?.group;
@@ -212,12 +229,12 @@ function calculateStats(bookmarks: any[]) {
 // ブックマーク統計コンテナ（Suspense内で使用）
 function BookmarksStatsContainer({
   bookmarksDataPromise,
-  searchQuery,
+  localSearchQuery,
   categoryFilter,
   visitedFilter
 }: {
   bookmarksDataPromise: Promise<any>;
-  searchQuery: string;
+  localSearchQuery: string;
   categoryFilter: string;
   visitedFilter: string;
 }) {
@@ -226,11 +243,11 @@ function BookmarksStatsContainer({
   const filteredBookmarks = useMemo(() => {
     return filterBookmarks(
       bookmarksData.bookmarks,
-      searchQuery,
+      localSearchQuery,
       categoryFilter,
       visitedFilter
     );
-  }, [bookmarksData.bookmarks, searchQuery, categoryFilter, visitedFilter]);
+  }, [bookmarksData.bookmarks, localSearchQuery, categoryFilter, visitedFilter]);
   
   return <BookmarksStats filteredBookmarks={filteredBookmarks} />;
 }
@@ -285,7 +302,7 @@ function BookmarksStats({
 function BookmarksContent({
   bookmarksDataPromise,
   group,
-  searchQuery,
+  localSearchQuery,
   categoryFilter,
   visitedFilter,
   handleToggleVisited,
@@ -293,7 +310,7 @@ function BookmarksContent({
 }: {
   bookmarksDataPromise: Promise<any>;
   group: any;
-  searchQuery: string;
+  localSearchQuery: string;
   categoryFilter: string;
   visitedFilter: string;
   handleToggleVisited: (bookmarkId: string, visited: boolean) => void;
@@ -304,17 +321,17 @@ function BookmarksContent({
   const filteredBookmarks = useMemo(() => {
     return filterBookmarks(
       bookmarksData.bookmarks,
-      searchQuery,
+      localSearchQuery,
       categoryFilter,
       visitedFilter
     );
-  }, [bookmarksData.bookmarks, searchQuery, categoryFilter, visitedFilter]);
+  }, [bookmarksData.bookmarks, localSearchQuery, categoryFilter, visitedFilter]);
   
   return (
     <BookmarksList
       filteredBookmarks={filteredBookmarks}
       group={group}
-      searchQuery={searchQuery}
+      searchQuery={localSearchQuery}
       categoryFilter={categoryFilter}
       visitedFilter={visitedFilter}
       handleToggleVisited={handleToggleVisited}
@@ -546,8 +563,11 @@ export default function GroupPage() {
   const searchQuery = searchParams.get("search") || "";
   const currentTab = tab as string;
   
-
-  const updateFilters = (newFilters: Record<string, string>) => {
+  // ローカル検索入力状態とデバウンス
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 500); // 500msデバウンス
+  
+  const updateFilters = useCallback((newFilters: Record<string, string>) => {
     const newSearchParams = new URLSearchParams(searchParams);
     
     Object.entries(newFilters).forEach(([key, value]) => {
@@ -559,7 +579,33 @@ export default function GroupPage() {
     });
     
     setSearchParams(newSearchParams);
-  };
+  }, [searchParams, setSearchParams]);
+  
+  // URLパラメータが変わったらローカル状態を更新
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+  
+  // デバウンスされた検索クエリでURLパラメータを更新
+  const updateSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    // ローカル状態とURLパラメータが異なる場合のURL更新
+    if (debouncedSearchQuery !== searchQuery) {
+      if (updateSearchTimeoutRef.current) {
+        clearTimeout(updateSearchTimeoutRef.current);
+      }
+      
+      updateSearchTimeoutRef.current = setTimeout(() => {
+        updateFilters({ search: debouncedSearchQuery });
+      }, 100);
+    }
+    
+    return () => {
+      if (updateSearchTimeoutRef.current) {
+        clearTimeout(updateSearchTimeoutRef.current);
+      }
+    };
+  }, [debouncedSearchQuery, searchQuery, updateFilters]);
 
   const handleTabChange = (key: string | number) => {
     const tabKey = String(key);
@@ -712,7 +758,7 @@ export default function GroupPage() {
           >
             <BookmarksStatsContainer 
               bookmarksDataPromise={bookmarksDataPromise}
-              searchQuery={searchQuery}
+              localSearchQuery={localSearchQuery}
               categoryFilter={categoryFilter}
               visitedFilter={visitedFilter}
             />
@@ -780,8 +826,8 @@ export default function GroupPage() {
                 <div className="flex-1 min-w-0 max-w-md">
                   <Input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => updateFilters({ search: e.target.value })}
+                    value={localSearchQuery}
+                    onChange={(e) => setLocalSearchQuery(e.target.value)}
                     placeholder="場所やメモで検索..."
                     variant="bordered"
                     size="sm"
@@ -824,7 +870,7 @@ export default function GroupPage() {
               <BookmarksContent
                 bookmarksDataPromise={bookmarksDataPromise}
                 group={group}
-                searchQuery={searchQuery}
+                localSearchQuery={localSearchQuery}
                 categoryFilter={categoryFilter}
                 visitedFilter={visitedFilter}
                 handleToggleVisited={handleToggleVisited}
