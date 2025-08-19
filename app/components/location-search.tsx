@@ -71,14 +71,45 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
         // 新しい検索結果を既存の結果に追加（重複除去）
         setAllResults(prev => {
           const existingIds = new Set(prev.map(r => r.place_id));
-          const newResults = data.results.filter((r: any) => !existingIds.has(r.place_id));
+          const newResults = data.results.filter((r: any) => {
+            // place_idでの重複チェック
+            if (existingIds.has(r.place_id)) return false;
+            
+            // 座標の近さでの重複チェック（100m以内は重複とみなす）
+            const isDuplicate = prev.some(existing => {
+              const distance = Math.sqrt(
+                Math.pow(existing.geometry.location.lat - r.geometry.location.lat, 2) +
+                Math.pow(existing.geometry.location.lng - r.geometry.location.lng, 2)
+              ) * 111000; // 度から概算メートルに変換
+              return distance < 100;
+            });
+            
+            return !isDuplicate;
+          });
           return [...prev, ...newResults];
         });
-        setResults(data.results);
+        // フィルタリング済みの結果をsetResultsに設定
+        const filteredResults = data.results.filter((r: any) => {
+          // place_idでの重複チェック
+          if (existingIds.has(r.place_id)) return false;
+          
+          // 座標の近さでの重複チェック（100m以内は重複とみなす）
+          const isDuplicate = allResults.some(existing => {
+            const distance = Math.sqrt(
+              Math.pow(existing.geometry.location.lat - r.geometry.location.lat, 2) +
+              Math.pow(existing.geometry.location.lng - r.geometry.location.lng, 2)
+            ) * 111000; // 度から概算メートルに変換
+            return distance < 100;
+          });
+          
+          return !isDuplicate;
+        });
         
-        // 検索結果の先頭アイテムを自動選択
-        if (data.results.length > 0) {
-          const firstPlace = data.results[0];
+        setResults(filteredResults);
+        
+        // フィルタリング済みの検索結果の先頭アイテムを自動選択
+        if (filteredResults.length > 0) {
+          const firstPlace = filteredResults[0];
           setSelectedPlaceId(firstPlace.place_id);
           
           onLocationSelect({
@@ -168,9 +199,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
             const placeId = Array.from(keys)[0] as string;
             if (placeId) {
               handlePlaceSelect(placeId);
-            } else {
-              clearSelection();
             }
+            // 選択解除は許可しない（placeIdが空の場合は何もしない）
           }}
           variant="bordered"
           startContent={<MapPin size={16} />}
