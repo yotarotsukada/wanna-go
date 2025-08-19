@@ -1,7 +1,7 @@
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 import { Card, CardBody, Button, Chip } from '@heroui/react';
 import { CATEGORY_PIN_EMOJIS } from '../lib/constants';
-import { ExternalLink, MapPin, Star, Clock } from 'lucide-react';
+import { ExternalLink, MapPin, Clock } from 'lucide-react';
 import type { BookmarkWithThemes } from '../entities/bookmark/bookmark';
 import { useState, useEffect } from 'react';
 
@@ -208,6 +208,24 @@ interface BookmarkInfoContentProps {
 }
 
 function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
+  // Google Mapsリンクを生成
+  const generateGoogleMapsUrl = () => {
+    if (bookmark.latitude && bookmark.longitude && bookmark.placeId) {
+      // 座標とplace_idの両方がある場合
+      return `https://www.google.com/maps/search/?api=1&query=${bookmark.latitude}%2C${bookmark.longitude}&query_place_id=${bookmark.placeId}`;
+    }
+    if (bookmark.placeId) {
+      // place_idのみの場合
+      return `https://www.google.com/maps/search/?api=1&query_place_id=${bookmark.placeId}`;
+    }
+    if (bookmark.latitude && bookmark.longitude) {
+      // 座標のみの場合（古いデータ用フォールバック）
+      return `https://www.google.com/maps?q=${bookmark.latitude},${bookmark.longitude}`;
+    }
+    return null;
+  };
+
+  const googleMapsUrl = generateGoogleMapsUrl();
   return (
     <div className="min-w-0 max-w-xs">
       <div className="space-y-3">
@@ -241,9 +259,12 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
         </div>
 
         {/* 興味度 */}
-        <div className="flex items-center gap-1">
-          <Star size={14} className="text-yellow-500" />
-          <span className="text-sm text-slate-700">{bookmark.priority}/5</span>
+        <div className="flex items-center gap-0.5">
+          {Array.from({ length: 5 }, (_, i) => (
+            <span key={i} className={i < bookmark.priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+              ★
+            </span>
+          ))}
         </div>
 
         {/* 住所 */}
@@ -294,7 +315,7 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
         )}
 
         {/* アクション */}
-        <div className="flex gap-2 pt-2 border-t border-slate-200">
+        <div className="flex gap-2 pt-2">
           <Button
             as="a"
             href={bookmark.url}
@@ -308,6 +329,21 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
           >
             詳細を見る
           </Button>
+          {googleMapsUrl && (
+            <Button
+              as="a"
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="sm"
+              color="secondary"
+              variant="flat"
+              startContent={<MapPin size={14} />}
+              className="flex-1 text-xs"
+            >
+              地図で見る
+            </Button>
+          )}
         </div>
       </div>
     </div>
