@@ -40,15 +40,12 @@ export function meta({ params, data }: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ params, request }: Route.LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   const { groupId } = params;
   
   if (!groupId) {
     throw redirect("/");
   }
-
-  const url = new URL(request.url);
-  const tab = url.searchParams.get("tab") || "bookmarks";
 
   try {
     // 最重要：グループ情報は即座に取得（404チェックのため）
@@ -67,7 +64,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     // React Router v7では、Promiseを直接返す
     return {
       group,
-      tab,
       bookmarksDataPromise,
       themesPromise,
     };
@@ -540,7 +536,7 @@ function ThemesList({
 
 export default function GroupPage() {
   const data = useLoaderData<typeof loader>();
-  const { group, tab, bookmarksDataPromise, themesPromise } = data;
+  const { group, bookmarksDataPromise, themesPromise } = data;
   const submit = useSubmit();
   const actionData = useActionData<{ error?: string; success?: boolean }>();
   const navigation = useNavigation();
@@ -570,13 +566,10 @@ export default function GroupPage() {
     "search",
     parseAsString.withDefault("")
   );
-  const [currentTabParam, setCurrentTabParam] = useQueryState(
+  const [currentTab, setCurrentTab] = useQueryState(
     "tab",
     parseAsString.withDefault("bookmarks")
   );
-  
-  // 現在のタブを取得（nuqsからとloaderからのフォールバック）
-  const currentTab = currentTabParam || (tab as string);
   
   // ローカル検索入力状態とデバウンス
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
@@ -601,9 +594,9 @@ export default function GroupPage() {
   const handleTabChange = (key: string | number) => {
     const tabKey = String(key);
     if (tabKey === "bookmarks") {
-      setCurrentTabParam(null);
+      setCurrentTab(null);
     } else {
-      setCurrentTabParam(tabKey);
+      setCurrentTab(tabKey);
     }
   };
 
