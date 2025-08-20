@@ -1,7 +1,7 @@
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 import { Card, CardBody, Button, Chip } from '@heroui/react';
 import { CATEGORY_PIN_EMOJIS } from '../lib/constants';
-import { ExternalLink, MapPin, Clock, Navigation } from 'lucide-react';
+import { ExternalLink, MapPin, Clock, Navigation, MessageCircle } from 'lucide-react';
 import type { BookmarkWithThemes } from '../entities/bookmark/bookmark';
 import { useState, useEffect } from 'react';
 
@@ -219,20 +219,20 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
   };
 
   const googleMapsUrl = generateGoogleMapsUrl();
+  const stars = Array.from({ length: 5 }, (_, i) => (
+    <span key={i} className={i < bookmark.priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+      ★
+    </span>
+  ));
+
   return (
     <div className="min-w-0 max-w-xs">
       <div className="space-y-3">
-        {/* 自動取得されたタイトル（メインタイトルと異なる場合のみ表示） */}
-        {bookmark.autoTitle && bookmark.autoTitle !== bookmark.title && (
-          <div>
-            <p className="text-xs text-slate-600 truncate">
-              {bookmark.autoTitle}
-            </p>
-          </div>
-        )}
-
-        {/* カテゴリと訪問状況 */}
+        {/* 星・カテゴリ */}
         <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-0.5">
+            {stars}
+          </div>
           <Chip
             variant="flat"
             color="primary"
@@ -241,24 +241,24 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
           >
             {bookmark.category}
           </Chip>
-          <Chip
-            variant="flat"
-            color={bookmark.visited ? "success" : "warning"}
-            size="sm"
-            startContent={bookmark.visited ? <Clock size={12} /> : <Clock size={12} />}
-          >
-            {bookmark.visited ? "訪問済み" : "未訪問"}
-          </Chip>
         </div>
 
-        {/* 興味度 */}
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }, (_, i) => (
-            <span key={i} className={i < bookmark.priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
-              ★
-            </span>
-          ))}
-        </div>
+        {/* テーマ（常に下段） */}
+        {bookmark.themes && bookmark.themes.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {bookmark.themes.map((theme) => (
+              <Chip
+                key={theme.id}
+                color="secondary"
+                variant="bordered"
+                size="sm"
+                startContent={theme.icon && <span>{theme.icon}</span>}
+              >
+                {theme.name}
+              </Chip>
+            ))}
+          </div>
+        )}
 
         {/* 住所 */}
         {bookmark.address && (
@@ -272,56 +272,46 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
 
         {/* メモ */}
         {bookmark.memo && (
-          <div className="border-t border-slate-200 pt-2">
-            <p className="text-sm text-slate-600 break-words">
+          <div className="flex items-start gap-2 text-sm">
+            <MessageCircle size={14} className="text-slate-500 mt-0.5 flex-shrink-0" />
+            <p className="text-slate-700 break-words">
               {bookmark.memo}
             </p>
           </div>
         )}
 
-        {/* 自動取得された説明 */}
-        {bookmark.autoDescription && (
-          <div className="border-t border-slate-200 pt-2">
-            <p className="text-xs text-slate-500 break-words line-clamp-3">
-              {bookmark.autoDescription}
-            </p>
-          </div>
-        )}
-
-        {/* テーマ情報 */}
-        {bookmark.themes && bookmark.themes.length > 0 && (
-          <div className="border-t border-slate-200 pt-2">
-            <div className="flex flex-wrap gap-1">
-              {bookmark.themes.map((theme) => (
-                <Chip
-                  key={theme.id}
-                  variant="flat"
-                  color="secondary"
-                  size="sm"
-                  className="text-xs"
-                >
-                  {theme.icon} {theme.name}
-                </Chip>
-              ))}
-            </div>
-          </div>
+        {/* 訪問状況 */}
+        {bookmark.visited && (
+          <Chip
+            variant="flat"
+            color="success"
+            size="sm"
+            startContent={<Clock size={12} />}
+          >
+            訪問済み
+          </Chip>
         )}
 
         {/* アクション */}
         <div className="flex gap-2 pt-2">
-          <Button
-            as="a"
-            href={bookmark.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            size="sm"
-            color="default"
-            variant="flat"
-            startContent={<ExternalLink size={14} />}
-            className="flex-1 text-xs"
-          >
-            詳細を見る
-          </Button>
+          {/* URLがGoogleマップURLでない場合のみ詳細ボタンを表示 */}
+          {!bookmark.url.includes('www.google.com/maps') && 
+           !bookmark.url.includes('maps.google.com') && 
+           !bookmark.url.includes('goo.gl/maps') && (
+            <Button
+              as="a"
+              href={bookmark.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="sm"
+              color="default"
+              variant="flat"
+              startContent={<ExternalLink size={14} />}
+              className="flex-1 text-xs"
+            >
+              詳細を見る
+            </Button>
+          )}
           {googleMapsUrl && (
             <Button
               as="a"

@@ -119,6 +119,9 @@ export async function action({ request, params }: Route.ActionArgs) {
         name: name.trim(),
         icon: icon?.trim() || undefined,
       });
+      
+      // テーマ作成後はテーマタブにリダイレクト
+      return redirect(`/group/${groupId}?tab=themes`);
     } else if (intent === "edit-theme") {
       const themeId = formData.get("themeId")?.toString();
       const name = formData.get("name") as string;
@@ -482,9 +485,6 @@ function ThemesList({
                         >
                           {theme.bookmarkCount}件のブックマーク
                         </Chip>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          作成日: {formatDate(typeof theme.createdAt === 'string' ? theme.createdAt : theme.createdAt.toISOString())}
-                        </span>
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -671,6 +671,7 @@ export default function GroupPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     formData.set("icon", createEmoji);
+    
     submit(formData, { method: "post" });
     setCreateEmoji("");
     onCreateClose();
@@ -775,8 +776,8 @@ export default function GroupPage() {
             selectedKey={currentTab}
             onSelectionChange={handleTabChange}
           >
-            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク一覧</span>} />
-            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ一覧</span>} />
+            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク</span>} />
+            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ</span>} />
             <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図</span>} />
           </Tabs>
         </div>

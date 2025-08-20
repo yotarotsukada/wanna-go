@@ -170,6 +170,11 @@ export default function AddBookmark() {
     setPlaceName(location.placeName);
     setPlaceId(location.placeId || "");
     
+    // タイトルが空欄の場合、地点名を自動入力
+    if (!title.trim() && location.placeName) {
+      setTitle(location.placeName);
+    }
+    
     // Google MapのURLが提供された場合、URLフィールドが空なら自動入力
     if (location.url && !url.trim()) {
       setUrl(location.url);
@@ -277,16 +282,13 @@ export default function AddBookmark() {
                   name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  onClear={() => setTitle('')}
                   label="タイトル"
                   placeholder="美味しいラーメン店"
                   variant="bordered"
                   maxLength={200}
                   isRequired
-                  description={
-                    metadata?.success && metadata.title 
-                      ? `自動取得: ${metadata.title}`
-                      : undefined
-                  }
+                  isClearable
                 />
               </div>
 
@@ -296,7 +298,7 @@ export default function AddBookmark() {
                   name="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  label="説明 (自動取得)"
+                  label="説明"
                   placeholder="説明文..."
                   variant="bordered"
                   minRows={3}
