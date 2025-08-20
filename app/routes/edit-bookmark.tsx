@@ -138,6 +138,10 @@ export default function EditBookmark() {
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(
     new Set(bookmarkThemes.map(theme => theme.id))
   );
+
+  const handleUrlChange = (value: string) => {
+    setUrl(value);
+  };
   
   // フロントエンドバリデーション状態（エンティティ関数を活用）
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -165,12 +169,22 @@ export default function EditBookmark() {
     }
   };
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string; url?: string }) => {
     setLatitude(location.latitude);
     setLongitude(location.longitude);
     setAddress(location.address);
     setPlaceName(location.placeName);
     setPlaceId(location.placeId || "");
+    
+    // タイトルが空欄の場合、地点名を自動入力
+    if (!title.trim() && location.placeName) {
+      setTitle(location.placeName);
+    }
+    
+    // Google MapのURLが提供された場合、URLフィールドが空なら自動入力
+    if (location.url && !url.trim()) {
+      setUrl(location.url);
+    }
   };
 
   return (
@@ -194,55 +208,7 @@ export default function EditBookmark() {
           <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
             <CardBody className="p-6">
             <Form method="post" className="space-y-6">
-              {/* URL */}
-              <div className="space-y-2">
-                <Input
-                  type="url"
-                  name="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  label="URL"
-                  placeholder="https://example.com"
-                  variant="bordered"
-                  isRequired
-                />
-              </div>
-
-              {/* Title */}
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  name="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  label="タイトル"
-                  placeholder="美味しいラーメン店"
-                  variant="bordered"
-                  maxLength={200}
-                  isRequired
-                />
-              </div>
-
-              {/* Category */}
-              <div className="space-y-2">
-                <Select
-                  name="category"
-                  selectedKeys={[category]}
-                  onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as Category;
-                    setCategory(value);
-                  }}
-                  label="カテゴリ"
-                  variant="bordered"
-                  isRequired
-                >
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat}>{cat}</SelectItem>
-                  ))}
-                </Select>
-              </div>
-
-              {/* Location Search */}
+              {/* Location Search - moved to top */}
               <div className="space-y-2">
                 <LocationSearch
                   onLocationSelect={handleLocationSelect}
@@ -270,6 +236,71 @@ export default function EditBookmark() {
                   <input type="hidden" name="placeId" value={placeId} />
                 )}
               </div>
+
+              {/* URL */}
+              <div className="space-y-2">
+                <Input
+                  type="url"
+                  name="url"
+                  value={url}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  onClear={() => setUrl('')}
+                  label="URL"
+                  placeholder="https://example.com"
+                  variant="bordered"
+                  isRequired
+                  isClearable
+                />
+                {(url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
+                  <div className="flex items-center gap-2">
+                    <Chip 
+                      size="sm" 
+                      variant="flat" 
+                      color="secondary"
+                      startContent={<MapPin size={16} />}
+                    >
+                      場所のURL
+                    </Chip>
+                  </div>
+                )}
+              </div>
+
+              {/* Title */}
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onClear={() => setTitle('')}
+                  label="タイトル"
+                  placeholder="美味しいラーメン店"
+                  variant="bordered"
+                  maxLength={200}
+                  isRequired
+                  isClearable
+                />
+              </div>
+
+              {/* Category */}
+              <div className="space-y-2">
+                <Select
+                  name="category"
+                  selectedKeys={[category]}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as Category;
+                    setCategory(value);
+                  }}
+                  label="カテゴリ"
+                  variant="bordered"
+                  isRequired
+                >
+                  {CATEGORIES.map(cat => (
+                    <SelectItem key={cat}>{cat}</SelectItem>
+                  ))}
+                </Select>
+              </div>
+
 
               {/* Priority */}
               <div className="space-y-2">

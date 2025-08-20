@@ -77,29 +77,40 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
               <span className="text-xl flex-shrink-0">{emoji}</span>
               <span className="truncate">{bookmark.title}</span>
             </h3>
-            <div className="flex items-center gap-3 flex-wrap">
-              <Chip color={categoryColor} variant="flat" size="sm">
-                {bookmark.category}
-              </Chip>
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-0.5">
                 {stars}
               </div>
+              <Chip color={categoryColor} variant="flat" size="sm">
+                {bookmark.category}
+              </Chip>
+              {bookmark.themes && bookmark.themes.map((theme) => (
+                <Chip
+                  key={theme.id}
+                  color="secondary"
+                  variant="bordered"
+                  size="sm"
+                  startContent={theme.icon && <span>{theme.icon}</span>}
+                  className="hidden sm:inline-flex"
+                >
+                  {theme.name}
+                </Chip>
+              ))}
             </div>
             {bookmark.themes && bookmark.themes.length > 0 && (
-              <div className="mt-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400 block mb-1">テーマ:</span>
-                <div className="flex gap-1 flex-wrap">
-                {bookmark.themes.map((theme) => (
-                  <Chip
-                    key={theme.id}
-                    color="secondary"
-                    variant="bordered"
-                    size="sm"
-                    startContent={theme.icon && <span>{theme.icon}</span>}
-                  >
-                    {theme.name}
-                  </Chip>
-                ))}
+              <div className="mt-2 sm:hidden">
+                <div className="flex gap-2 flex-wrap">
+                  {bookmark.themes.map((theme) => (
+                    <Chip
+                      key={theme.id}
+                      color="secondary"
+                      variant="bordered"
+                      size="sm"
+                      startContent={theme.icon && <span>{theme.icon}</span>}
+                    >
+                      {theme.name}
+                    </Chip>
+                  ))}
                 </div>
               </div>
             )}
@@ -120,7 +131,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
         {bookmark.memo && (
           <div className="flex items-start gap-2 text-sm">
             <MessageCircle size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
-            <div className="text-slate-900 dark:text-slate-50 leading-relaxed bg-slate-100/50 dark:bg-slate-800/50 p-3 rounded-md flex-1">
+            <div className="text-slate-900 dark:text-slate-50 leading-relaxed flex-1">
               {bookmark.memo}
             </div>
           </div>
