@@ -138,6 +138,10 @@ export default function EditBookmark() {
   const [selectedThemeIds, setSelectedThemeIds] = useState<Set<string>>(
     new Set(bookmarkThemes.map(theme => theme.id))
   );
+
+  const handleUrlChange = (value: string) => {
+    setUrl(value);
+  };
   
   // フロントエンドバリデーション状態（エンティティ関数を活用）
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -165,12 +169,17 @@ export default function EditBookmark() {
     }
   };
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string; url?: string }) => {
     setLatitude(location.latitude);
     setLongitude(location.longitude);
     setAddress(location.address);
     setPlaceName(location.placeName);
     setPlaceId(location.placeId || "");
+    
+    // Google MapのURLが提供された場合、URLフィールドが空なら自動入力
+    if (location.url && !url.trim()) {
+      setUrl(location.url);
+    }
   };
 
   return (
@@ -194,18 +203,61 @@ export default function EditBookmark() {
           <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
             <CardBody className="p-6">
             <Form method="post" className="space-y-6">
+              {/* Location Search - moved to top */}
+              <div className="space-y-2">
+                <LocationSearch
+                  onLocationSelect={handleLocationSelect}
+                  defaultLocation={latitude && longitude ? { 
+                    latitude, 
+                    longitude,
+                    address: bookmark.address || '',
+                    placeName: bookmark.placeName || bookmark.title,
+                    placeId: bookmark.placeId || undefined
+                  } : null}
+                />
+                {latitude && longitude && (
+                  <>
+                    <input type="hidden" name="latitude" value={latitude} />
+                    <input type="hidden" name="longitude" value={longitude} />
+                  </>
+                )}
+                {address && (
+                  <input type="hidden" name="address" value={address} />
+                )}
+                {placeName && (
+                  <input type="hidden" name="placeName" value={placeName} />
+                )}
+                {placeId && (
+                  <input type="hidden" name="placeId" value={placeId} />
+                )}
+              </div>
+
               {/* URL */}
               <div className="space-y-2">
                 <Input
                   type="url"
                   name="url"
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  onClear={() => setUrl('')}
                   label="URL"
                   placeholder="https://example.com"
                   variant="bordered"
                   isRequired
+                  isClearable
                 />
+                {(url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
+                  <div className="flex items-center gap-2">
+                    <Chip 
+                      size="sm" 
+                      variant="flat" 
+                      color="secondary"
+                      startContent={<MapPin size={16} />}
+                    >
+                      場所のURL
+                    </Chip>
+                  </div>
+                )}
               </div>
 
               {/* Title */}
@@ -242,34 +294,6 @@ export default function EditBookmark() {
                 </Select>
               </div>
 
-              {/* Location Search */}
-              <div className="space-y-2">
-                <LocationSearch
-                  onLocationSelect={handleLocationSelect}
-                  defaultLocation={latitude && longitude ? { 
-                    latitude, 
-                    longitude,
-                    address: bookmark.address || '',
-                    placeName: bookmark.placeName || bookmark.title,
-                    placeId: bookmark.placeId || undefined
-                  } : null}
-                />
-                {latitude && longitude && (
-                  <>
-                    <input type="hidden" name="latitude" value={latitude} />
-                    <input type="hidden" name="longitude" value={longitude} />
-                  </>
-                )}
-                {address && (
-                  <input type="hidden" name="address" value={address} />
-                )}
-                {placeName && (
-                  <input type="hidden" name="placeName" value={placeName} />
-                )}
-                {placeId && (
-                  <input type="hidden" name="placeId" value={placeId} />
-                )}
-              </div>
 
               {/* Priority */}
               <div className="space-y-2">

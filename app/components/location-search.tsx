@@ -15,7 +15,7 @@ interface PlaceResult {
 }
 
 interface LocationSearchProps {
-  onLocationSelect: (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => void;
+  onLocationSelect: (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string; url?: string }) => void;
   defaultLocation?: { latitude: number; longitude: number; address?: string; placeName?: string; placeId?: string } | null;
   className?: string;
 }
@@ -120,7 +120,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
             longitude: firstPlace.geometry.location.lng,
             address: firstPlace.formatted_address,
             placeName: firstPlace.name,
-            placeId: firstPlace.place_id
+            placeId: firstPlace.place_id,
+            url: `https://www.google.com/maps/search/?api=1&query=${firstPlace.geometry.location.lat}%2C${firstPlace.geometry.location.lng}&query_place_id=${firstPlace.place_id}`
           });
         }
       } else {
@@ -145,7 +146,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
       longitude: place.geometry.location.lng,
       address: place.formatted_address,
       placeName: place.name,
-      placeId: place.place_id
+      placeId: place.place_id,
+      url: `https://www.google.com/maps/search/?api=1&query=${place.geometry.location.lat}%2C${place.geometry.location.lng}&query_place_id=${place.place_id}`
     });
   };
 
@@ -156,7 +158,8 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
       longitude: 0,
       address: '',
       placeName: '',
-      placeId: undefined
+      placeId: undefined,
+      url: undefined
     });
   };
 
@@ -196,22 +199,22 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
       </div>
 
       {/* 場所選択 */}
-      {allResults.length > 0 && (
-        <Select
-          label="場所を選択"
-          placeholder="場所を選択してください"
-          selectedKeys={selectedPlaceId ? [selectedPlaceId] : []}
-          onSelectionChange={(keys) => {
-            const placeId = Array.from(keys)[0] as string;
-            if (placeId) {
-              handlePlaceSelect(placeId);
-            }
-            // 選択解除は許可しない（placeIdが空の場合は何もしない）
-          }}
-          variant="bordered"
-          startContent={<MapPin size={16} />}
-        >
-          {allResults.map((place) => (
+      <Select
+        label="場所を選択"
+        placeholder="検索結果から選択してください"
+        selectedKeys={selectedPlaceId ? [selectedPlaceId] : []}
+        onSelectionChange={(keys) => {
+          const placeId = Array.from(keys)[0] as string;
+          if (placeId) {
+            handlePlaceSelect(placeId);
+          }
+          // 選択解除は許可しない（placeIdが空の場合は何もしない）
+        }}
+        variant="bordered"
+        startContent={<MapPin size={16} />}
+      >
+        {allResults.length > 0 ? (
+          allResults.map((place) => (
             <SelectItem
               key={place.place_id}
               textValue={place.name}
@@ -222,9 +225,15 @@ export function LocationSearch({ onLocationSelect, defaultLocation, className }:
                 <span className="text-sm text-gray-500">{place.formatted_address}</span>
               </div>
             </SelectItem>
-          ))}
-        </Select>
-      )}
+          ))
+        ) : (
+          <SelectItem key="no-results" textValue="候補がありません" isDisabled>
+            <div className="flex flex-col">
+              <span className="text-gray-500">候補がありません</span>
+            </div>
+          </SelectItem>
+        )}
+      </Select>
     </div>
   );
 }
