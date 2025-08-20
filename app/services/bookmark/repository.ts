@@ -132,7 +132,6 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
         }
       },
       orderBy: [
-        { priority: 'desc' },
         { createdAt: 'desc' }
       ]
     });
@@ -206,7 +205,6 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
           }
         },
         orderBy: [
-          { priority: 'desc' },
           { createdAt: 'desc' }
         ]
       }),
