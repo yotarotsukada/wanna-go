@@ -156,17 +156,24 @@ export default function AddBookmark() {
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
-    if (value && isValidURL(value)) {
+    // 場所から自動入力されたGoogle MapのURLの場合はメタデータ取得をスキップ
+    const isGoogleMapsUrl = value.includes('www.google.com/maps') || value.includes('maps.google.com') || value.includes('goo.gl/maps');
+    if (value && isValidURL(value) && !isGoogleMapsUrl) {
       fetchMetadata(value);
     }
   };
 
-  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string }) => {
+  const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string; url?: string }) => {
     setLatitude(location.latitude);
     setLongitude(location.longitude);
     setAddress(location.address);
     setPlaceName(location.placeName);
     setPlaceId(location.placeId || "");
+    
+    // Google MapのURLが提供された場合、URLフィールドが空なら自動入力
+    if (location.url && !url.trim()) {
+      setUrl(location.url);
+    }
   };
 
 
@@ -200,6 +207,30 @@ export default function AddBookmark() {
                   <input type="hidden" name="autoSiteName" value={metadata.site_name || ""} />
                 </>
               )}
+              
+              {/* Location Search - moved to top */}
+              <div className="space-y-2">
+                <LocationSearch
+                  onLocationSelect={handleLocationSelect}
+                  defaultLocation={latitude && longitude ? { latitude, longitude } : null}
+                />
+                {latitude && longitude && (
+                  <>
+                    <input type="hidden" name="latitude" value={latitude} />
+                    <input type="hidden" name="longitude" value={longitude} />
+                  </>
+                )}
+                {address && (
+                  <input type="hidden" name="address" value={address} />
+                )}
+                {placeName && (
+                  <input type="hidden" name="placeName" value={placeName} />
+                )}
+                {placeId && (
+                  <input type="hidden" name="placeId" value={placeId} />
+                )}
+              </div>
+
               {/* URL */}
               <div className="space-y-2">
                 <Input
@@ -207,28 +238,36 @@ export default function AddBookmark() {
                   name="url"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
+                  onClear={() => setUrl('')}
                   label="URL"
                   placeholder="https://example.com"
                   variant="bordered"
                   isRequired
+                  isClearable
                 />
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    onPress={() => url && fetchMetadata(url)}
-                    isDisabled={!url || !isValidURL(url) || isLoadingMetadata}
-                    size="sm"
-                    variant="flat"
-                    color="primary"
-                  >
-                    URLから情報を取得
-                  </Button>
-                  {isLoadingMetadata && (
-                    <Chip size="sm" variant="flat">
-                      <RotateCw size={16} className="animate-spin" /> 取得中...
-                    </Chip>
-                  )}
-                </div>
+                {(isLoadingMetadata || url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
+                  <div className="flex items-center gap-2">
+                    {isLoadingMetadata && (
+                      <Chip 
+                        size="sm" 
+                        variant="flat"
+                        startContent={<RotateCw size={16} className="animate-spin" />}
+                      >
+                        取得中...
+                      </Chip>
+                    )}
+                    {(url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
+                      <Chip 
+                        size="sm" 
+                        variant="flat" 
+                        color="secondary"
+                        startContent={<MapPin size={16} />}
+                      >
+                        場所のURL
+                      </Chip>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Title */}
@@ -284,28 +323,6 @@ export default function AddBookmark() {
                 </Select>
               </div>
 
-              {/* Location Search */}
-              <div className="space-y-2">
-                <LocationSearch
-                  onLocationSelect={handleLocationSelect}
-                  defaultLocation={latitude && longitude ? { latitude, longitude } : null}
-                />
-                {latitude && longitude && (
-                  <>
-                    <input type="hidden" name="latitude" value={latitude} />
-                    <input type="hidden" name="longitude" value={longitude} />
-                  </>
-                )}
-                {address && (
-                  <input type="hidden" name="address" value={address} />
-                )}
-                {placeName && (
-                  <input type="hidden" name="placeName" value={placeName} />
-                )}
-                {placeId && (
-                  <input type="hidden" name="placeId" value={placeId} />
-                )}
-              </div>
 
               {/* Priority */}
               <div className="space-y-2">
