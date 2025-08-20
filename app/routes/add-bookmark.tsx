@@ -282,11 +282,6 @@ export default function AddBookmark() {
                   variant="bordered"
                   maxLength={200}
                   isRequired
-                  description={
-                    metadata?.success && metadata.title 
-                      ? `自動取得: ${metadata.title}`
-                      : undefined
-                  }
                 />
               </div>
 
@@ -296,7 +291,7 @@ export default function AddBookmark() {
                   name="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  label="説明 (自動取得)"
+                  label="説明"
                   placeholder="説明文..."
                   variant="bordered"
                   minRows={3}

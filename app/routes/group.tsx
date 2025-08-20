@@ -119,6 +119,9 @@ export async function action({ request, params }: Route.ActionArgs) {
         name: name.trim(),
         icon: icon?.trim() || undefined,
       });
+      
+      // テーマ作成後はテーマタブにリダイレクト
+      return redirect(`/group/${groupId}?tab=themes`);
     } else if (intent === "edit-theme") {
       const themeId = formData.get("themeId")?.toString();
       const name = formData.get("name") as string;
@@ -671,6 +674,7 @@ export default function GroupPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     formData.set("icon", createEmoji);
+    
     submit(formData, { method: "post" });
     setCreateEmoji("");
     onCreateClose();
@@ -775,8 +779,8 @@ export default function GroupPage() {
             selectedKey={currentTab}
             onSelectionChange={handleTabChange}
           >
-            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク一覧</span>} />
-            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ一覧</span>} />
+            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク</span>} />
+            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ</span>} />
             <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図</span>} />
           </Tabs>
         </div>
