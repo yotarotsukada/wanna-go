@@ -105,8 +105,12 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
       where.category = filters.category;
     }
 
+    // visitedフィルターが未指定の場合はデフォルトで未訪問のみ取得
     if (filters?.visited && filters.visited !== 'all') {
       where.visited = filters.visited === 'true';
+    } else if (!filters?.visited || filters.visited !== 'all') {
+      // デフォルトで訪問済みを除外
+      where.visited = false;
     }
 
     if (filters?.search) {
@@ -175,8 +179,12 @@ export const createBookmarkRepository = (): BookmarkRepository => ({
       filteredWhere.category = filters.category;
     }
 
+    // visitedフィルターが未指定の場合はデフォルトで未訪問のみ取得
     if (filters?.visited && filters.visited !== 'all') {
       filteredWhere.visited = filters.visited === 'true';
+    } else if (!filters?.visited || filters.visited !== 'all') {
+      // デフォルトで訪問済みを除外
+      filteredWhere.visited = false;
     }
 
     if (filters?.search) {

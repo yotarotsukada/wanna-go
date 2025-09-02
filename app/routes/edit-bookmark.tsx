@@ -1,5 +1,5 @@
 import type { Route } from "./+types/edit-bookmark";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useParams, Form, useLoaderData, useActionData, useNavigation } from "react-router";
 import { getBookmark, updateBookmark, deleteBookmark } from "../services/bookmark.server";
 import { getGroup } from "../services/group.server";
@@ -10,13 +10,12 @@ import type { Category } from "../lib/constants";
 import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import type { Group } from "../entities/group/group";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
-import { validateBookmarkUrl, validateBookmarkTitle, validatePriority } from "../entities/bookmark/bookmark";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Divider } from "@heroui/react";
+import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { LocationSearch } from "../components/location-search";
 
-export function meta({ params }: Route.MetaArgs) {
+export function meta() {
   return [
     { title: `ブックマーク編集 - wanna-go` },
     { name: "description", content: "ブックマークを編集" },
@@ -115,7 +114,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function EditBookmark() {
   const { groupId } = useParams();
-  const { bookmark, group, themes, bookmarkThemes } = useLoaderData() as { 
+  const { bookmark, themes, bookmarkThemes } = useLoaderData() as { 
     bookmark: BookmarkWithThemes; 
     group: Group; 
     themes: ThemeWithBookmarkCount[];
@@ -143,31 +142,6 @@ export default function EditBookmark() {
     setUrl(value);
   };
   
-  // フロントエンドバリデーション状態（エンティティ関数を活用）
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  
-  // リアルタイムバリデーション関数
-  const validateField = (field: string, value: any) => {
-    try {
-      switch (field) {
-        case 'url':
-          validateBookmarkUrl(value);
-          break;
-        case 'title':
-          validateBookmarkTitle(value);
-          break;
-        case 'priority':
-          validatePriority(value);
-          break;
-      }
-      setValidationErrors(prev => ({ ...prev, [field]: '' }));
-    } catch (error) {
-      setValidationErrors(prev => ({ 
-        ...prev, 
-        [field]: error instanceof Error ? error.message : '入力エラー' 
-      }));
-    }
-  };
 
   const handleLocationSelect = (location: { latitude: number; longitude: number; address: string; placeName: string; placeId?: string; url?: string }) => {
     setLatitude(location.latitude);
