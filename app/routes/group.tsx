@@ -266,29 +266,13 @@ function BookmarksStats({
   const stats = calculateStats(filteredBookmarks);
   
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-4">
-          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-            {stats.total_count}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">総数</div>
-        </CardBody>
-      </Card>
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-4">
-          <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-            {stats.visited_count}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">訪問済み</div>
-        </CardBody>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-            {stats.unvisited_count}
+            {stats.total_count}
           </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">未訪問</div>
+          <div className="text-sm text-slate-500 dark:text-slate-400">ブックマーク数</div>
         </CardBody>
       </Card>
       <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
