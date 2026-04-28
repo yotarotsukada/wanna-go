@@ -69,11 +69,11 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
   };
 
   return (
-    <Card className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+    <Card className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm">
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between w-full gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+            <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-50 flex items-center gap-2 mb-2">
               <span className="text-xl flex-shrink-0">{emoji}</span>
               <span className="truncate">{bookmark.title}</span>
             </h3>
@@ -122,7 +122,7 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
           )}
         </div>
         {bookmark.address && (
-          <div className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-start gap-2 text-sm text-stone-500 dark:text-stone-400">
             <MapPin size={16} className="flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">{bookmark.address}</span>
           </div>
@@ -130,15 +130,15 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
 
         {bookmark.memo && (
           <div className="flex items-start gap-2 text-sm">
-            <MessageCircle size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
-            <div className="text-slate-900 dark:text-slate-50 leading-relaxed flex-1">
+            <MessageCircle size={16} className="flex-shrink-0 mt-0.5 text-stone-500 dark:text-stone-400" />
+            <div className="text-stone-900 dark:text-stone-50 leading-relaxed flex-1">
               {bookmark.memo}
             </div>
           </div>
         )}
 
         <div className="flex items-start gap-2 text-sm">
-          <ExternalLink size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
+          <ExternalLink size={16} className="flex-shrink-0 mt-0.5 text-stone-500 dark:text-stone-400" />
           <a
             href={bookmark.url}
             target="_blank"

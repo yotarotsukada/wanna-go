@@ -110,9 +110,9 @@ export default function GroupSettings() {
           </div>
 
           {/* Group Info */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm mb-6">
+          <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm mb-6">
             <CardHeader className="pb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+              <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
                 グループ情報
               </h2>
             </CardHeader>
@@ -180,9 +180,9 @@ export default function GroupSettings() {
           </Card>
 
           {/* Sharing */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm mb-6">
+          <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm mb-6">
             <CardHeader className="pb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+              <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
                 共有
               </h2>
             </CardHeader>
@@ -219,9 +219,9 @@ export default function GroupSettings() {
           </Card>
 
           {/* Statistics */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
             <CardHeader className="pb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+              <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
                 統計情報
               </h2>
             </CardHeader>

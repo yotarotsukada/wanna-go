@@ -28,20 +28,20 @@ export default function Home() {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="mb-6">
-              <h1 className="text-6xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">
+              <h1 className="text-6xl font-bold text-stone-900 dark:text-stone-50 mb-4 tracking-tight">
                 wanna-go
               </h1>
               <div className="text-4xl mb-6">🗺️</div>
             </div>
             
             <div className="mb-12 space-y-2">
-              <h2 className="text-3xl font-medium text-slate-500 dark:text-slate-400">
+              <h2 className="text-3xl font-medium text-stone-500 dark:text-stone-400">
                 行きたい場所を
               </h2>
-              <h2 className="text-3xl font-medium text-slate-900 dark:text-slate-50">
+              <h2 className="text-3xl font-medium text-stone-900 dark:text-stone-50">
                 家族・恋人と共有しよう
               </h2>
-              <p className="text-lg text-slate-500 dark:text-slate-400 mt-6 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-lg text-stone-500 dark:text-stone-400 mt-6 max-w-2xl mx-auto leading-relaxed">
                 アカウント不要でURLを共有するだけ。お気に入りの場所をみんなで集めて、次の冒険を計画しよう
               </p>
             </div>
@@ -64,7 +64,7 @@ export default function Home() {
           {/* Cards Section */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             {/* Join group card */}
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div>
                   <h3 className="text-xl font-semibold">既存グループに参加</h3>
@@ -101,7 +101,7 @@ export default function Home() {
             </Card>
 
             {/* Features card */}
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <div>
                   <h3 className="text-xl font-semibold">主な機能</h3>
@@ -151,7 +151,7 @@ export default function Home() {
           </div>
 
           {/* How it works */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
             <CardHeader className="pb-3 text-center">
               <div className="w-full">
                 <h3 className="text-xl font-semibold">使い方はとても簡単</h3>

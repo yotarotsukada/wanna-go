@@ -165,17 +165,17 @@ function BookmarksSkeleton() {
   return (
     <div className="space-y-6">
       {[1, 2, 3].map((i) => (
-        <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <Card key={i} className="animate-pulse bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
           <CardBody className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-3/4"></div>
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                <div className="h-6 bg-stone-200 dark:bg-stone-700 rounded-3xl mb-2 w-3/4"></div>
+                <div className="h-4 bg-stone-200 dark:bg-stone-700 rounded-3xl w-1/2"></div>
               </div>
-              <div className="w-16 h-8 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              <div className="w-16 h-8 bg-stone-200 dark:bg-stone-700 rounded-3xl"></div>
             </div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full mb-2"></div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
+            <div className="h-4 bg-stone-200 dark:bg-stone-700 rounded-3xl w-full mb-2"></div>
+            <div className="h-4 bg-stone-200 dark:bg-stone-700 rounded-3xl w-2/3"></div>
           </CardBody>
         </Card>
       ))}
@@ -267,20 +267,20 @@ function BookmarksStats({
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <Card className="text-center bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
             {stats.total_count}
           </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">ブックマーク数</div>
+          <div className="text-sm text-stone-500 dark:text-stone-400">ブックマーク数</div>
         </CardBody>
       </Card>
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <Card className="text-center bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
         <CardBody className="py-4">
           <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
             {stats.avg_priority.toFixed(1)}
           </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
+          <div className="text-sm text-stone-500 dark:text-stone-400">平均興味度</div>
         </CardBody>
       </Card>
     </div>
@@ -349,14 +349,14 @@ function BookmarksList({
 }) {
   if (filteredBookmarks.length === 0) {
     return (
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <Card className="text-center bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
         <CardBody className="py-16">
           <h3 className="text-xl font-semibold mb-2">
             {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
               ? "条件に一致するブックマークがありません"
               : "まだブックマークがありません"}
           </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
+          <p className="text-stone-500 dark:text-stone-400 mb-6">
             {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
               ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
               : "最初の行きたい場所を追加して、みんなで共有しましょう"}
@@ -412,12 +412,12 @@ function ThemesList({
   
   if (themes.length === 0) {
     return (
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+      <Card className="text-center bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
         <CardBody className="py-16">
           <h3 className="text-xl font-semibold mb-2">
             テーマがありません
           </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
+          <p className="text-stone-500 dark:text-stone-400 mb-6">
             最初のテーマを作成して、ブックマークを整理しましょう
           </p>
           <Button
@@ -435,7 +435,7 @@ function ThemesList({
   return (
     <>
       {themes.map((theme: any) => (
-        <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
           <div className="p-4">
             <Accordion
               onSelectionChange={(keys) => {
@@ -457,7 +457,7 @@ function ThemesList({
                 title={
                   <div className="flex items-start justify-between w-full gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-50 flex items-center gap-2 mb-2">
                         <span className="text-xl flex-shrink-0">{theme.icon || '🗺️'}</span>
                         <span className="truncate">{theme.name}</span>
                       </h3>
@@ -487,11 +487,11 @@ function ThemesList({
                 <div className="space-y-3">
                   {loadingThemes[theme.id] ? (
                     <div className="text-center py-8">
-                      <div className="text-slate-500 dark:text-slate-400">読み込み中...</div>
+                      <div className="text-stone-500 dark:text-stone-400">読み込み中...</div>
                     </div>
                   ) : themeBookmarks[theme.id]?.length === 0 ? (
                     <div className="text-center py-8">
-                      <div className="text-slate-500 dark:text-slate-400">
+                      <div className="text-stone-500 dark:text-stone-400">
                         このテーマに紐づくブックマークはありません
                       </div>
                     </div>
@@ -508,7 +508,7 @@ function ThemesList({
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <div className="text-slate-500 dark:text-slate-400">
+                      <div className="text-stone-500 dark:text-stone-400">
                         クリックでブックマークを表示
                       </div>
                     </div>
@@ -695,11 +695,11 @@ export default function GroupPage() {
         <div className="mb-8">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-2 tracking-tight">
+              <h1 className="text-4xl font-bold text-stone-900 dark:text-stone-50 mb-2 tracking-tight">
                 {group.name}
               </h1>
               {group.description && (
-                <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+                <p className="text-lg text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
                   {group.description}
                 </p>
               )}
@@ -736,10 +736,10 @@ export default function GroupPage() {
           fallback={
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
+                <Card key={i} className="text-center bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm animate-pulse">
                   <CardBody className="py-4">
-                    <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-1"></div>
-                    <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto"></div>
+                    <div className="w-12 h-8 bg-stone-200 dark:bg-stone-700 rounded-3xl mx-auto mb-1"></div>
+                    <div className="w-16 h-4 bg-stone-200 dark:bg-stone-700 rounded-3xl mx-auto"></div>
                   </CardBody>
                 </Card>
               ))}
@@ -768,12 +768,12 @@ export default function GroupPage() {
 
         {/* Filters - Only show for bookmarks tab */}
         {currentTab === "bookmarks" && (
-          <Card className="mb-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <Card className="mb-8 bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
             <CardBody>
               <div className="flex flex-wrap gap-4 items-center">
                 {/* Category filter */}
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">カテゴリ:</label>
+                  <label className="text-sm font-medium text-stone-500 dark:text-stone-400 min-w-fit">カテゴリ:</label>
                   <Select
                     selectedKeys={[categoryFilter]}
                     onSelectionChange={(keys) => {
@@ -795,7 +795,7 @@ export default function GroupPage() {
 
                 {/* Visited filter */}
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">状態:</label>
+                  <label className="text-sm font-medium text-stone-500 dark:text-stone-400 min-w-fit">状態:</label>
                   <Select
                     selectedKeys={[visitedFilter]}
                     onSelectionChange={(keys) => {
@@ -821,7 +821,7 @@ export default function GroupPage() {
                     placeholder="場所やメモで検索..."
                     variant="bordered"
                     size="sm"
-                    startContent={<Search size={16} className={`text-slate-500 dark:text-slate-400 ${isSearching ? 'animate-pulse' : ''}`} />}
+                    startContent={<Search size={16} className={`text-stone-500 dark:text-stone-400 ${isSearching ? 'animate-pulse' : ''}`} />}
                   />
                 </div>
               </div>
@@ -872,12 +872,12 @@ export default function GroupPage() {
             <Suspense fallback={
               <div className="space-y-6">
                 {[1, 2, 3].map((i) => (
-                  <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                  <Card key={i} className="animate-pulse bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
                     <CardBody className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-1/2"></div>
-                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+                          <div className="h-6 bg-stone-200 dark:bg-stone-700 rounded-3xl mb-2 w-1/2"></div>
+                          <div className="h-4 bg-stone-200 dark:bg-stone-700 rounded-3xl w-1/3"></div>
                         </div>
                       </div>
                     </CardBody>
@@ -899,9 +899,9 @@ export default function GroupPage() {
           ) : currentTab === "map" ? (
             // Map content with Suspense
             <Suspense fallback={
-              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
+              <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm animate-pulse">
                 <CardBody className="p-6">
-                  <div className="w-full h-96 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  <div className="w-full h-96 bg-stone-200 dark:bg-stone-700 rounded-3xl"></div>
                 </CardBody>
               </Card>
             }>
@@ -993,9 +993,9 @@ export default function GroupPage() {
                     />
                   </div>
                   {selectedTheme && (
-                    <Card className="bg-slate-50/50 dark:bg-slate-800/50">
+                    <Card className="bg-stone-50/50 dark:bg-stone-800/50">
                       <CardBody className="p-4">
-                        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                        <h3 className="text-sm font-medium text-stone-700 dark:text-stone-300 mb-3">
                           統計情報
                         </h3>
                         <div className="flex flex-wrap gap-2">

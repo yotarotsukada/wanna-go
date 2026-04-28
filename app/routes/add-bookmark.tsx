@@ -200,7 +200,7 @@ export default function AddBookmark() {
           </div>
 
           {/* Form */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <Card className="bg-white/80 dark:bg-stone-900/80 shadow-orange-900/5 shadow-xl rounded-3xl border border-orange-100 dark:border-stone-800 backdrop-blur-sm">
             <CardBody className="p-6">
             <Form method="post" className="space-y-6">
               {/* Hidden metadata fields */}
@@ -328,7 +328,7 @@ export default function AddBookmark() {
 
               {/* Priority */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-900 dark:text-slate-50">
+                <label className="block text-sm font-medium text-stone-900 dark:text-stone-50">
                   興味度
                 </label>
                 <div className="flex items-center gap-4">
@@ -402,7 +402,7 @@ export default function AddBookmark() {
                   {Array.from(selectedThemeIds).map((themeId) => (
                     <input key={themeId} type="hidden" name="themeIds" value={themeId} />
                   ))}
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     ※ 複数選択可能
                   </p>
                 </div>

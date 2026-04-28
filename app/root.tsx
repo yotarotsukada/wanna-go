@@ -21,7 +21,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Zen+Maru+Gothic:wght@300;400;500;700;900&display=swap",
   },
 ];
 
@@ -47,8 +47,11 @@ export default function App() {
   return (
     <NuqsAdapter>
       <HeroUIProvider>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-          <Outlet />
+        <div className="min-h-screen relative bg-gradient-to-br from-amber-50 via-orange-50 to-orange-100 dark:from-stone-900 dark:via-amber-900/40 dark:to-stone-950 font-body transition-colors duration-500 text-slate-800 dark:text-stone-100">
+          <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20 dark:opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjgiIG51bU9jdGF2ZXM9IjQiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbikiIG9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')] z-0"></div>
+          <div className="relative z-10">
+            <Outlet />
+          </div>
         </div>
       </HeroUIProvider>
     </NuqsAdapter>

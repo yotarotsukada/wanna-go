@@ -37,12 +37,12 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
 
   if (bookmarksWithCoordinates.length === 0) {
     return (
-      <Card className={`bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm ${className || ''}`}>
+      <Card className={`bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm ${className || ''}`}>
         <CardBody className="p-16 text-center">
           <h3 className="text-xl font-semibold mb-2">
             座標情報のあるブックマークがありません
           </h3>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-stone-500 dark:text-stone-400">
             ブックマークに住所や座標情報を追加すると地図に表示されます
           </p>
         </CardBody>
@@ -123,12 +123,12 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
 
   if (!googleMapsApiKey) {
     return (
-      <Card className={`bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm ${className || ''}`}>
+      <Card className={`bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm ${className || ''}`}>
         <CardBody className="p-16 text-center">
           <h3 className="text-xl font-semibold mb-2 text-red-600 dark:text-red-400">
             Google Maps APIキーが設定されていません
           </h3>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="text-stone-500 dark:text-stone-400">
             地図を表示するにはGOOGLE_MAPS_API_KEY環境変数を設定してください
           </p>
         </CardBody>
@@ -137,7 +137,7 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
   }
 
   return (
-    <Card className={`bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm ${className || ''}`}>
+    <Card className={`bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm ${className || ''}`}>
       <CardBody className="p-0">
         <APIProvider apiKey={googleMapsApiKey}>
           <div className="w-full h-96 md:h-[500px] lg:h-[600px] relative">
@@ -179,7 +179,7 @@ export function MapView({ bookmarks, googleMapsApiKey, className }: MapViewProps
                   maxWidth={300}
                   pixelOffset={[0, -40]}
                   headerContent={
-                    <div className="font-semibold text-base text-slate-900 truncate">
+                    <div className="font-semibold text-base text-stone-900 truncate">
                       {selectedBookmark.title}
                     </div>
                   }
@@ -263,8 +263,8 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
         {/* 住所 */}
         {bookmark.address && (
           <div className="flex items-start gap-2">
-            <MapPin size={14} className="text-slate-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-slate-700 break-words">
+            <MapPin size={14} className="text-stone-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-stone-700 break-words">
               {bookmark.address}
             </p>
           </div>
@@ -273,8 +273,8 @@ function BookmarkInfoContent({ bookmark }: BookmarkInfoContentProps) {
         {/* メモ */}
         {bookmark.memo && (
           <div className="flex items-start gap-2 text-sm">
-            <MessageCircle size={14} className="text-slate-500 mt-0.5 flex-shrink-0" />
-            <p className="text-slate-700 break-words">
+            <MessageCircle size={14} className="text-stone-500 mt-0.5 flex-shrink-0" />
+            <p className="text-stone-700 break-words">
               {bookmark.memo}
             </p>
           </div>
