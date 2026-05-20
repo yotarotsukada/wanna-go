@@ -7,7 +7,6 @@
 
 ## エージェントの動き方
 - 作業に入る前に `.claude/skills/` の各 Skill description を確認し、該当するものを発火させる。規約・ドメイン知識・データモデルは Skill 本文と `docs/` に集約してある。
-- 一人で悩み過ぎず、`gemini -p <question>` による Web 検索および生成 AI からの評価を活用する。
 
 ## ディレクトリ役割
 - `app/` — React Router v7 アプリ本体（`routes/` / `services/` / `entities/` / `components/` / `lib/`）
