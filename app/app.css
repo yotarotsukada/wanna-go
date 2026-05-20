@@ -1,41 +1,264 @@
 @import "tailwindcss";
 @plugin './lib/hero.ts';
-/* Note: You may need to change the path to fit your project structure */
 @source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+ * Design Tokens — Pocket Atlas / Vintage Map
+ * ============================================================ */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+  /* Fonts */
+  --font-sans: "Inter", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "DM Serif Display", "Noto Serif JP", ui-serif, Georgia, serif;
+  --font-serif: "Noto Serif JP", "DM Serif Display", ui-serif, Georgia, serif;
+
+  /* Vintage Map palette */
+  --color-parchment: #f2e8d5;
+  --color-parchment-2: #eadfc6;
+  --color-parchment-3: #ddd0b3;
+  --color-deep-sea: #1f3a5f;
+  --color-deep-sea-ink: #142840;
+  --color-deep-sea-soft: #2a4d7a;
+  --color-gold: #d4a24c;
+  --color-gold-soft: #e7c587;
+  --color-rust: #a4503a;
+  --color-rust-soft: #c87355;
+  --color-moss: #3d5a3d;
+  --color-moss-soft: #5b7d5b;
+
+  /* Dark mode — deep sea night map */
+  --color-night-sea: #0d1f33;
+  --color-night-sea-2: #142840;
+  --color-night-paper: #1c3552;
+
+  /* Radius */
+  --radius-paper: 14px;
+  --radius-pin: 999px;
+
+  /* Shadow */
+  --shadow-paper: 0 1px 2px rgba(20, 40, 64, 0.08),
+    0 8px 24px -8px rgba(20, 40, 64, 0.16);
+  --shadow-paper-hover: 0 2px 4px rgba(20, 40, 64, 0.12),
+    0 16px 32px -8px rgba(20, 40, 64, 0.2);
+  --shadow-pin: 0 2px 4px rgba(20, 40, 64, 0.3),
+    0 4px 8px -2px rgba(164, 80, 58, 0.25);
+}
+
+/* ============================================================
+ * Background textures (SVG data URIs)
+ * ============================================================ */
+:root {
+  /* 等高線パターン: 透過の薄い斜め曲線 */
+  --contour-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'><g fill='none' stroke='%231f3a5f' stroke-width='0.6' opacity='0.08'><path d='M0 60 Q60 30 120 60 T240 60'/><path d='M0 100 Q60 70 120 100 T240 100'/><path d='M0 140 Q60 110 120 140 T240 140'/><path d='M0 180 Q60 150 120 180 T240 180'/><path d='M0 220 Q60 190 120 220 T240 220'/></g></svg>");
+
+  /* ノイズ: 紙繊維風の薄いドット */
+  --noise-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.16  0 0 0 0 0.25  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+
+  /* 紙の左上ロゴ用コンパス透かし */
+  --compass-watermark-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><g fill='none' stroke='%231f3a5f' stroke-width='1.2' opacity='0.18'><circle cx='32' cy='32' r='26'/><path d='M32 6 L36 32 L32 58 L28 32 Z' fill='%231f3a5f' opacity='0.18'/><path d='M6 32 L32 28 L58 32 L32 36 Z'/></g></svg>");
 }
 
 html,
 body {
-  @apply bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased;
+  background-color: var(--color-parchment);
+  color: var(--color-deep-sea-ink);
+  @apply antialiased;
+  font-family: var(--font-sans);
+}
 
-  @media (prefers-color-scheme: dark) {
+body {
+  background-image: var(--noise-url), var(--contour-url),
+    radial-gradient(
+      circle at 20% 10%,
+      rgba(212, 162, 76, 0.12),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 90%,
+      rgba(164, 80, 58, 0.1),
+      transparent 55%
+    );
+  background-attachment: fixed;
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
+  min-height: 100vh;
+}
+
+/* Dark mode — night sea map */
+.dark html,
+.dark body,
+html.dark,
+html.dark body {
+  background-color: var(--color-night-sea);
+  color: var(--color-parchment);
+}
+
+html.dark body,
+.dark body {
+  background-image: var(--noise-url), var(--contour-url),
+    radial-gradient(
+      circle at 20% 10%,
+      rgba(212, 162, 76, 0.06),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 90%,
+      rgba(31, 58, 95, 0.4),
+      transparent 55%
+    );
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light),
+  html:not(.light) body {
     color-scheme: dark;
   }
 }
 
+/* ============================================================
+ * Typography helpers
+ * ============================================================ */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
 
-/* Animations */
+.font-serif-jp {
+  font-family: var(--font-serif);
+}
+
+/* ============================================================
+ * Paper card (vintage parchment card)
+ * ============================================================ */
+.paper-card {
+  background-color: var(--color-parchment-2);
+  border: 1px solid rgba(31, 58, 95, 0.16);
+  border-radius: var(--radius-paper);
+  box-shadow: var(--shadow-paper);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.paper-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--contour-url);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dark .paper-card {
+  background-color: var(--color-night-paper);
+  border-color: rgba(242, 232, 213, 0.16);
+}
+
+/* ============================================================
+ * Pin drop shadow utility
+ * ============================================================ */
+.drop-shadow-pin {
+  filter: drop-shadow(0 3px 3px rgba(20, 40, 64, 0.35));
+}
+
+/* ============================================================
+ * Animations
+ * ============================================================ */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Autofill styles for better contrast in both light and dark modes */
+@keyframes pin-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.85) rotate(-2deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.02) rotate(0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+.animate-pin-drop {
+  animation: pin-drop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+@keyframes compass-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-compass-spin {
+  animation: compass-spin 2.4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes ink-check {
+  0% {
+    stroke-dashoffset: 28;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-ink-check path {
+  stroke-dasharray: 28;
+  animation: ink-check 0.5s ease-out forwards;
+}
+
+@keyframes paper-lift {
+  to {
+    transform: translateY(-2px) rotate(-0.3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-pin-drop,
+  .animate-compass-spin,
+  .animate-ink-check path {
+    animation: none !important;
+  }
+  .animate-ink-check path {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ============================================================
+ * Autofill: parchment-friendly contrast
+ * ============================================================ */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-  -webkit-text-fill-color: #0f172a !important;
+  -webkit-text-fill-color: var(--color-deep-sea-ink) !important;
 }
 
 .dark input:-webkit-autofill,
@@ -43,5 +266,19 @@ input:-webkit-autofill:active {
 .dark input:-webkit-autofill:focus,
 .dark input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-text-fill-color: var(--color-parchment) !important;
+}
+
+/* ============================================================
+ * Dotted route line (for "使い方3ステップ" connector)
+ * ============================================================ */
+.route-line {
+  background-image: radial-gradient(
+    circle,
+    rgba(31, 58, 95, 0.35) 1.2px,
+    transparent 1.2px
+  );
+  background-size: 10px 2px;
+  background-repeat: repeat-x;
+  background-position: center;
 }
