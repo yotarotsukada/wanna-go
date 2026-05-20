@@ -1,8 +1,20 @@
 import { Link } from "react-router";
-import { Button, Card, Chip } from "@heroui/react";
+import { Button } from "@heroui/react";
+import { motion } from "framer-motion";
+import {
+  MapPin,
+  MessageCircle,
+  ExternalLink,
+  Edit,
+  Trash2,
+  Navigation,
+  RotateCcw,
+  Check,
+} from "lucide-react";
 import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import { formatDate } from "../lib/utils";
-import { MapPin, MessageCircle, ExternalLink, Check, Edit, Trash2, Navigation } from "lucide-react";
+import { CategoryPin } from "./category-pin";
+import { StampChip } from "./stamp-chip";
 
 interface BookmarkCardProps {
   bookmark: BookmarkWithThemes;
@@ -10,52 +22,86 @@ interface BookmarkCardProps {
   onDelete: (bookmarkId: string) => void;
 }
 
-const categoryEmojis: Record<string, string> = {
-  'レストラン': '🍜',
-  '観光地': '🏛️',
-  'ショッピング': '🛍️',
-  'アクティビティ': '🎯',
-  'その他': '📍',
-};
+function PriorityPins({ priority }: { priority: number }) {
+  return (
+    <div
+      className="flex items-center gap-0.5"
+      aria-label={`興味度 ${priority} / 5`}
+    >
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg
+          key={i}
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+          className={i < priority ? "" : "opacity-30"}
+        >
+          <circle
+            cx="8"
+            cy="8"
+            r="6"
+            fill={i < priority ? "#D4A24C" : "transparent"}
+            stroke="#D4A24C"
+            strokeWidth="1.2"
+          />
+          {i < priority && (
+            <circle cx="8" cy="8" r="2" fill="#142840" opacity="0.55" />
+          )}
+        </svg>
+      ))}
+    </div>
+  );
+}
 
-const categoryColors: Record<string, 'warning' | 'primary' | 'secondary' | 'success' | 'default'> = {
-  'レストラン': 'warning',
-  '観光地': 'primary',
-  'ショッピング': 'secondary',
-  'アクティビティ': 'success',
-  'その他': 'default',
-};
-
-export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCardProps) {
-  const emoji = categoryEmojis[bookmark.category] || '📍';
-  const categoryColor = categoryColors[bookmark.category] || categoryColors['その他'];
-  const stars = Array.from({ length: 5 }, (_, i) => (
-    <span key={i} className={i < bookmark.priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
-      ★
+function InkCheck({ size = 22 }: { size?: number }) {
+  return (
+    <span
+      className="animate-ink-check inline-flex items-center justify-center rounded-full bg-moss/15 dark:bg-moss-soft/20"
+      style={{ width: size + 10, height: size + 10 }}
+      aria-hidden="true"
+    >
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#3D5A3D"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="dark:[&_path]:stroke-[#5B7D5B]"
+      >
+        <path d="M4 12 L10 18 L20 6" />
+      </svg>
     </span>
-  ));
+  );
+}
 
+export function BookmarkCard({
+  bookmark,
+  onToggleVisited,
+  onDelete,
+}: BookmarkCardProps) {
   const handleToggleVisited = () => {
     onToggleVisited(bookmark.id, !bookmark.visited);
   };
 
   const handleDelete = () => {
-    if (confirm('このブックマークを削除しますか？')) {
+    if (confirm("このブックマークを削除しますか？")) {
       onDelete(bookmark.id);
     }
   };
 
   const generateGoogleMapsUrl = () => {
     if (bookmark.latitude && bookmark.longitude && bookmark.placeId) {
-      // 座標とplace_idの両方がある場合
       return `https://www.google.com/maps/search/?api=1&query=${bookmark.latitude}%2C${bookmark.longitude}&query_place_id=${bookmark.placeId}`;
     }
     if (bookmark.placeId) {
-      // place_idのみの場合
       return `https://www.google.com/maps/search/?api=1&query_place_id=${bookmark.placeId}`;
     }
     if (bookmark.latitude && bookmark.longitude) {
-      // 座標のみの場合（古いデータ用フォールバック）
       return `https://www.google.com/maps?q=${bookmark.latitude},${bookmark.longitude}`;
     }
     return null;
@@ -64,65 +110,73 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
   const handleOpenInMaps = () => {
     const mapsUrl = generateGoogleMapsUrl();
     if (mapsUrl) {
-      window.open(mapsUrl, '_blank');
+      window.open(mapsUrl, "_blank");
     }
   };
 
+  const visitedTone = bookmark.visited ? "opacity-90" : "";
+
   return (
-    <Card className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-      <div className="p-4 space-y-3">
-        <div className="flex items-start justify-between w-full gap-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
-              <span className="text-xl flex-shrink-0">{emoji}</span>
-              <span className="truncate">{bookmark.title}</span>
-            </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-0.5">
-                {stars}
-              </div>
-              <Chip color={categoryColor} variant="flat" size="sm">
-                {bookmark.category}
-              </Chip>
-              {bookmark.themes && bookmark.themes.map((theme) => (
-                <Chip
-                  key={theme.id}
-                  color="secondary"
-                  variant="bordered"
-                  size="sm"
-                  startContent={theme.icon && <span>{theme.icon}</span>}
-                  className="hidden sm:inline-flex"
-                >
-                  {theme.name}
-                </Chip>
-              ))}
-            </div>
-            {bookmark.themes && bookmark.themes.length > 0 && (
-              <div className="mt-2 sm:hidden">
-                <div className="flex gap-2 flex-wrap">
-                  {bookmark.themes.map((theme) => (
-                    <Chip
-                      key={theme.id}
-                      color="secondary"
-                      variant="bordered"
-                      size="sm"
-                      startContent={theme.icon && <span>{theme.icon}</span>}
-                    >
-                      {theme.name}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          {bookmark.visited && (
-            <div className="flex-shrink-0">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            </div>
-          )}
+    <motion.article
+      whileHover={{ y: -2, rotate: -0.3 }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      className={`paper-card animate-pin-drop relative ${visitedTone} ${
+        bookmark.visited ? "bg-moss/[0.06] dark:bg-moss-soft/[0.08]" : ""
+      }`}
+    >
+      {/* 左上の category-pin（紙にピン留め） */}
+      <div className="absolute -top-3 -left-3 z-10 drop-shadow-pin pointer-events-none">
+        <CategoryPin category={bookmark.category} size={36} />
+      </div>
+
+      {/* 訪問済みの羽ペン風チェック */}
+      {bookmark.visited && (
+        <div className="absolute top-3 right-3 z-10">
+          <InkCheck />
         </div>
+      )}
+
+      {/* OG画像（メディア帯） */}
+      {bookmark.autoImageUrl && (
+        <div className="aspect-[16/9] w-full overflow-hidden rounded-t-[14px] bg-parchment-3/40 border-b border-deep-sea/10">
+          <img
+            src={bookmark.autoImageUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+      )}
+
+      <div className="p-5 pt-6 space-y-3">
+        <header className="pl-8 pr-12 space-y-2">
+          <h3
+            className={`font-display text-xl leading-snug text-deep-sea dark:text-parchment ${
+              bookmark.visited ? "line-through decoration-moss/60 decoration-[1.5px]" : ""
+            }`}
+          >
+            {bookmark.title}
+          </h3>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <PriorityPins priority={bookmark.priority} />
+            <span className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 font-serif-jp tracking-wide">
+              {bookmark.category}
+            </span>
+            {bookmark.themes?.map((theme) => (
+              <StampChip key={theme.id} tone="rust">
+                {theme.icon && <span aria-hidden="true">{theme.icon}</span>}
+                {theme.name}
+              </StampChip>
+            ))}
+          </div>
+        </header>
+
         {bookmark.address && (
-          <div className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-start gap-2 text-sm text-deep-sea-ink/75 dark:text-parchment/75">
             <MapPin size={16} className="flex-shrink-0 mt-0.5" />
             <span className="leading-relaxed">{bookmark.address}</span>
           </div>
@@ -130,49 +184,53 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
 
         {bookmark.memo && (
           <div className="flex items-start gap-2 text-sm">
-            <MessageCircle size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
-            <div className="text-slate-900 dark:text-slate-50 leading-relaxed flex-1">
+            <MessageCircle
+              size={16}
+              className="flex-shrink-0 mt-0.5 text-deep-sea-ink/60 dark:text-parchment/60"
+            />
+            <p className="text-deep-sea-ink dark:text-parchment leading-relaxed flex-1">
               {bookmark.memo}
-            </div>
+            </p>
           </div>
         )}
 
         <div className="flex items-start gap-2 text-sm">
-          <ExternalLink size={16} className="flex-shrink-0 mt-0.5 text-slate-500 dark:text-slate-400" />
+          <ExternalLink
+            size={16}
+            className="flex-shrink-0 mt-0.5 text-deep-sea-ink/60 dark:text-parchment/60"
+          />
           <a
             href={bookmark.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline break-all transition-colors flex-1"
+            className="text-deep-sea dark:text-gold-soft hover:underline break-all transition-colors flex-1"
           >
             {bookmark.url}
           </a>
         </div>
 
         {bookmark.visited && bookmark.visitedAt && (
-          <Chip
-            color="success"
-            variant="flat"
-            size="sm"
-            startContent={<Check size={16} />}
-            className="w-fit"
-          >
-            {formatDate(bookmark.visitedAt)}に訪問済み
-          </Chip>
+          <div className="text-xs font-serif-jp text-moss dark:text-moss-soft inline-flex items-center gap-1.5">
+            <Check size={14} />
+            {formatDate(bookmark.visitedAt)} に訪問済み
+          </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-3 border-t border-deep-sea/10">
           <Button
             onPress={handleToggleVisited}
             color={bookmark.visited ? "default" : "success"}
             variant={bookmark.visited ? "ghost" : "flat"}
             size="sm"
             className="flex-1"
+            startContent={
+              bookmark.visited ? <RotateCcw size={14} /> : <Check size={14} />
+            }
           >
-            {bookmark.visited ? '未訪問に戻す' : '訪問済みにする'}
+            {bookmark.visited ? "未訪問に戻す" : "訪問済みにする"}
           </Button>
-          
+
           {(bookmark.placeId || (bookmark.latitude && bookmark.longitude)) && (
             <Button
               onPress={handleOpenInMaps}
@@ -180,33 +238,34 @@ export function BookmarkCard({ bookmark, onToggleVisited, onDelete }: BookmarkCa
               size="sm"
               isIconOnly
               color="primary"
+              aria-label="Google マップで開く"
             >
               <Navigation size={16} />
             </Button>
           )}
-          
+
           <Button
             as={Link}
             to={`/group/${bookmark.groupId}/edit/${bookmark.id}`}
             variant="ghost"
             size="sm"
-            startContent={<Edit size={16} />}
+            startContent={<Edit size={14} />}
           >
             編集
           </Button>
-          
+
           <Button
             onPress={handleDelete}
             color="danger"
             variant="ghost"
             size="sm"
             isIconOnly
+            aria-label="削除"
           >
             <Trash2 size={16} />
           </Button>
         </div>
       </div>
-    </Card>
-
+    </motion.article>
   );
 }
