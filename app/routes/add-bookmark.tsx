@@ -10,7 +10,7 @@ import type { Category } from "../lib/constants";
 import type { UrlMetadata } from "../lib/types";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { Button, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
-import { ArrowLeft, RotateCw, MapPin } from "lucide-react";
+import { ArrowLeft, RotateCw, MapPin, Globe, Check, X } from "lucide-react";
 import { LocationSearch } from "../components/location-search";
 import { AppHeader } from "../components/app-header";
 
@@ -204,121 +204,182 @@ export default function AddBookmark() {
               ブックマークを追加
             </h1>
             <p className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
-              URL を貼り付けるとタイトルや画像が自動取得されます
+              URLを貼る・場所を検索する、どちらか片方でも両方でもOKです
             </p>
           </div>
 
-          {/* Form */}
-          <div className="surface p-6">
-            <Form method="post" className="space-y-6">
-              {/* Hidden metadata fields */}
-              {metadata && (
-                <>
-                  <input type="hidden" name="autoTitle" value={metadata.title || ""} />
-                  <input type="hidden" name="autoDescription" value={metadata.description || ""} />
-                  <input type="hidden" name="autoImageUrl" value={metadata.image || ""} />
-                  <input type="hidden" name="autoSiteName" value={metadata.site_name || ""} />
-                </>
-              )}
-              
-              {/* Location Search - moved to top */}
-              <div className="space-y-2">
+          <Form method="post" className="space-y-5">
+            {/* Hidden metadata fields */}
+            {metadata && (
+              <>
+                <input type="hidden" name="autoTitle" value={metadata.title || ""} />
+                <input type="hidden" name="autoDescription" value={metadata.description || ""} />
+                <input type="hidden" name="autoImageUrl" value={metadata.image || ""} />
+                <input type="hidden" name="autoSiteName" value={metadata.site_name || ""} />
+              </>
+            )}
+
+            {/* === 始め方ブロック === */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* URLから取得 */}
+              <div className="surface p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-deep-sea/10 text-deep-sea dark:text-gold-soft">
+                      <Globe size={14} />
+                    </span>
+                    <h2 className="text-sm font-semibold text-deep-sea dark:text-parchment">
+                      URLから取得
+                    </h2>
+                  </div>
+                  {url && metadata?.success && (
+                    <span className="inline-flex items-center gap-1 text-xs text-moss dark:text-moss-soft">
+                      <Check size={12} /> 取得済み
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mb-3">
+                  食べログ・公式サイト等。タイトルと画像を自動取得
+                </p>
+                <Input
+                  type="url"
+                  name="url"
+                  value={url}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  onClear={() => setUrl("")}
+                  placeholder="https://..."
+                  variant="bordered"
+                  size="sm"
+                  isClearable
+                  classNames={{ inputWrapper: "bg-content2" }}
+                  endContent={
+                    isLoadingMetadata ? (
+                      <RotateCw
+                        size={14}
+                        className="animate-spin text-deep-sea-ink/40 dark:text-parchment/40"
+                      />
+                    ) : null
+                  }
+                />
+                {metadata?.success && (metadata.title || metadata.image) && (
+                  <div className="mt-3 flex gap-3 items-center surface-inset rounded-md p-2 border border-line">
+                    {metadata.image && (
+                      <img
+                        src={metadata.image}
+                        alt=""
+                        className="w-12 h-12 object-cover rounded shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium text-deep-sea-ink dark:text-parchment truncate">
+                        {metadata.title}
+                      </div>
+                      {metadata.site_name && (
+                        <div className="text-[10px] text-deep-sea-ink/55 dark:text-parchment/55 truncate">
+                          {metadata.site_name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 場所を選ぶ */}
+              <div className="surface p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-rust/10 text-rust dark:text-rust-soft">
+                      <MapPin size={14} />
+                    </span>
+                    <h2 className="text-sm font-semibold text-deep-sea dark:text-parchment">
+                      場所を選ぶ
+                    </h2>
+                  </div>
+                  {placeName && (
+                    <span className="inline-flex items-center gap-1 text-xs text-moss dark:text-moss-soft">
+                      <Check size={12} /> 選択済み
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mb-3">
+                  Googleマップから検索。住所と座標を自動入力
+                </p>
                 <LocationSearch
                   onLocationSelect={handleLocationSelect}
                   defaultLocation={latitude && longitude ? { latitude, longitude } : null}
                 />
+                {placeName && (
+                  <div className="mt-3 surface-inset rounded-md p-2 border border-line text-xs">
+                    <div className="font-medium text-deep-sea-ink dark:text-parchment truncate">
+                      {placeName}
+                    </div>
+                    {address && (
+                      <div className="text-deep-sea-ink/60 dark:text-parchment/60 truncate mt-0.5">
+                        {address}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLatitude(null);
+                        setLongitude(null);
+                        setAddress("");
+                        setPlaceName("");
+                        setPlaceId("");
+                      }}
+                      className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-rust hover:underline"
+                    >
+                      <X size={10} /> 場所をクリア
+                    </button>
+                  </div>
+                )}
                 {latitude && longitude && (
                   <>
                     <input type="hidden" name="latitude" value={latitude} />
                     <input type="hidden" name="longitude" value={longitude} />
                   </>
                 )}
-                {address && (
-                  <input type="hidden" name="address" value={address} />
-                )}
-                {placeName && (
-                  <input type="hidden" name="placeName" value={placeName} />
-                )}
-                {placeId && (
-                  <input type="hidden" name="placeId" value={placeId} />
-                )}
+                {address && <input type="hidden" name="address" value={address} />}
+                {placeName && <input type="hidden" name="placeName" value={placeName} />}
+                {placeId && <input type="hidden" name="placeId" value={placeId} />}
               </div>
+            </div>
 
-              {/* URL */}
-              <div className="space-y-2">
-                <Input
-                  type="url"
-                  name="url"
-                  value={url}
-                  onChange={(e) => handleUrlChange(e.target.value)}
-                  onClear={() => setUrl('')}
-                  label="URL"
-                  placeholder="https://example.com"
-                  variant="bordered"
-                  isRequired
-                  isClearable
-                  classNames={{ inputWrapper: "bg-content2" }}
-                />
-                {(isLoadingMetadata || url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
-                  <div className="flex items-center gap-2">
-                    {isLoadingMetadata && (
-                      <Chip 
-                        size="sm" 
-                        variant="flat"
-                        startContent={<RotateCw size={16} className="animate-spin" />}
-                      >
-                        取得中...
-                      </Chip>
-                    )}
-                    {(url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
-                      <Chip 
-                        size="sm" 
-                        variant="flat" 
-                        color="secondary"
-                        startContent={<MapPin size={16} />}
-                      >
-                        場所のURL
-                      </Chip>
-                    )}
-                  </div>
-                )}
-              </div>
+            {/* === 詳細 === */}
+            <div className="surface p-5 space-y-5">
+              <div className="text-eyebrow">詳細</div>
 
               {/* Title */}
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  name="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onClear={() => setTitle('')}
-                  label="タイトル"
-                  placeholder="美味しいラーメン店"
-                  variant="bordered"
-                  maxLength={200}
-                  isRequired
-                  isClearable
-                  classNames={{ inputWrapper: "bg-content2" }}
-                />
-              </div>
+              <Input
+                type="text"
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onClear={() => setTitle("")}
+                label="タイトル"
+                placeholder="美味しいラーメン店"
+                variant="bordered"
+                maxLength={200}
+                isRequired
+                isClearable
+                classNames={{ inputWrapper: "bg-content2" }}
+              />
 
               {/* Description */}
-              <div className="space-y-2">
-                <Textarea
-                  name="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  label="説明"
-                  placeholder="説明文..."
-                  variant="bordered"
-                  minRows={3}
-                  maxLength={500}
-                  classNames={{ inputWrapper: "bg-content2" }}
-                />
-              </div>
+              <Textarea
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                label="説明"
+                placeholder="説明文..."
+                variant="bordered"
+                minRows={3}
+                maxLength={500}
+                classNames={{ inputWrapper: "bg-content2" }}
+              />
 
-              {/* Category */}
-              <div className="space-y-2">
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Category */}
                 <Select
                   name="category"
                   selectedKeys={[category]}
@@ -331,56 +392,55 @@ export default function AddBookmark() {
                   isRequired
                   classNames={{ trigger: "bg-content2" }}
                 >
-                  {CATEGORIES.map(cat => (
+                  {CATEGORIES.map((cat) => (
                     <SelectItem key={cat}>{cat}</SelectItem>
                   ))}
                 </Select>
-              </div>
 
-
-              {/* Priority */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-deep-sea-ink dark:text-parchment">
-                    興味度
-                  </label>
-                  <span className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
-                    {priority} / 5
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Slider
-                    size="sm"
-                    step={1}
-                    minValue={1}
-                    maxValue={5}
-                    value={priority}
-                    onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
-                    className="flex-1"
-                    color="warning"
-                    aria-label="興味度"
-                  />
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <span
-                        key={i}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          i < priority
-                            ? "bg-gold"
-                            : "bg-deep-sea/15 dark:bg-parchment/15"
-                        }`}
-                      />
-                    ))}
+                {/* Priority */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-deep-sea-ink dark:text-parchment">
+                      興味度
+                    </label>
+                    <span className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
+                      {priority} / 5
+                    </span>
                   </div>
+                  <div className="flex items-center gap-3 h-11">
+                    <Slider
+                      size="sm"
+                      step={1}
+                      minValue={1}
+                      maxValue={5}
+                      value={priority}
+                      onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
+                      className="flex-1"
+                      color="warning"
+                      aria-label="興味度"
+                    />
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span
+                          key={i}
+                          className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                            i < priority
+                              ? "bg-gold"
+                              : "bg-deep-sea/15 dark:bg-parchment/15"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <input type="hidden" name="priority" value={priority} />
                 </div>
-                <input type="hidden" name="priority" value={priority} />
               </div>
 
               {/* Themes */}
               {themes.length > 0 && (
-                <div className="space-y-2">
+                <div>
                   <Select
-                    label="テーマ（任意）"
+                    label="テーマ（任意・複数可）"
                     placeholder="テーマを選択..."
                     selectionMode="multiple"
                     selectedKeys={selectedThemeIds}
@@ -395,7 +455,7 @@ export default function AddBookmark() {
                     renderValue={(items) => (
                       <div className="flex flex-wrap gap-1">
                         {items.map((item) => {
-                          const theme = themes.find(t => t.id === item.key);
+                          const theme = themes.find((t) => t.id === item.key);
                           return (
                             <Chip
                               key={item.key}
@@ -412,8 +472,8 @@ export default function AddBookmark() {
                     )}
                   >
                     {themes.map((theme) => (
-                      <SelectItem 
-                        key={theme.id} 
+                      <SelectItem
+                        key={theme.id}
                         textValue={theme.name}
                         startContent={theme.icon && <span>{theme.icon}</span>}
                       >
@@ -421,51 +481,45 @@ export default function AddBookmark() {
                       </SelectItem>
                     ))}
                   </Select>
-                  {/* Hidden inputs for selected theme IDs */}
                   {Array.from(selectedThemeIds).map((themeId) => (
                     <input key={themeId} type="hidden" name="themeIds" value={themeId} />
                   ))}
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    ※ 複数選択可能
-                  </p>
                 </div>
               )}
 
               {/* Memo */}
-              <div className="space-y-2">
-                <Textarea
-                  name="memo"
-                  value={memo}
-                  onChange={(e) => setMemo(e.target.value)}
-                  label="メモ"
-                  placeholder="友人おすすめ！"
-                  variant="bordered"
-                  minRows={3}
-                  maxLength={1000}
-                  classNames={{ inputWrapper: "bg-content2" }}
-                />
+              <Textarea
+                name="memo"
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+                label="メモ"
+                placeholder="友人おすすめ！"
+                variant="bordered"
+                minRows={3}
+                maxLength={1000}
+                classNames={{ inputWrapper: "bg-content2" }}
+              />
+            </div>
+
+            {/* Error Message */}
+            {actionData?.error && (
+              <div className="px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+                <p className="text-rust text-sm">{actionData.error}</p>
               </div>
+            )}
 
-              {/* Error Message */}
-              {actionData?.error && (
-                <div className="px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
-                  <p className="text-rust text-sm">{actionData.error}</p>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                color="primary"
-                size="lg"
-                className="w-full"
-                isDisabled={isSubmitting}
-                isLoading={isSubmitting}
-              >
-                {isSubmitting ? "保存中..." : "保存"}
-              </Button>
-            </Form>
-          </div>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              color="primary"
+              size="lg"
+              className="w-full"
+              isDisabled={isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {isSubmitting ? "保存中..." : "保存"}
+            </Button>
+          </Form>
         </div>
       </div>
     </>

@@ -233,7 +233,6 @@ export default function GroupSettings() {
             <ProgressGauge
               visited={stats.visited_count}
               total={stats.total_count}
-              avgPriority={stats.avg_priority}
               label="訪問の進捗"
               className="mb-3"
             />
