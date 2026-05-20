@@ -11,11 +11,10 @@ import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import type { Group } from "../entities/group/group";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
+import { Button, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { LocationSearch } from "../components/location-search";
 import { AppHeader } from "../components/app-header";
-import { CompassRose } from "../components/compass-rose";
 
 export function meta() {
   return [
@@ -163,32 +162,29 @@ export default function EditBookmark() {
     }
   };
 
-  const needleRotation = -90 + ((priority - 1) / 4) * 180;
-
   return (
     <>
       <AppHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
+          <Button
+            as={Link}
+            to={`/group/${groupId}`}
+            variant="light"
+            size="sm"
+            className="mb-5 -ml-2"
+            startContent={<ArrowLeft size={16} />}
+          >
+            グループに戻る
+          </Button>
           <div className="mb-6">
-            <Button
-              as={Link}
-              to={`/group/${groupId}`}
-              variant="ghost"
-              size="sm"
-              className="mb-4 hover:translate-x-[-2px] transition-transform"
-              startContent={<ArrowLeft size={16} />}
-            >
-              グループに戻る
-            </Button>
             <h1 className="font-display text-3xl text-deep-sea dark:text-parchment mb-2">
               ブックマークを編集
             </h1>
           </div>
 
           {/* Form */}
-          <div className="paper-card p-6">
+          <div className="surface p-6">
             <Form method="post" className="space-y-6">
               {/* Location Search - moved to top */}
               <div className="space-y-2">
@@ -286,15 +282,15 @@ export default function EditBookmark() {
 
               {/* Priority */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-deep-sea-ink dark:text-parchment font-serif-jp">
-                  興味度
-                </label>
-                <div className="flex items-center gap-4">
-                  <CompassRose
-                    size={36}
-                    tone="rust"
-                    needleRotation={needleRotation}
-                  />
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-deep-sea-ink dark:text-parchment">
+                    興味度
+                  </label>
+                  <span className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
+                    {priority} / 5
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
                   <Slider
                     size="sm"
                     step={1}
@@ -304,15 +300,18 @@ export default function EditBookmark() {
                     onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
                     className="flex-1"
                     color="warning"
+                    aria-label="興味度"
                   />
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-1">
                     {Array.from({ length: 5 }, (_, i) => (
                       <span
                         key={i}
-                        className={i < priority ? "text-gold-soft" : "text-deep-sea/25 dark:text-parchment/25"}
-                      >
-                        ★
-                      </span>
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          i < priority
+                            ? "bg-gold"
+                            : "bg-deep-sea/15 dark:bg-parchment/15"
+                        }`}
+                      />
                     ))}
                   </div>
                 </div>

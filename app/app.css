@@ -4,61 +4,63 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
- * Design Tokens — Pocket Atlas / Vintage Map
+ * Design Tokens — wanna-go SaaS palette (warm paper accent)
  * ============================================================ */
 @theme {
   /* Fonts */
   --font-sans: "Inter", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-display: "DM Serif Display", "Noto Serif JP", ui-serif, Georgia, serif;
-  --font-serif: "Noto Serif JP", "DM Serif Display", ui-serif, Georgia, serif;
+  --font-serif: "Noto Serif JP", ui-serif, Georgia, serif;
 
-  /* Vintage Map palette */
-  --color-parchment: #f2e8d5;
-  --color-parchment-2: #eadfc6;
-  --color-parchment-3: #ddd0b3;
+  /* Surfaces — warm but quiet */
+  --color-parchment: #f4eede;
+  --color-parchment-2: #efe7d2;
+  --color-parchment-3: #e6dcc4;
+  --color-surface: #fbf8ee;
+  --color-surface-2: #f7f2e4;
+  --color-surface-3: #ebe2cb;
+
+  /* Ink */
   --color-deep-sea: #1f3a5f;
   --color-deep-sea-ink: #142840;
   --color-deep-sea-soft: #2a4d7a;
-  --color-gold: #d4a24c;
-  --color-gold-soft: #e7c587;
+  --color-ink-muted: #5a6c83;
+
+  /* Accents */
+  --color-gold: #c69544;
+  --color-gold-soft: #e0bf85;
   --color-rust: #a4503a;
   --color-rust-soft: #c87355;
   --color-moss: #3d5a3d;
   --color-moss-soft: #5b7d5b;
 
-  /* Dark mode — deep sea night map */
+  /* Borders */
+  --color-line: rgba(20, 40, 64, 0.1);
+  --color-line-strong: rgba(20, 40, 64, 0.18);
+
+  /* Dark mode */
   --color-night-sea: #0d1f33;
   --color-night-sea-2: #142840;
-  --color-night-paper: #1c3552;
+  --color-night-paper: #1a3050;
+  --color-night-paper-2: #21405e;
 
   /* Radius */
-  --radius-paper: 14px;
+  --radius-card: 14px;
   --radius-pin: 999px;
 
-  /* Shadow */
-  --shadow-paper: 0 1px 2px rgba(20, 40, 64, 0.08),
-    0 8px 24px -8px rgba(20, 40, 64, 0.16);
-  --shadow-paper-hover: 0 2px 4px rgba(20, 40, 64, 0.12),
-    0 16px 32px -8px rgba(20, 40, 64, 0.2);
-  --shadow-pin: 0 2px 4px rgba(20, 40, 64, 0.3),
-    0 4px 8px -2px rgba(164, 80, 58, 0.25);
+  /* Shadow — soft, SaaS-style */
+  --shadow-card: 0 1px 2px rgba(20, 40, 64, 0.04),
+    0 8px 24px -12px rgba(20, 40, 64, 0.08);
+  --shadow-card-hover: 0 2px 4px rgba(20, 40, 64, 0.06),
+    0 16px 32px -12px rgba(20, 40, 64, 0.12);
+  --shadow-pin: 0 1px 2px rgba(20, 40, 64, 0.2);
+  --shadow-header: 0 1px 0 rgba(20, 40, 64, 0.06);
 }
 
 /* ============================================================
- * Background textures (SVG data URIs)
+ * Background — flat warm paper
  * ============================================================ */
-:root {
-  /* 等高線パターン: 透過の薄い斜め曲線 */
-  --contour-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'><g fill='none' stroke='%231f3a5f' stroke-width='0.6' opacity='0.08'><path d='M0 60 Q60 30 120 60 T240 60'/><path d='M0 100 Q60 70 120 100 T240 100'/><path d='M0 140 Q60 110 120 140 T240 140'/><path d='M0 180 Q60 150 120 180 T240 180'/><path d='M0 220 Q60 190 120 220 T240 220'/></g></svg>");
-
-  /* ノイズ: 紙繊維風の薄いドット */
-  --noise-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.16  0 0 0 0 0.25  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-
-  /* 紙の左上ロゴ用コンパス透かし */
-  --compass-watermark-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><g fill='none' stroke='%231f3a5f' stroke-width='1.2' opacity='0.18'><circle cx='32' cy='32' r='26'/><path d='M32 6 L36 32 L32 58 L28 32 Z' fill='%231f3a5f' opacity='0.18'/><path d='M6 32 L32 28 L58 32 L32 36 Z'/></g></svg>");
-}
-
 html,
 body {
   background-color: var(--color-parchment);
@@ -68,23 +70,16 @@ body {
 }
 
 body {
-  background-image: var(--noise-url), var(--contour-url),
-    radial-gradient(
-      circle at 20% 10%,
-      rgba(212, 162, 76, 0.12),
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 80% 90%,
-      rgba(164, 80, 58, 0.1),
-      transparent 55%
-    );
-  background-attachment: fixed;
-  background-repeat: repeat, repeat, no-repeat, no-repeat;
   min-height: 100vh;
+  background-image: radial-gradient(
+    ellipse 1200px 600px at 50% -200px,
+    rgba(212, 162, 76, 0.08),
+    transparent 70%
+  );
+  background-attachment: fixed;
 }
 
-/* Dark mode — night sea map */
+/* Dark mode */
 .dark html,
 .dark body,
 html.dark,
@@ -95,17 +90,11 @@ html.dark body {
 
 html.dark body,
 .dark body {
-  background-image: var(--noise-url), var(--contour-url),
-    radial-gradient(
-      circle at 20% 10%,
-      rgba(212, 162, 76, 0.06),
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 80% 90%,
-      rgba(31, 58, 95, 0.4),
-      transparent 55%
-    );
+  background-image: radial-gradient(
+    ellipse 1200px 600px at 50% -200px,
+    rgba(212, 162, 76, 0.04),
+    transparent 70%
+  );
 }
 
 @media (prefers-color-scheme: dark) {
@@ -127,85 +116,93 @@ html.dark body,
   font-family: var(--font-serif);
 }
 
+.text-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.dark .text-eyebrow {
+  color: rgba(244, 238, 222, 0.55);
+}
+
 /* ============================================================
- * Paper card (vintage parchment card)
+ * Surface (旧 paper-card) — quiet, modern SaaS card
  * ============================================================ */
-.paper-card {
-  background-color: var(--color-parchment-2);
-  border: 1px solid rgba(31, 58, 95, 0.16);
-  border-radius: var(--radius-paper);
-  box-shadow: var(--shadow-paper);
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
+.paper-card,
+.surface {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
-.paper-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: var(--contour-url);
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.dark .paper-card {
+.dark .paper-card,
+.dark .surface {
   background-color: var(--color-night-paper);
-  border-color: rgba(242, 232, 213, 0.16);
+  border-color: rgba(244, 238, 222, 0.08);
+}
+
+.surface-inset {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+.dark .surface-inset {
+  background-color: var(--color-night-paper-2);
+  border-color: rgba(244, 238, 222, 0.06);
 }
 
 /* ============================================================
- * Pin drop shadow utility
+ * Sticky app header
+ * ============================================================ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  background-color: color-mix(in srgb, var(--color-parchment) 78%, transparent);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.dark .app-header {
+  background-color: color-mix(in srgb, var(--color-night-sea) 78%, transparent);
+  border-bottom-color: rgba(244, 238, 222, 0.08);
+}
+
+/* ============================================================
+ * Drop shadow utility (pin)
  * ============================================================ */
 .drop-shadow-pin {
-  filter: drop-shadow(0 3px 3px rgba(20, 40, 64, 0.35));
+  filter: drop-shadow(0 2px 2px rgba(20, 40, 64, 0.25));
 }
 
 /* ============================================================
  * Animations
  * ============================================================ */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
-}
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
 
 @keyframes pin-drop {
-  0% {
-    opacity: 0;
-    transform: translateY(-18px) scale(0.85) rotate(-2deg);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(2px) scale(1.02) rotate(0.5deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotate(0deg);
-  }
+  0% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .animate-pin-drop {
-  animation: pin-drop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation: pin-drop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @keyframes compass-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-compass-spin {
@@ -214,28 +211,14 @@ html.dark body,
 }
 
 @keyframes ink-check {
-  0% {
-    stroke-dashoffset: 28;
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
+  0% { stroke-dashoffset: 28; opacity: 0; }
+  20% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
 }
 
 .animate-ink-check path {
   stroke-dasharray: 28;
   animation: ink-check 0.5s ease-out forwards;
-}
-
-@keyframes paper-lift {
-  to {
-    transform: translateY(-2px) rotate(-0.3deg);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -245,13 +228,11 @@ html.dark body,
   .animate-ink-check path {
     animation: none !important;
   }
-  .animate-ink-check path {
-    stroke-dashoffset: 0;
-  }
+  .animate-ink-check path { stroke-dashoffset: 0; }
 }
 
 /* ============================================================
- * Autofill: parchment-friendly contrast
+ * Autofill
  * ============================================================ */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -270,15 +251,24 @@ input:-webkit-autofill:active {
 }
 
 /* ============================================================
- * Dotted route line (for "使い方3ステップ" connector)
+ * HeroUI overrides — kill bright white insides
  * ============================================================ */
-.route-line {
-  background-image: radial-gradient(
-    circle,
-    rgba(31, 58, 95, 0.35) 1.2px,
-    transparent 1.2px
-  );
-  background-size: 10px 2px;
-  background-repeat: repeat-x;
-  background-position: center;
+/* Modals / popovers shouldn't be pure white */
+[data-slot="base"][role="dialog"] {
+  background-color: var(--color-surface) !important;
+}
+
+.dark [data-slot="base"][role="dialog"] {
+  background-color: var(--color-night-paper) !important;
+}
+
+/* Listbox / dropdown panels */
+[data-slot="content"] > [role="listbox"],
+[data-slot="popover"] > div {
+  background-color: var(--color-surface);
+}
+
+.dark [data-slot="content"] > [role="listbox"],
+.dark [data-slot="popover"] > div {
+  background-color: var(--color-night-paper);
 }

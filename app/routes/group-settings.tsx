@@ -8,9 +8,8 @@ import type { Group } from "../entities/group/group";
 import type { BookmarksResponse } from "../services/bookmark";
 import { redirect } from "react-router";
 import { Button, Input, Textarea } from "@heroui/react";
-import { ArrowLeft, Copy, QrCode, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Copy, Check, Link as LinkIcon, Share2 } from "lucide-react";
 import { AppHeader } from "../components/app-header";
-import { CompassRose } from "../components/compass-rose";
 import { ProgressGauge } from "../components/progress-gauge";
 
 export function meta({ params }: Route.MetaArgs) {
@@ -79,26 +78,39 @@ export default function GroupSettings() {
 
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description || "");
+  const [copiedField, setCopiedField] = useState<"url" | "id" | null>(null);
 
   const shareUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/group/${group.id}`
       : `/group/${group.id}`;
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(shareUrl)}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&bgcolor=fbf8ee&color=142840&data=${encodeURIComponent(shareUrl)}`;
 
-  const copyUrl = () => {
+  const handleCopy = (text: string, field: "url" | "id") => {
     navigator.clipboard
-      .writeText(shareUrl)
-      .then(() => alert("URLをコピーしました"))
-      .catch(() => alert("URLのコピーに失敗しました"));
+      .writeText(text)
+      .then(() => {
+        setCopiedField(field);
+        setTimeout(() => setCopiedField(null), 1800);
+      })
+      .catch(() => alert("コピーに失敗しました"));
   };
 
-  const copyGroupId = () => {
-    navigator.clipboard
-      .writeText(group.id)
-      .then(() => alert("グループIDをコピーしました"))
-      .catch(() => alert("コピーに失敗しました"));
+  const handleNativeShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${group.name} - wanna-go`,
+          text: "行きたい場所のグループに参加してください",
+          url: shareUrl,
+        });
+      } catch {
+        // user cancelled
+      }
+    } else {
+      handleCopy(shareUrl, "url");
+    }
   };
 
   return (
@@ -106,151 +118,157 @@ export default function GroupSettings() {
       <AppHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Back link */}
           <Button
             as={Link}
             to={`/group/${group.id}`}
-            variant="ghost"
+            variant="light"
             size="sm"
-            className="hover:translate-x-[-2px] transition-transform"
+            className="-ml-2"
             startContent={<ArrowLeft size={16} />}
           >
             グループに戻る
           </Button>
 
           <div>
-            <h1 className="font-display text-3xl text-deep-sea dark:text-parchment mb-2">
+            <h1 className="font-display text-3xl text-deep-sea dark:text-parchment mb-1">
               グループ設定
             </h1>
-            <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 font-serif-jp">
-              共有・統計・基本情報を確認できます
+            <p className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
+              {group.name}
             </p>
           </div>
 
-          {/* Sharing card (Vintage paper) */}
-          <section
-            aria-labelledby="share-heading"
-            className="paper-card p-7 relative overflow-hidden"
-          >
-            {/* 透かしコンパス */}
-            <div
-              className="absolute -top-4 -left-4 opacity-25 pointer-events-none"
-              aria-hidden="true"
-            >
-              <CompassRose size={100} tone="deep-sea" />
-            </div>
-            {/* 上下点線 */}
-            <div
-              className="absolute top-3 left-6 right-6 border-t border-dashed border-deep-sea/30 dark:border-parchment/30"
-              aria-hidden="true"
-            />
-            <div
-              className="absolute bottom-3 left-6 right-6 border-t border-dashed border-deep-sea/30 dark:border-parchment/30"
-              aria-hidden="true"
-            />
-
-            <div className="relative pt-3 pb-3">
-              <p
-                id="share-heading"
-                className="text-center text-xs uppercase tracking-[0.3em] text-deep-sea-ink/60 dark:text-parchment/60 font-serif-jp mb-2"
+          {/* Sharing */}
+          <section className="surface p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="font-display text-lg text-deep-sea dark:text-parchment leading-none">
+                  グループを共有
+                </h2>
+                <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mt-1">
+                  IDを知っている人なら誰でも参加・編集できます
+                </p>
+              </div>
+              <Button
+                size="sm"
+                color="primary"
+                variant="flat"
+                startContent={<Share2 size={14} />}
+                onPress={handleNativeShare}
               >
                 共有
-              </p>
-              <h2 className="text-center font-display text-xl text-deep-sea dark:text-parchment mb-4">
-                グループID
-              </h2>
+              </Button>
+            </div>
 
-              <div className="text-center mb-5">
-                <div className="font-display text-4xl tracking-[0.18em] text-deep-sea dark:text-parchment font-mono">
-                  {group.id}
+            <div className="grid sm:grid-cols-[1fr_auto] gap-5 items-start">
+              <div className="space-y-3 order-2 sm:order-1">
+                {/* Group ID */}
+                <div>
+                  <label className="text-eyebrow block mb-1.5">グループID</label>
+                  <div className="flex items-center gap-2">
+                    <code className="font-mono text-lg tracking-wider text-deep-sea dark:text-parchment bg-content2 border border-line rounded-md px-3 py-2 flex-1">
+                      {group.id}
+                    </code>
+                    <Button
+                      size="md"
+                      variant="bordered"
+                      isIconOnly
+                      onPress={() => handleCopy(group.id, "id")}
+                      aria-label="IDをコピー"
+                    >
+                      {copiedField === "id" ? <Check size={16} className="text-moss" /> : <Copy size={16} />}
+                    </Button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={copyGroupId}
-                  className="mt-2 inline-flex items-center gap-1 text-xs text-deep-sea-ink/60 dark:text-parchment/60 hover:text-deep-sea dark:hover:text-parchment transition-colors"
-                >
-                  <Copy size={12} /> IDをコピー
-                </button>
+
+                {/* URL */}
+                <div>
+                  <label className="text-eyebrow block mb-1.5">共有URL</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={shareUrl}
+                      variant="bordered"
+                      isReadOnly
+                      size="md"
+                      startContent={<LinkIcon size={14} className="text-deep-sea-ink/40 dark:text-parchment/40" />}
+                      classNames={{
+                        inputWrapper: "bg-content2",
+                        input: "text-sm",
+                      }}
+                    />
+                    <Button
+                      size="md"
+                      variant="bordered"
+                      isIconOnly
+                      onPress={() => handleCopy(shareUrl, "url")}
+                      aria-label="URLをコピー"
+                    >
+                      {copiedField === "url" ? <Check size={16} className="text-moss" /> : <Copy size={16} />}
+                    </Button>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex justify-center mb-5">
-                <div className="bg-parchment p-3 rounded-md border border-deep-sea/20">
+              {/* QR */}
+              <div className="order-1 sm:order-2 flex sm:block justify-center">
+                <div className="inline-block bg-content1 border border-line rounded-lg p-2">
                   <img
                     src={qrUrl}
                     alt={`グループ ${group.id} の QRコード`}
-                    width={180}
-                    height={180}
+                    width={120}
+                    height={120}
                     className="block"
                   />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Input
-                  type="text"
-                  value={shareUrl}
-                  label="グループURL"
-                  variant="bordered"
-                  isReadOnly
-                  startContent={
-                    <LinkIcon size={16} className="text-deep-sea-ink/50 dark:text-parchment/50" />
-                  }
-                  classNames={{
-                    inputWrapper: "bg-parchment dark:bg-night-sea-2",
-                  }}
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onPress={copyUrl}
-                    color="primary"
-                    variant="flat"
-                    size="sm"
-                    className="flex-1"
-                    startContent={<Copy size={14} />}
-                  >
-                    URLをコピー
-                  </Button>
-                  <Button
-                    onPress={() => window.open(qrUrl, "_blank")}
-                    color="default"
-                    variant="flat"
-                    size="sm"
-                    className="flex-1"
-                    startContent={<QrCode size={14} />}
-                  >
-                    QRを別タブで開く
-                  </Button>
                 </div>
               </div>
             </div>
           </section>
 
+          {/* Statistics */}
+          <section>
+            <h2 className="font-display text-lg text-deep-sea dark:text-parchment mb-3">
+              統計
+            </h2>
+            <ProgressGauge
+              visited={stats.visited_count}
+              total={stats.total_count}
+              avgPriority={stats.avg_priority}
+              label="訪問の進捗"
+              className="mb-3"
+            />
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "総ブックマーク", value: `${stats.total_count}件`, tone: "text-deep-sea dark:text-parchment" },
+                { label: "未訪問", value: `${stats.unvisited_count}件`, tone: "text-rust" },
+                { label: "作成日", value: formatDate(group.createdAt), tone: "text-deep-sea-ink/80 dark:text-parchment/80 text-base" },
+              ].map((item) => (
+                <div key={item.label} className="surface p-4">
+                  <div className="text-eyebrow mb-1">{item.label}</div>
+                  <div className={`font-display text-xl ${item.tone}`}>
+                    {item.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* Group Info */}
-          <section
-            aria-labelledby="info-heading"
-            className="paper-card p-6"
-          >
-            <h2
-              id="info-heading"
-              className="font-display text-xl text-deep-sea dark:text-parchment mb-4"
-            >
+          <section className="surface p-6">
+            <h2 className="font-display text-lg text-deep-sea dark:text-parchment mb-4">
               グループ情報
             </h2>
-            <Form method="post" className="space-y-5">
+            <Form method="post" className="space-y-4">
               <Input
                 type="text"
                 name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 label="グループ名"
-                placeholder="我が家の行きたいところ"
                 variant="bordered"
                 maxLength={100}
                 isRequired
-                classNames={{
-                  label: "font-serif-jp",
-                  inputWrapper: "bg-parchment dark:bg-night-sea-2",
-                }}
+                classNames={{ inputWrapper: "bg-content2" }}
               />
 
               <Textarea
@@ -258,24 +276,20 @@ export default function GroupSettings() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 label="説明"
-                placeholder="家族で行きたい場所ややりたいことをまとめています"
                 variant="bordered"
                 minRows={3}
                 maxLength={500}
-                classNames={{
-                  label: "font-serif-jp",
-                  inputWrapper: "bg-parchment dark:bg-night-sea-2",
-                }}
+                classNames={{ inputWrapper: "bg-content2" }}
               />
 
               {actionData?.error && (
-                <div className="px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+                <div className="px-3 py-2 bg-rust/10 border border-rust/30 rounded-lg">
                   <p className="text-rust text-sm">{actionData.error}</p>
                 </div>
               )}
 
               {actionData?.success && (
-                <div className="px-4 py-3 bg-moss/10 border border-moss/40 rounded-md">
+                <div className="px-3 py-2 bg-moss/10 border border-moss/30 rounded-lg">
                   <p className="text-moss dark:text-moss-soft text-sm">設定を更新しました</p>
                 </div>
               )}
@@ -283,7 +297,6 @@ export default function GroupSettings() {
               <Button
                 type="submit"
                 color="primary"
-                size="lg"
                 className="w-full"
                 isDisabled={isSubmitting}
                 isLoading={isSubmitting}
@@ -291,59 +304,6 @@ export default function GroupSettings() {
                 {isSubmitting ? "更新中..." : "設定を更新"}
               </Button>
             </Form>
-          </section>
-
-          {/* Statistics */}
-          <section
-            aria-labelledby="stats-heading"
-            className="space-y-4"
-          >
-            <h2
-              id="stats-heading"
-              className="font-display text-xl text-deep-sea dark:text-parchment"
-            >
-              統計情報
-            </h2>
-            <ProgressGauge
-              visited={stats.visited_count}
-              total={stats.total_count}
-              label="訪問済み"
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="paper-card p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-deep-sea-ink/60 dark:text-parchment/60 font-serif-jp mb-1">
-                  総ブックマーク
-                </div>
-                <div className="font-display text-2xl text-deep-sea dark:text-parchment">
-                  {stats.total_count}件
-                </div>
-              </div>
-              <div className="paper-card p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-deep-sea-ink/60 dark:text-parchment/60 font-serif-jp mb-1">
-                  平均興味度
-                </div>
-                <div className="font-display text-2xl text-gold-soft">
-                  {stats.avg_priority.toFixed(1)}
-                  <span className="text-base text-deep-sea-ink/55 dark:text-parchment/55"> / 5</span>
-                </div>
-              </div>
-              <div className="paper-card p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-deep-sea-ink/60 dark:text-parchment/60 font-serif-jp mb-1">
-                  未訪問
-                </div>
-                <div className="font-display text-2xl text-rust">
-                  {stats.unvisited_count}件
-                </div>
-              </div>
-              <div className="paper-card p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-deep-sea-ink/60 dark:text-parchment/60 font-serif-jp mb-1">
-                  作成日
-                </div>
-                <div className="font-display text-lg text-deep-sea dark:text-parchment">
-                  {formatDate(group.createdAt)}
-                </div>
-              </div>
-            </div>
           </section>
         </div>
       </div>
