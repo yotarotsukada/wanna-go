@@ -14,6 +14,11 @@ import { Settings, Sparkles, Search, Edit, Plus, MapPin, Bookmark, Palette } fro
 import { formatDate } from "../lib/utils";
 import { useState, Suspense, use, useMemo, useEffect, useRef, useCallback } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
+import { AppHeader } from "../components/app-header";
+import { ProgressGauge } from "../components/progress-gauge";
+import { EmptyAtlas } from "../components/empty-atlas";
+import { LoadingCompass } from "../components/loading-compass";
+import { StampChip } from "../components/stamp-chip";
 
 // デバウンスカスタムフック
 function useDebounce<T>(value: T, delay: number): T {
@@ -163,21 +168,13 @@ export async function action({ request, params }: Route.ActionArgs) {
 // ブックマークスケルトンコンポーネント
 function BookmarksSkeleton() {
   return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-          <CardBody className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-3/4"></div>
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-              </div>
-              <div className="w-16 h-8 bg-slate-200 dark:bg-slate-700 rounded"></div>
-            </div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full mb-2"></div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
-          </CardBody>
-        </Card>
+    <div className="grid md:grid-cols-2 gap-5">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="paper-card animate-pulse p-5">
+          <div className="h-6 bg-deep-sea/15 dark:bg-parchment/15 rounded mb-3 w-3/4"></div>
+          <div className="h-4 bg-deep-sea/10 dark:bg-parchment/10 rounded mb-2 w-1/2"></div>
+          <div className="h-4 bg-deep-sea/10 dark:bg-parchment/10 rounded w-2/3"></div>
+        </div>
       ))}
     </div>
   );
@@ -258,31 +255,38 @@ function BookmarksStatsContainer({
 }
 
 // ブックマーク統計情報コンポーネント
-function BookmarksStats({ 
-  filteredBookmarks 
-}: { 
+function BookmarksStats({
+  filteredBookmarks,
+}: {
   filteredBookmarks: any[];
 }) {
   const stats = calculateStats(filteredBookmarks);
-  
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-4">
-          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-            {stats.total_count}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">ブックマーク数</div>
-        </CardBody>
-      </Card>
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-4">
-          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <ProgressGauge
+        visited={stats.visited_count}
+        total={stats.total_count}
+        label="訪問済み"
+        className="md:col-span-2"
+      />
+      <div className="paper-card px-5 py-4 flex flex-col justify-center">
+        <div className="text-xs uppercase tracking-[0.18em] text-deep-sea/70 dark:text-parchment/60 mb-1 font-serif-jp">
+          ブックマーク数
+        </div>
+        <div className="font-display text-3xl text-deep-sea dark:text-parchment mb-3">
+          {stats.total_count}
+        </div>
+        <div className="text-xs uppercase tracking-[0.18em] text-deep-sea/70 dark:text-parchment/60 mb-1 font-serif-jp">
+          平均興味度
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="font-display text-2xl text-gold-soft dark:text-gold-soft">
             {stats.avg_priority.toFixed(1)}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
-        </CardBody>
-      </Card>
+          </span>
+          <span className="text-deep-sea-ink/55 dark:text-parchment/55 text-sm">/ 5</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -348,34 +352,36 @@ function BookmarksList({
   handleDelete: (bookmarkId: string) => void;
 }) {
   if (filteredBookmarks.length === 0) {
+    const isFiltered =
+      searchQuery || categoryFilter !== "all" || visitedFilter !== "all";
     return (
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-16">
-          <h3 className="text-xl font-semibold mb-2">
-            {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-              ? "条件に一致するブックマークがありません"
-              : "まだブックマークがありません"}
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
-            {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-              ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
-              : "最初の行きたい場所を追加して、みんなで共有しましょう"}
-          </p>
+      <EmptyAtlas
+        title={
+          isFiltered
+            ? "条件に一致するブックマークがありません"
+            : "まだブックマークがありません"
+        }
+        description={
+          isFiltered
+            ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
+            : "最初の行きたい場所を追加して、みんなで共有しましょう"
+        }
+        action={
           <Button
             as={Link}
             to={`/group/${group.id}/add`}
             color="primary"
-            startContent={<Sparkles size={20} />}
+            startContent={<Sparkles size={18} />}
           >
             ブックマークを追加
           </Button>
-        </CardBody>
-      </Card>
+        }
+      />
     );
   }
-  
+
   return (
-    <div className="space-y-6">
+    <div className="grid md:grid-cols-2 gap-5">
       {filteredBookmarks.map((bookmark: any) => (
         <BookmarkCard
           key={bookmark.id}
@@ -412,30 +418,26 @@ function ThemesList({
   
   if (themes.length === 0) {
     return (
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-16">
-          <h3 className="text-xl font-semibold mb-2">
-            テーマがありません
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
-            最初のテーマを作成して、ブックマークを整理しましょう
-          </p>
+      <EmptyAtlas
+        title="テーマがありません"
+        description="最初のテーマを作成して、ブックマークを整理しましょう"
+        action={
           <Button
             onPress={onCreateOpen}
             color="primary"
-            startContent={<Plus size={20} />}
+            startContent={<Plus size={18} />}
           >
             テーマを作成
           </Button>
-        </CardBody>
-      </Card>
+        }
+      />
     );
   }
 
   return (
-    <>
+    <div className="space-y-4">
       {themes.map((theme: any) => (
-        <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <div key={theme.id} className="paper-card animate-fadeIn">
           <div className="p-4">
             <Accordion
               onSelectionChange={(keys) => {
@@ -457,18 +459,14 @@ function ThemesList({
                 title={
                   <div className="flex items-start justify-between w-full gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+                      <h3 className="font-display text-xl text-deep-sea dark:text-parchment flex items-center gap-2 mb-2">
                         <span className="text-xl flex-shrink-0">{theme.icon || '🗺️'}</span>
                         <span className="truncate">{theme.name}</span>
                       </h3>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <Chip 
-                          variant="flat" 
-                          color="primary"
-                          size="sm"
-                        >
+                        <StampChip tone="deep-sea">
                           {theme.bookmarkCount}件のブックマーク
-                        </Chip>
+                        </StampChip>
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -517,9 +515,9 @@ function ThemesList({
               </AccordionItem>
             </Accordion>
           </div>
-        </Card>
+        </div>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -690,41 +688,45 @@ export default function GroupPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <AppHeader
+        rightSlot={
+          <Button
+            as={Link}
+            to={`/group/${group.id}/settings`}
+            variant="ghost"
+            size="sm"
+            startContent={<Settings size={16} />}
+          >
+            設定
+          </Button>
+        }
+      />
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-2 tracking-tight">
-                {group.name}
-              </h1>
-              {group.description && (
-                <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
-                  {group.description}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                as={Link}
-                to={`/group/${group.id}/settings`}
-                variant="ghost"
-                size="sm"
-                startContent={<Settings size={16} />}
-              >
-                設定
-              </Button>
-            </div>
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-deep-sea-ink/55 dark:text-parchment/55 font-serif-jp mb-2">
+              グループID: <span className="font-mono">{group.id}</span>
+            </p>
+            <h1 className="font-display text-4xl text-deep-sea dark:text-parchment mb-3">
+              {group.name}
+            </h1>
+            {group.description && (
+              <p className="text-deep-sea-ink/75 dark:text-parchment/75 max-w-2xl leading-relaxed">
+                {group.description}
+              </p>
+            )}
           </div>
 
           {/* Add bookmark button */}
-          <div className="mb-6">
+          <div className="mb-2">
             <Button
               as={Link}
               to={`/group/${group.id}/add`}
               color="primary"
-              className="shadow-md hover:shadow-lg transition-all duration-200"
-              startContent={<Sparkles size={20} />}
+              className="shadow-paper hover:shadow-paper-hover transition-all duration-200"
+              startContent={<Sparkles size={18} />}
             >
               ブックマーク追加
             </Button>
@@ -734,14 +736,9 @@ export default function GroupPage() {
         {/* Stats Cards */}
         <Suspense
           fallback={
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
-                  <CardBody className="py-4">
-                    <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-1"></div>
-                    <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto"></div>
-                  </CardBody>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="paper-card animate-pulse h-24 md:col-span-1 first:md:col-span-2" />
               ))}
             </div>
           }
@@ -768,12 +765,11 @@ export default function GroupPage() {
 
         {/* Filters - Only show for bookmarks tab */}
         {currentTab === "bookmarks" && (
-          <Card className="mb-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody>
-              <div className="flex flex-wrap gap-4 items-center">
+          <div className="paper-card mb-8 p-4">
+            <div className="flex flex-wrap gap-4 items-center">
                 {/* Category filter */}
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">カテゴリ:</label>
+                  <label className="text-sm font-medium text-deep-sea-ink/70 dark:text-parchment/70 min-w-fit font-serif-jp">カテゴリ:</label>
                   <Select
                     selectedKeys={[categoryFilter]}
                     onSelectionChange={(keys) => {
@@ -795,7 +791,7 @@ export default function GroupPage() {
 
                 {/* Visited filter */}
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">状態:</label>
+                  <label className="text-sm font-medium text-deep-sea-ink/70 dark:text-parchment/70 min-w-fit font-serif-jp">状態:</label>
                   <Select
                     selectedKeys={[visitedFilter]}
                     onSelectionChange={(keys) => {
@@ -821,12 +817,11 @@ export default function GroupPage() {
                     placeholder="場所やメモで検索..."
                     variant="bordered"
                     size="sm"
-                    startContent={<Search size={16} className={`text-slate-500 dark:text-slate-400 ${isSearching ? 'animate-pulse' : ''}`} />}
+                    startContent={<Search size={16} className={`text-deep-sea-ink/60 dark:text-parchment/60 ${isSearching ? 'animate-pulse' : ''}`} />}
                   />
                 </div>
               </div>
-            </CardBody>
-          </Card>
+          </div>
         )}
 
         {/* Add Theme button for themes tab */}
@@ -845,11 +840,9 @@ export default function GroupPage() {
         
         {/* Error message */}
         {actionData?.error && (
-          <Card className="mb-6 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
-            <CardBody className="p-3">
-              <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
-            </CardBody>
-          </Card>
+          <div className="mb-6 px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+            <p className="text-rust text-sm">{actionData.error}</p>
+          </div>
         )}
 
         {/* Content */}
@@ -869,22 +862,7 @@ export default function GroupPage() {
             </Suspense>
           ) : currentTab === "themes" ? (
             // Themes content with Suspense
-            <Suspense fallback={
-              <div className="space-y-6">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                    <CardBody className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-1/2"></div>
-                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-                        </div>
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
-            }>
+            <Suspense fallback={<LoadingCompass label="テーマを開いています…" />}>
               <ThemesList
                 themesPromise={themesPromise}
                 themeBookmarks={themeBookmarks}
@@ -898,13 +876,7 @@ export default function GroupPage() {
             </Suspense>
           ) : currentTab === "map" ? (
             // Map content with Suspense
-            <Suspense fallback={
-              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
-                <CardBody className="p-6">
-                  <div className="w-full h-96 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                </CardBody>
-              </Card>
-            }>
+            <Suspense fallback={<LoadingCompass label="地図を広げています…" />}>
               <MapViewContainer 
                 bookmarksDataPromise={bookmarksDataPromise} 
                 googleMapsApiKey={googleMapsApiKey}
@@ -1041,6 +1013,7 @@ export default function GroupPage() {
             </Form>
           </ModalContent>
         </Modal>
-    </div>
+      </div>
+    </>
   );
 }

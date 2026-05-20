@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Link, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { createGroup } from "../services/group.server";
-import { Button, Card, CardBody, CardHeader, Input, Textarea, Chip } from "@heroui/react";
+import { Button, Input, Textarea } from "@heroui/react";
 import { ArrowLeft, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
+import { AppHeader } from "../components/app-header";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -23,12 +24,11 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   try {
-    // groupIDは自動生成される
     const group = await createGroup({
       name: name.trim(),
       description: description?.trim() || undefined,
     });
-    
+
     return redirect(`/group/${group.id}`);
   } catch (error) {
     return { error: error instanceof Error ? error.message : "グループの作成に失敗しました" };
@@ -43,146 +43,130 @@ export default function Create() {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <AppHeader />
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Button
               as={Link}
               to="/"
               variant="ghost"
               size="sm"
-              className="mb-6 hover:translate-x-1 transition-transform"
+              className="mb-6 hover:translate-x-[-2px] transition-transform"
               startContent={<ArrowLeft size={16} />}
             >
-              wanna-goに戻る
+              ホームに戻る
             </Button>
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">
+            <div className="text-center mb-6">
+              <h1 className="font-display text-4xl text-deep-sea dark:text-parchment mb-3">
                 新しいグループを作成
               </h1>
-              <p className="text-lg text-slate-500 dark:text-slate-400">
+              <p className="text-deep-sea-ink/70 dark:text-parchment/70 font-serif-jp">
                 みんなで共有する行きたい場所リストを始めましょう
               </p>
             </div>
           </div>
 
           {/* Form Card */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="space-y-6">
-              {/* Info Banner */}
-              <Card className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800">
-                <CardBody className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-blue-600 dark:text-blue-400 text-xl mt-0.5"><Lightbulb size={20} /></div>
-                    <div>
-                      <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                        自動でグループIDを生成
-                      </h3>
-                      <p className="text-blue-700 dark:text-blue-300 text-sm">
-                        作成後に表示されるURLを家族や友人に共有して、一緒に行きたい場所を管理できます
-                      </p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-              
-              <Form method="post" className="space-y-6">
-                {/* Group Name */}
-                <div className="space-y-2">
-                  <Input
-                    name="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    label="グループ名"
-                    placeholder="我が家の行きたいところ"
-                    variant="bordered"
-                    maxLength={100}
-                    isRequired
-                    classNames={{
-                      label: "text-sm font-medium text-slate-900 dark:text-slate-50",
-                      input: "text-base"
-                    }}
-                    description={`最大100文字まで入力できます (${name.length}/100)`}
-                  />
+          <div className="paper-card p-6 space-y-6">
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 px-4 py-3 bg-gold/12 dark:bg-gold/8 border border-gold/40 rounded-md">
+              <Lightbulb size={20} className="text-gold-soft dark:text-gold-soft flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-deep-sea-ink dark:text-parchment mb-0.5 font-serif-jp">
+                  自動でグループIDを生成
+                </h3>
+                <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70">
+                  作成後に表示されるURLを家族や友人に共有して、一緒に行きたい場所を管理できます
+                </p>
+              </div>
+            </div>
+
+            <Form method="post" className="space-y-6">
+              <Input
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                label="グループ名"
+                placeholder="我が家の行きたいところ"
+                variant="bordered"
+                maxLength={100}
+                isRequired
+                classNames={{
+                  label: "text-sm font-medium font-serif-jp",
+                  input: "text-base",
+                  inputWrapper: "bg-parchment dark:bg-night-sea-2",
+                }}
+                description={`最大100文字まで入力できます (${name.length}/100)`}
+              />
+
+              <Textarea
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                label="説明"
+                placeholder="家族で行きたい場所ややりたいことをまとめています"
+                variant="bordered"
+                maxLength={500}
+                minRows={4}
+                classNames={{
+                  label: "text-sm font-medium font-serif-jp",
+                  inputWrapper: "bg-parchment dark:bg-night-sea-2",
+                }}
+                description={`グループの目的や説明を追加できます (${description.length}/500)`}
+              />
+
+              {actionData?.error && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+                  <AlertTriangle size={18} className="text-rust" />
+                  <p className="text-rust font-medium text-sm">{actionData.error}</p>
                 </div>
+              )}
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <Textarea
-                    name="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    label="説明"
-                    placeholder="家族で行きたい場所ややりたいことをまとめています"
-                    variant="bordered"
-                    maxLength={500}
-                    minRows={4}
-                    classNames={{
-                      label: "text-sm font-medium text-slate-900 dark:text-slate-50"
-                    }}
-                    description={`グループの目的や説明を追加できます (${description.length}/500)`}
-                  />
-                </div>
-
-                {/* Error Message */}
-                {actionData?.error && (
-                  <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
-                    <CardBody className="p-4">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
-                        <p className="text-red-700 dark:text-red-300 font-medium">{actionData.error}</p>
-                      </div>
-                    </CardBody>
-                  </Card>
-                )}
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  color="primary"
-                  size="lg"
-                  className="w-full shadow-lg hover:shadow-xl transition-all duration-300"
-                  isDisabled={isSubmitting || !name.trim()}
-                  isLoading={isSubmitting}
-                  startContent={!isSubmitting ? <Sparkles size={20} /> : undefined}
-                >
-                  {isSubmitting ? "作成中..." : "グループを作成する"}
-                </Button>
-              </Form>
-            </CardBody>
-          </Card>
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                className="w-full shadow-paper hover:shadow-paper-hover transition-all duration-300"
+                isDisabled={isSubmitting || !name.trim()}
+                isLoading={isSubmitting}
+                startContent={!isSubmitting ? <Sparkles size={18} /> : undefined}
+              >
+                {isSubmitting ? "作成中..." : "グループを作成する"}
+              </Button>
+            </Form>
+          </div>
 
           {/* Preview Card */}
           {name.trim() && (
-            <Card className="mt-6 animate-fadeIn bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div>
-                  <h3 className="text-lg font-semibold">プレビュー</h3>
-                  <p className="text-small text-default-500">作成されるグループの見た目</p>
+            <div className="mt-6 paper-card p-5 animate-fadeIn">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-display text-lg text-deep-sea dark:text-parchment">
+                  プレビュー
+                </h3>
+                <span className="text-xs uppercase tracking-[0.18em] text-deep-sea-ink/55 dark:text-parchment/55 font-serif-jp">
+                  作成されるグループ
+                </span>
+              </div>
+              <div className="border border-dashed border-deep-sea/30 dark:border-parchment/30 rounded-lg p-5 bg-parchment dark:bg-night-sea-2">
+                <h4 className="font-display text-2xl text-deep-sea dark:text-parchment mb-2">
+                  {name}
+                </h4>
+                {description && (
+                  <p className="text-sm text-deep-sea-ink/75 dark:text-parchment/75 leading-relaxed mb-3">
+                    {description}
+                  </p>
+                )}
+                <div className="text-xs font-serif-jp text-deep-sea-ink/60 dark:text-parchment/60">
+                  グループID: <span className="font-mono tracking-wider">xxxxxxxx</span>（自動生成）
                 </div>
-              </CardHeader>
-              <CardBody className="pt-0">
-                <div className="border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-100/20 dark:bg-slate-800/20">
-                  <h4 className="font-semibold text-slate-900 dark:text-slate-50 text-xl mb-2">{name}</h4>
-                  {description && (
-                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{description}</p>
-                  )}
-                  <div className="mt-4 flex items-center gap-2">
-                    <Chip
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                      className="text-xs"
-                    >
-                      グループID: xxxxxxxx (自動生成)
-                    </Chip>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
-    </div>
+      </div>
+    </>
   );
 }

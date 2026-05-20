@@ -12,6 +12,8 @@ import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip, Divider } from "@heroui/react";
 import { ArrowLeft, RotateCw, MapPin } from "lucide-react";
 import { LocationSearch } from "../components/location-search";
+import { AppHeader } from "../components/app-header";
+import { CompassRose } from "../components/compass-rose";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
@@ -182,26 +184,36 @@ export default function AddBookmark() {
   };
 
 
+  // 興味度の値に応じてコンパス針を回転（1→-90deg, 5→+90deg）
+  const needleRotation = -90 + ((priority - 1) / 4) * 180;
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <AppHeader />
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Button
               as={Link}
               to={`/group/${groupId}`}
               variant="ghost"
               size="sm"
-              className="mb-4"
+              className="mb-4 hover:translate-x-[-2px] transition-transform"
               startContent={<ArrowLeft size={16} />}
             >
-              ブックマークを追加
+              グループに戻る
             </Button>
+            <h1 className="font-display text-3xl text-deep-sea dark:text-parchment mb-2">
+              ブックマークを追加
+            </h1>
+            <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 font-serif-jp">
+              URL を貼り付けるとタイトルと画像を自動取得します
+            </p>
           </div>
 
           {/* Form */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="p-6">
+          <div className="paper-card p-6">
             <Form method="post" className="space-y-6">
               {/* Hidden metadata fields */}
               {metadata && (
@@ -328,10 +340,15 @@ export default function AddBookmark() {
 
               {/* Priority */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-900 dark:text-slate-50">
+                <label className="block text-sm font-medium text-deep-sea-ink dark:text-parchment font-serif-jp">
                   興味度
                 </label>
                 <div className="flex items-center gap-4">
+                  <CompassRose
+                    size={36}
+                    tone="rust"
+                    needleRotation={needleRotation}
+                  />
                   <Slider
                     size="sm"
                     step={1}
@@ -340,11 +357,14 @@ export default function AddBookmark() {
                     value={priority}
                     onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
                     className="flex-1"
-                    color="primary"
+                    color="warning"
                   />
                   <div className="flex items-center gap-0.5">
                     {Array.from({ length: 5 }, (_, i) => (
-                      <span key={i} className={i < priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
+                      <span
+                        key={i}
+                        className={i < priority ? "text-gold-soft" : "text-deep-sea/25 dark:text-parchment/25"}
+                      >
                         ★
                       </span>
                     ))}
@@ -424,11 +444,9 @@ export default function AddBookmark() {
 
               {/* Error Message */}
               {actionData?.error && (
-                <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
-                  <CardBody className="p-3">
-                    <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
-                  </CardBody>
-                </Card>
+                <div className="px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+                  <p className="text-rust text-sm">{actionData.error}</p>
+                </div>
               )}
 
               {/* Submit Button */}
@@ -436,16 +454,16 @@ export default function AddBookmark() {
                 type="submit"
                 color="primary"
                 size="lg"
-                className="w-full"
+                className="w-full shadow-paper hover:shadow-paper-hover transition-all duration-300"
                 isDisabled={isSubmitting}
                 isLoading={isSubmitting}
               >
                 {isSubmitting ? "保存中..." : "保存"}
               </Button>
             </Form>
-            </CardBody>
-          </Card>
+          </div>
         </div>
-    </div>
+      </div>
+    </>
   );
 }

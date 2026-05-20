@@ -1,8 +1,10 @@
 import type { Route } from "./+types/home";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Button, Card, CardBody, CardHeader, Input, Chip } from "@heroui/react";
+import { Button, Input } from "@heroui/react";
 import { MapPin, Users, Link as LinkIcon, Check, Sparkles, Rocket } from "lucide-react";
+import { AppHeader } from "../components/app-header";
+import { CategoryPin } from "../components/category-pin";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -23,189 +25,181 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <>
+      <AppHeader homeLink={false} />
+      <div className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="mb-6">
-              <h1 className="text-6xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">
-                wanna-go
-              </h1>
-              <div className="text-4xl mb-6">🗺️</div>
+          <section className="text-center mb-16 relative">
+            {/* 装飾ピン */}
+            <div
+              className="absolute -top-2 left-8 hidden sm:block opacity-70"
+              aria-hidden="true"
+            >
+              <CategoryPin category="観光地" size={28} />
             </div>
-            
-            <div className="mb-12 space-y-2">
-              <h2 className="text-3xl font-medium text-slate-500 dark:text-slate-400">
-                行きたい場所を
-              </h2>
-              <h2 className="text-3xl font-medium text-slate-900 dark:text-slate-50">
-                家族・恋人と共有しよう
-              </h2>
-              <p className="text-lg text-slate-500 dark:text-slate-400 mt-6 max-w-2xl mx-auto leading-relaxed">
-                アカウント不要でURLを共有するだけ。お気に入りの場所をみんなで集めて、次の冒険を計画しよう
+            <div
+              className="absolute top-12 right-6 hidden sm:block opacity-70 rotate-12"
+              aria-hidden="true"
+            >
+              <CategoryPin category="レストラン" size={26} />
+            </div>
+
+            <div className="space-y-3 mb-10 pt-10">
+              <p className="font-serif-jp text-deep-sea-ink/70 dark:text-parchment/70 tracking-[0.18em] text-sm">
+                WANNA-GO
+              </p>
+              <h1 className="font-display text-5xl sm:text-6xl text-deep-sea dark:text-parchment leading-tight">
+                行きたい場所を、
+                <br className="hidden sm:block" />
+                みんなで共有しよう
+              </h1>
+              <p className="text-lg text-deep-sea-ink/75 dark:text-parchment/75 mt-6 max-w-2xl mx-auto leading-relaxed">
+                アカウント不要、URL ひとつ。お気に入りの場所を持ち寄って、
+                家族・恋人・友人とゆっくり計画できます。
               </p>
             </div>
 
             {/* Primary CTA */}
-            <div className="mb-12">
+            <div className="mb-4">
               <Button
                 as={Link}
                 to="/create"
                 color="primary"
                 size="lg"
-                className="shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 text-lg px-8 py-3"
+                className="text-lg px-10 py-7 shadow-paper hover:shadow-paper-hover transition-all duration-300"
                 startContent={<Sparkles size={20} />}
               >
                 新しいグループを作成
               </Button>
             </div>
-          </div>
+          </section>
 
           {/* Cards Section */}
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="grid md:grid-cols-2 gap-6 mb-16">
             {/* Join group card */}
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div>
-                  <h3 className="text-xl font-semibold">既存グループに参加</h3>
-                  <p className="text-small text-default-500">
-                    グループIDを入力してメンバーに加わりましょう
-                  </p>
-                </div>
-              </CardHeader>
-              <CardBody className="pt-0">
-                <form onSubmit={handleJoinGroup} className="space-y-4">
-                  <Input
-                    type="text"
-                    value={groupId}
-                    onChange={(e) => setGroupId(e.target.value)}
-                    placeholder="例: xy7k9m2p"
-                    maxLength={8}
-                    variant="bordered"
-                    classNames={{
-                      input: "text-small",
-                      inputWrapper: "h-10"
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    color="secondary"
-                    variant="flat"
-                    className="w-full"
-                    startContent={<Rocket size={16} />}
-                  >
-                    参加する
-                  </Button>
-                </form>
-              </CardBody>
-            </Card>
+            <div className="paper-card p-6">
+              <h3 className="font-display text-xl text-deep-sea dark:text-parchment mb-1">
+                既存グループに参加
+              </h3>
+              <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 mb-4 font-serif-jp">
+                グループIDを入力してメンバーに加わりましょう
+              </p>
+              <form onSubmit={handleJoinGroup} className="space-y-3">
+                <Input
+                  type="text"
+                  value={groupId}
+                  onChange={(e) => setGroupId(e.target.value)}
+                  placeholder="例: xy7k9m2p"
+                  maxLength={8}
+                  variant="bordered"
+                  classNames={{
+                    input: "font-mono tracking-wider",
+                    inputWrapper: "h-11 bg-parchment dark:bg-night-sea-2",
+                  }}
+                />
+                <Button
+                  type="submit"
+                  color="secondary"
+                  variant="flat"
+                  className="w-full"
+                  startContent={<Rocket size={16} />}
+                >
+                  参加する
+                </Button>
+              </form>
+            </div>
 
             {/* Features card */}
-            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div>
-                  <h3 className="text-xl font-semibold">主な機能</h3>
-                  <p className="text-small text-default-500">
-                    シンプルで使いやすい設計
-                  </p>
-                </div>
-              </CardHeader>
-              <CardBody className="pt-0">
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-3">
-                    <Chip
-                      size="sm"
-                      color="success"
-                      variant="flat"
-                      className="w-8 h-8 min-w-8 p-0 flex items-center justify-center"
+            <div className="paper-card p-6">
+              <h3 className="font-display text-xl text-deep-sea dark:text-parchment mb-1">
+                主な機能
+              </h3>
+              <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 mb-4 font-serif-jp">
+                シンプルで使いやすい設計
+              </p>
+              <ul className="space-y-3">
+                {[
+                  { icon: <Check size={14} />, text: "アカウント不要", tone: "moss" },
+                  { icon: <LinkIcon size={14} />, text: "URLで簡単共有", tone: "deep-sea" },
+                  { icon: <MapPin size={14} />, text: "地図で場所を確認", tone: "rust" },
+                  { icon: <Users size={14} />, text: "みんなで持ち寄り", tone: "gold" },
+                ].map((item) => (
+                  <li key={item.text} className="flex items-center gap-3 text-deep-sea-ink dark:text-parchment">
+                    <span
+                      className={`inline-flex w-7 h-7 items-center justify-center rounded-full ${
+                        item.tone === "moss"
+                          ? "bg-moss/15 text-moss dark:text-moss-soft"
+                          : item.tone === "deep-sea"
+                            ? "bg-deep-sea/15 text-deep-sea dark:text-parchment"
+                            : item.tone === "rust"
+                              ? "bg-rust/15 text-rust dark:text-rust-soft"
+                              : "bg-gold/20 text-deep-sea-ink dark:text-gold-soft"
+                      }`}
+                      aria-hidden="true"
                     >
-                      <Check size={14} />
-                    </Chip>
-                    <span>アカウント不要</span>
+                      {item.icon}
+                    </span>
+                    <span className="font-serif-jp">{item.text}</span>
                   </li>
-                  <li className="flex items-center gap-3">
-                    <Chip
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                      className="w-8 h-8 min-w-8 p-0 flex items-center justify-center"
-                    >
-                      <LinkIcon size={14} />
-                    </Chip>
-                    <span>URLで簡単共有</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Chip
-                      size="sm"
-                      color="secondary"
-                      variant="flat"
-                      className="w-8 h-8 min-w-8 p-0 flex items-center justify-center"
-                    >
-                      <MapPin size={14} />
-                    </Chip>
-                    <span>地図で場所を確認</span>
-                  </li>
-                </ul>
-              </CardBody>
-            </Card>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* How it works */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardHeader className="pb-3 text-center">
-              <div className="w-full">
-                <h3 className="text-xl font-semibold">使い方はとても簡単</h3>
-                <p className="text-small text-default-500">3ステップで始められます</p>
-              </div>
-            </CardHeader>
-            <CardBody className="pt-0">
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <Chip
-                    size="lg"
-                    color="default"
-                    variant="flat"
-                    className="w-12 h-12 mx-auto mb-4 text-2xl"
-                  >
-                    1
-                  </Chip>
-                  <h4 className="font-semibold mb-2">グループ作成</h4>
-                  <p className="text-sm text-default-500">
-                    グループ名を入力して新しいリストを作成
+          <section className="paper-card p-8">
+            <div className="text-center mb-8">
+              <h2 className="font-display text-2xl text-deep-sea dark:text-parchment mb-2">
+                使い方はとても簡単
+              </h2>
+              <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 font-serif-jp">
+                3ステップで始められます
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 relative">
+              {/* 点線の経路（md以上で表示） */}
+              <div
+                className="hidden md:block absolute top-7 left-[16.66%] right-[16.66%] h-px route-line pointer-events-none"
+                aria-hidden="true"
+              />
+
+              {[
+                {
+                  step: 1,
+                  title: "グループ作成",
+                  body: "グループ名を入力して新しいリストを作成",
+                },
+                {
+                  step: 2,
+                  title: "場所を追加",
+                  body: "行きたい場所のURLを貼り付けて保存",
+                },
+                {
+                  step: 3,
+                  title: "みんなで共有",
+                  body: "グループURLを家族・友人に送信",
+                },
+              ].map((s) => (
+                <div key={s.step} className="text-center relative">
+                  <div className="relative inline-flex items-center justify-center w-14 h-14 mb-4 mx-auto bg-parchment dark:bg-night-sea-2 rounded-full border-2 border-deep-sea/30 dark:border-parchment/30">
+                    <span className="font-display text-2xl text-deep-sea dark:text-parchment leading-none">
+                      {s.step}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-lg text-deep-sea dark:text-parchment mb-1">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 font-serif-jp">
+                    {s.body}
                   </p>
                 </div>
-                <div className="text-center">
-                  <Chip
-                    size="lg"
-                    color="default"
-                    variant="flat"
-                    className="w-12 h-12 mx-auto mb-4 text-2xl"
-                  >
-                    2
-                  </Chip>
-                  <h4 className="font-semibold mb-2">場所を追加</h4>
-                  <p className="text-sm text-default-500">
-                    行きたい場所のURLを貼り付けて保存
-                  </p>
-                </div>
-                <div className="text-center">
-                  <Chip
-                    size="lg"
-                    color="default"
-                    variant="flat"
-                    className="w-12 h-12 mx-auto mb-4 text-2xl"
-                  >
-                    3
-                  </Chip>
-                  <h4 className="font-semibold mb-2">みんなで共有</h4>
-                  <p className="text-sm text-default-500">
-                    グループURLを家族・友人に送信
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+              ))}
+            </div>
+          </section>
         </div>
-    </div>
+      </div>
+    </>
   );
 }
