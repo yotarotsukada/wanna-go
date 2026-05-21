@@ -14,6 +14,11 @@ import { Settings, Sparkles, Search, Edit, Plus, MapPin, Bookmark, Palette } fro
 import { formatDate } from "../lib/utils";
 import { useState, Suspense, use, useMemo, useEffect, useRef, useCallback } from "react";
 import { ThemeValidationError, ThemeNotFoundError } from "../entities/theme/theme-errors";
+import { AppHeader } from "../components/app-header";
+import { ProgressGauge } from "../components/progress-gauge";
+import { EmptyAtlas } from "../components/empty-atlas";
+import { LoadingCompass } from "../components/loading-compass";
+import { StampChip } from "../components/stamp-chip";
 
 // デバウンスカスタムフック
 function useDebounce<T>(value: T, delay: number): T {
@@ -163,21 +168,13 @@ export async function action({ request, params }: Route.ActionArgs) {
 // ブックマークスケルトンコンポーネント
 function BookmarksSkeleton() {
   return (
-    <div className="space-y-6">
-      {[1, 2, 3].map((i) => (
-        <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-          <CardBody className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-3/4"></div>
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-              </div>
-              <div className="w-16 h-8 bg-slate-200 dark:bg-slate-700 rounded"></div>
-            </div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full mb-2"></div>
-            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
-          </CardBody>
-        </Card>
+    <div className="grid md:grid-cols-2 gap-5">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="surface animate-pulse p-5">
+          <div className="h-6 bg-deep-sea/15 dark:bg-parchment/15 rounded mb-3 w-3/4"></div>
+          <div className="h-4 bg-deep-sea/10 dark:bg-parchment/10 rounded mb-2 w-1/2"></div>
+          <div className="h-4 bg-deep-sea/10 dark:bg-parchment/10 rounded w-2/3"></div>
+        </div>
       ))}
     </div>
   );
@@ -258,32 +255,20 @@ function BookmarksStatsContainer({
 }
 
 // ブックマーク統計情報コンポーネント
-function BookmarksStats({ 
-  filteredBookmarks 
-}: { 
+function BookmarksStats({
+  filteredBookmarks,
+}: {
   filteredBookmarks: any[];
 }) {
   const stats = calculateStats(filteredBookmarks);
-  
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-4">
-          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-            {stats.total_count}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">ブックマーク数</div>
-        </CardBody>
-      </Card>
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-4">
-          <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-            {stats.avg_priority.toFixed(1)}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">平均興味度</div>
-        </CardBody>
-      </Card>
-    </div>
+    <ProgressGauge
+      visited={stats.visited_count}
+      total={stats.total_count}
+      label="訪問の進捗"
+      className="mb-6"
+    />
   );
 }
 
@@ -348,34 +333,36 @@ function BookmarksList({
   handleDelete: (bookmarkId: string) => void;
 }) {
   if (filteredBookmarks.length === 0) {
+    const isFiltered =
+      searchQuery || categoryFilter !== "all" || visitedFilter !== "all";
     return (
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-16">
-          <h3 className="text-xl font-semibold mb-2">
-            {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-              ? "条件に一致するブックマークがありません"
-              : "まだブックマークがありません"}
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
-            {searchQuery || categoryFilter !== "all" || visitedFilter !== "all"
-              ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
-              : "最初の行きたい場所を追加して、みんなで共有しましょう"}
-          </p>
+      <EmptyAtlas
+        title={
+          isFiltered
+            ? "条件に一致するブックマークがありません"
+            : "まだブックマークがありません"
+        }
+        description={
+          isFiltered
+            ? "フィルターを変更するか、新しいブックマークを追加してみましょう"
+            : "最初の行きたい場所を追加して、みんなで共有しましょう"
+        }
+        action={
           <Button
             as={Link}
             to={`/group/${group.id}/add`}
             color="primary"
-            startContent={<Sparkles size={20} />}
+            startContent={<Sparkles size={18} />}
           >
             ブックマークを追加
           </Button>
-        </CardBody>
-      </Card>
+        }
+      />
     );
   }
-  
+
   return (
-    <div className="space-y-6">
+    <div className="grid md:grid-cols-2 gap-5">
       {filteredBookmarks.map((bookmark: any) => (
         <BookmarkCard
           key={bookmark.id}
@@ -412,30 +399,26 @@ function ThemesList({
   
   if (themes.length === 0) {
     return (
-      <Card className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-        <CardBody className="py-16">
-          <h3 className="text-xl font-semibold mb-2">
-            テーマがありません
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
-            最初のテーマを作成して、ブックマークを整理しましょう
-          </p>
+      <EmptyAtlas
+        title="テーマがありません"
+        description="最初のテーマを作成して、ブックマークを整理しましょう"
+        action={
           <Button
             onPress={onCreateOpen}
             color="primary"
-            startContent={<Plus size={20} />}
+            startContent={<Plus size={18} />}
           >
             テーマを作成
           </Button>
-        </CardBody>
-      </Card>
+        }
+      />
     );
   }
 
   return (
-    <>
+    <div className="space-y-4">
       {themes.map((theme: any) => (
-        <Card key={theme.id} className="animate-fadeIn group hover:shadow-lg transition-all duration-300 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <div key={theme.id} className="surface animate-fadeIn">
           <div className="p-4">
             <Accordion
               onSelectionChange={(keys) => {
@@ -457,18 +440,14 @@ function ThemesList({
                 title={
                   <div className="flex items-start justify-between w-full gap-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-2">
+                      <h3 className="font-display text-xl text-deep-sea dark:text-parchment flex items-center gap-2 mb-2">
                         <span className="text-xl flex-shrink-0">{theme.icon || '🗺️'}</span>
                         <span className="truncate">{theme.name}</span>
                       </h3>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <Chip 
-                          variant="flat" 
-                          color="primary"
-                          size="sm"
-                        >
+                        <StampChip tone="deep-sea">
                           {theme.bookmarkCount}件のブックマーク
-                        </Chip>
+                        </StampChip>
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -517,9 +496,9 @@ function ThemesList({
               </AccordionItem>
             </Accordion>
           </div>
-        </Card>
+        </div>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -690,60 +669,54 @@ export default function GroupPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-2 tracking-tight">
-                {group.name}
-              </h1>
-              {group.description && (
-                <p className="text-lg text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
-                  {group.description}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                as={Link}
-                to={`/group/${group.id}/settings`}
-                variant="ghost"
-                size="sm"
-                startContent={<Settings size={16} />}
-              >
-                設定
-              </Button>
-            </div>
-          </div>
-
-          {/* Add bookmark button */}
-          <div className="mb-6">
+    <>
+      <AppHeader
+        rightSlot={
+          <>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-deep-sea-ink/60 dark:text-parchment/60 px-2 py-1 rounded-md bg-default font-mono">
+              {group.id}
+            </span>
             <Button
               as={Link}
-              to={`/group/${group.id}/add`}
-              color="primary"
-              className="shadow-md hover:shadow-lg transition-all duration-200"
-              startContent={<Sparkles size={20} />}
+              to={`/group/${group.id}/settings`}
+              variant="light"
+              size="sm"
+              isIconOnly
+              aria-label="設定"
             >
-              ブックマーク追加
+              <Settings size={16} />
             </Button>
+          </>
+        }
+      />
+      <div className="container mx-auto px-4 py-8">
+        {/* Title row */}
+        <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-3xl sm:text-4xl text-deep-sea dark:text-parchment mb-2">
+              {group.name}
+            </h1>
+            {group.description && (
+              <p className="text-sm text-deep-sea-ink/70 dark:text-parchment/70 max-w-2xl leading-relaxed">
+                {group.description}
+              </p>
+            )}
           </div>
+          <Button
+            as={Link}
+            to={`/group/${group.id}/add`}
+            color="primary"
+            startContent={<Sparkles size={16} />}
+            className="shrink-0"
+          >
+            追加
+          </Button>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <Suspense
           fallback={
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="text-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
-                  <CardBody className="py-4">
-                    <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded mx-auto mb-1"></div>
-                    <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded mx-auto"></div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
+            <div className="surface animate-pulse h-24 mb-6" />
           }
         >
           <BookmarksStatsContainer 
@@ -755,88 +728,110 @@ export default function GroupPage() {
         </Suspense>
 
         {/* Tabs */}
-        <div className="mb-8">
+        <div className="mb-6 border-b border-line">
           <Tabs
             selectedKey={currentTab}
             onSelectionChange={handleTabChange}
+            variant="underlined"
+            classNames={{
+              tabList: "gap-6 p-0",
+              tab: "px-0 h-10",
+              cursor: "bg-deep-sea dark:bg-gold-soft",
+              tabContent: "group-data-[selected=true]:text-deep-sea dark:group-data-[selected=true]:text-parchment",
+            }}
           >
-            <Tab key="bookmarks" title={<span className="flex items-center gap-2"><Bookmark size={16} />ブックマーク</span>} />
-            <Tab key="themes" title={<span className="flex items-center gap-2"><Palette size={16} />テーマ</span>} />
-            <Tab key="map" title={<span className="flex items-center gap-2"><MapPin size={16} />地図</span>} />
+            <Tab key="bookmarks" title={<span className="flex items-center gap-2 text-sm"><Bookmark size={15} />ブックマーク</span>} />
+            <Tab key="themes" title={<span className="flex items-center gap-2 text-sm"><Palette size={15} />テーマ</span>} />
+            <Tab key="map" title={<span className="flex items-center gap-2 text-sm"><MapPin size={15} />地図</span>} />
           </Tabs>
         </div>
 
-        {/* Filters - Only show for bookmarks tab */}
+        {/* Filters - bookmarks tab */}
         {currentTab === "bookmarks" && (
-          <Card className="mb-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody>
-              <div className="flex flex-wrap gap-4 items-center">
-                {/* Category filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">カテゴリ:</label>
-                  <Select
-                    selectedKeys={[categoryFilter]}
-                    onSelectionChange={(keys) => {
-                      const value = Array.from(keys)[0] as string;
-                      setCategoryFilter(value === "all" ? null : value);
-                    }}
-                    className="min-w-[120px]"
-                    size="sm"
-                    variant="bordered"
-                  >
-                    <SelectItem key="all">全て</SelectItem>
-                    <>
-                    {CATEGORIES.map(category => (
-                      <SelectItem key={category}>{category}</SelectItem>
-                      ))}
-                    </>
-                  </Select>
-                </div>
+          <div className="mb-5 space-y-3">
+            {/* Search */}
+            <Input
+              type="text"
+              value={localSearchQuery}
+              onChange={(e) => setLocalSearchQuery(e.target.value)}
+              placeholder="場所やメモで検索"
+              variant="bordered"
+              size="md"
+              startContent={
+                <Search
+                  size={16}
+                  className={`text-deep-sea-ink/50 dark:text-parchment/50 ${isSearching ? "animate-pulse" : ""}`}
+                />
+              }
+              classNames={{
+                inputWrapper: "bg-content2",
+              }}
+            />
 
-                {/* Visited filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-slate-500 dark:text-slate-400 min-w-fit">状態:</label>
-                  <Select
-                    selectedKeys={[visitedFilter]}
-                    onSelectionChange={(keys) => {
-                      const value = Array.from(keys)[0] as string;
-                      setVisitedFilter(value === "all" ? null : value);
-                    }}
-                    className="min-w-[120px]"
-                    size="sm"
-                    variant="bordered"
+            {/* Filter pills */}
+            <div className="flex gap-2 flex-wrap items-center">
+              {/* Visited filter as segments */}
+              <div className="inline-flex rounded-lg border border-line p-0.5 bg-content2">
+                {[
+                  { key: "all", label: "すべて" },
+                  { key: "false", label: "未訪問" },
+                  { key: "true", label: "訪問済み" },
+                ].map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setVisitedFilter(opt.key === "all" ? null : opt.key)}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      visitedFilter === opt.key
+                        ? "bg-content1 text-deep-sea dark:text-parchment shadow-sm"
+                        : "text-deep-sea-ink/65 dark:text-parchment/65 hover:text-deep-sea dark:hover:text-parchment"
+                    }`}
                   >
-                    <SelectItem key="all">全て</SelectItem>
-                    <SelectItem key="false">未訪問</SelectItem>
-                    <SelectItem key="true">訪問済み</SelectItem>
-                  </Select>
-                </div>
-
-                {/* Search */}
-                <div className="flex-1 min-w-0 max-w-md">
-                  <Input
-                    type="text"
-                    value={localSearchQuery}
-                    onChange={(e) => setLocalSearchQuery(e.target.value)}
-                    placeholder="場所やメモで検索..."
-                    variant="bordered"
-                    size="sm"
-                    startContent={<Search size={16} className={`text-slate-500 dark:text-slate-400 ${isSearching ? 'animate-pulse' : ''}`} />}
-                  />
-                </div>
+                    {opt.label}
+                  </button>
+                ))}
               </div>
-            </CardBody>
-          </Card>
+
+              {/* Category as pills */}
+              <div className="flex gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter(null)}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                    categoryFilter === "all"
+                      ? "border-deep-sea bg-deep-sea text-parchment dark:bg-gold-soft dark:text-deep-sea-ink dark:border-gold-soft"
+                      : "border-line text-deep-sea-ink/70 dark:text-parchment/70 hover:border-deep-sea/40 dark:hover:border-parchment/40"
+                  }`}
+                >
+                  全カテゴリ
+                </button>
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setCategoryFilter(category)}
+                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                      categoryFilter === category
+                        ? "border-deep-sea bg-deep-sea text-parchment dark:bg-gold-soft dark:text-deep-sea-ink dark:border-gold-soft"
+                        : "border-line text-deep-sea-ink/70 dark:text-parchment/70 hover:border-deep-sea/40 dark:hover:border-parchment/40"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Add Theme button for themes tab */}
         {currentTab === "themes" && (
-          <div className="mb-6">
+          <div className="mb-5">
             <Button
               onPress={onCreateOpen}
               color="primary"
-              className="shadow-md hover:shadow-lg transition-all duration-200"
-              startContent={<Plus size={20} />}
+              size="sm"
+              startContent={<Plus size={16} />}
             >
               テーマを作成
             </Button>
@@ -845,11 +840,9 @@ export default function GroupPage() {
         
         {/* Error message */}
         {actionData?.error && (
-          <Card className="mb-6 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
-            <CardBody className="p-3">
-              <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
-            </CardBody>
-          </Card>
+          <div className="mb-6 px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+            <p className="text-rust text-sm">{actionData.error}</p>
+          </div>
         )}
 
         {/* Content */}
@@ -869,22 +862,7 @@ export default function GroupPage() {
             </Suspense>
           ) : currentTab === "themes" ? (
             // Themes content with Suspense
-            <Suspense fallback={
-              <div className="space-y-6">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="animate-pulse bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                    <CardBody className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded mb-2 w-1/2"></div>
-                          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-                        </div>
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
-            }>
+            <Suspense fallback={<LoadingCompass label="テーマを開いています…" />}>
               <ThemesList
                 themesPromise={themesPromise}
                 themeBookmarks={themeBookmarks}
@@ -898,13 +876,7 @@ export default function GroupPage() {
             </Suspense>
           ) : currentTab === "map" ? (
             // Map content with Suspense
-            <Suspense fallback={
-              <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm animate-pulse">
-                <CardBody className="p-6">
-                  <div className="w-full h-96 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                </CardBody>
-              </Card>
-            }>
+            <Suspense fallback={<LoadingCompass label="地図を広げています…" />}>
               <MapViewContainer 
                 bookmarksDataPromise={bookmarksDataPromise} 
                 googleMapsApiKey={googleMapsApiKey}
@@ -1041,6 +1013,7 @@ export default function GroupPage() {
             </Form>
           </ModalContent>
         </Modal>
-    </div>
+      </div>
+    </>
   );
 }

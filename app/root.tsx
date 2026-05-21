@@ -21,13 +21,13 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=DM+Serif+Display&family=Noto+Serif+JP:wght@500;700&display=swap",
   },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -46,8 +46,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <NuqsAdapter>
-      <HeroUIProvider>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+      <HeroUIProvider locale="ja-JP">
+        <div className="min-h-screen relative isolate">
           <Outlet />
         </div>
       </HeroUIProvider>
@@ -56,15 +56,15 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let message = "ページが見つかりません";
+  let details = "申し訳ありません、お探しのページは見つかりませんでした。";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message = error.status === 404 ? "404" : "エラー";
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? "リクエストされたページは存在しないようです。"
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
@@ -72,14 +72,18 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="container mx-auto px-4 py-16">
+      <div className="max-w-xl mx-auto paper-card p-8 text-center">
+        <h1 className="font-display text-5xl mb-4 text-deep-sea dark:text-parchment">
+          {message}
+        </h1>
+        <p className="text-deep-sea-ink/80 dark:text-parchment/80">{details}</p>
+        {stack && (
+          <pre className="w-full mt-6 p-4 overflow-x-auto text-left text-xs bg-parchment dark:bg-night-sea-2 rounded">
+            <code>{stack}</code>
+          </pre>
+        )}
+      </div>
     </main>
   );
 }

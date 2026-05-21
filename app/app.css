@@ -1,41 +1,245 @@
 @import "tailwindcss";
 @plugin './lib/hero.ts';
-/* Note: You may need to change the path to fit your project structure */
 @source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+ * Design Tokens — wanna-go SaaS palette (warm paper accent)
+ * ============================================================ */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+  /* Fonts */
+  --font-sans: "Inter", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "DM Serif Display", "Noto Serif JP", ui-serif, Georgia, serif;
+  --font-serif: "Noto Serif JP", ui-serif, Georgia, serif;
+
+  /* Surfaces — warm but quiet */
+  --color-parchment: #f4eede;
+  --color-parchment-2: #efe7d2;
+  --color-parchment-3: #e6dcc4;
+  --color-surface: #fbf8ee;
+  --color-surface-2: #f7f2e4;
+  --color-surface-3: #ebe2cb;
+
+  /* Ink */
+  --color-deep-sea: #1f3a5f;
+  --color-deep-sea-ink: #142840;
+  --color-deep-sea-soft: #2a4d7a;
+  --color-ink-muted: #5a6c83;
+
+  /* Accents */
+  --color-gold: #c69544;
+  --color-gold-soft: #e0bf85;
+  --color-rust: #a4503a;
+  --color-rust-soft: #c87355;
+  --color-moss: #3d5a3d;
+  --color-moss-soft: #5b7d5b;
+
+  /* Borders */
+  --color-line: rgba(20, 40, 64, 0.1);
+  --color-line-strong: rgba(20, 40, 64, 0.18);
+
+  /* Dark mode */
+  --color-night-sea: #0d1f33;
+  --color-night-sea-2: #142840;
+  --color-night-paper: #1a3050;
+  --color-night-paper-2: #21405e;
+
+  /* Radius */
+  --radius-card: 14px;
+  --radius-pin: 999px;
+
+  /* Shadow — soft, SaaS-style */
+  --shadow-card: 0 1px 2px rgba(20, 40, 64, 0.04),
+    0 8px 24px -12px rgba(20, 40, 64, 0.08);
+  --shadow-card-hover: 0 2px 4px rgba(20, 40, 64, 0.06),
+    0 16px 32px -12px rgba(20, 40, 64, 0.12);
+  --shadow-pin: 0 1px 2px rgba(20, 40, 64, 0.2);
+  --shadow-header: 0 1px 0 rgba(20, 40, 64, 0.06);
 }
 
+/* ============================================================
+ * Background — flat warm paper
+ * ============================================================ */
 html,
 body {
-  @apply bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased;
+  background-color: var(--color-parchment);
+  color: var(--color-deep-sea-ink);
+  @apply antialiased;
+  font-family: var(--font-sans);
+}
 
-  @media (prefers-color-scheme: dark) {
+body {
+  min-height: 100vh;
+  background-image: radial-gradient(
+    ellipse 1200px 600px at 50% -200px,
+    rgba(212, 162, 76, 0.08),
+    transparent 70%
+  );
+  background-attachment: fixed;
+}
+
+/* Dark mode */
+.dark html,
+.dark body,
+html.dark,
+html.dark body {
+  background-color: var(--color-night-sea);
+  color: var(--color-parchment);
+}
+
+html.dark body,
+.dark body {
+  background-image: radial-gradient(
+    ellipse 1200px 600px at 50% -200px,
+    rgba(212, 162, 76, 0.04),
+    transparent 70%
+  );
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light),
+  html:not(.light) body {
     color-scheme: dark;
   }
 }
 
+/* ============================================================
+ * Typography helpers
+ * ============================================================ */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
 
-/* Animations */
+.font-serif-jp {
+  font-family: var(--font-serif);
+}
+
+.text-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.dark .text-eyebrow {
+  color: rgba(244, 238, 222, 0.55);
+}
+
+/* ============================================================
+ * Surface (旧 paper-card) — quiet, modern SaaS card
+ * ============================================================ */
+.paper-card,
+.surface {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .paper-card,
+.dark .surface {
+  background-color: var(--color-night-paper);
+  border-color: rgba(244, 238, 222, 0.08);
+}
+
+.surface-inset {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+.dark .surface-inset {
+  background-color: var(--color-night-paper-2);
+  border-color: rgba(244, 238, 222, 0.06);
+}
+
+/* ============================================================
+ * Sticky app header
+ * ============================================================ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  background-color: color-mix(in srgb, var(--color-parchment) 78%, transparent);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.dark .app-header {
+  background-color: color-mix(in srgb, var(--color-night-sea) 78%, transparent);
+  border-bottom-color: rgba(244, 238, 222, 0.08);
+}
+
+/* ============================================================
+ * Drop shadow utility (pin)
+ * ============================================================ */
+.drop-shadow-pin {
+  filter: drop-shadow(0 2px 2px rgba(20, 40, 64, 0.25));
+}
+
+/* ============================================================
+ * Animations
+ * ============================================================ */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+
+@keyframes pin-drop {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Autofill styles for better contrast in both light and dark modes */
+.animate-pin-drop {
+  animation: pin-drop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes compass-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-compass-spin {
+  animation: compass-spin 2.4s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes ink-check {
+  0% { stroke-dashoffset: 28; opacity: 0; }
+  20% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.animate-ink-check path {
+  stroke-dasharray: 28;
+  animation: ink-check 0.5s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-pin-drop,
+  .animate-compass-spin,
+  .animate-ink-check path {
+    animation: none !important;
+  }
+  .animate-ink-check path { stroke-dashoffset: 0; }
+}
+
+/* ============================================================
+ * Autofill
+ * ============================================================ */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-  -webkit-text-fill-color: #0f172a !important;
+  -webkit-text-fill-color: var(--color-deep-sea-ink) !important;
 }
 
 .dark input:-webkit-autofill,
@@ -43,5 +247,28 @@ input:-webkit-autofill:active {
 .dark input:-webkit-autofill:focus,
 .dark input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px transparent inset !important;
-  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-text-fill-color: var(--color-parchment) !important;
+}
+
+/* ============================================================
+ * HeroUI overrides — kill bright white insides
+ * ============================================================ */
+/* Modals / popovers shouldn't be pure white */
+[data-slot="base"][role="dialog"] {
+  background-color: var(--color-surface) !important;
+}
+
+.dark [data-slot="base"][role="dialog"] {
+  background-color: var(--color-night-paper) !important;
+}
+
+/* Listbox / dropdown panels */
+[data-slot="content"] > [role="listbox"],
+[data-slot="popover"] > div {
+  background-color: var(--color-surface);
+}
+
+.dark [data-slot="content"] > [role="listbox"],
+.dark [data-slot="popover"] > div {
+  background-color: var(--color-night-paper);
 }

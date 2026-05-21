@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Link, Form, useActionData, useNavigation } from "react-router";
 import { redirect } from "react-router";
 import { createGroup } from "../services/group.server";
-import { Button, Card, CardBody, CardHeader, Input, Textarea, Chip } from "@heroui/react";
-import { ArrowLeft, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
+import { Button, Input, Textarea } from "@heroui/react";
+import { ArrowLeft, AlertTriangle, ArrowRight } from "lucide-react";
+import { AppHeader } from "../components/app-header";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -23,12 +24,11 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   try {
-    // groupIDは自動生成される
     const group = await createGroup({
       name: name.trim(),
       description: description?.trim() || undefined,
     });
-    
+
     return redirect(`/group/${group.id}`);
   } catch (error) {
     return { error: error instanceof Error ? error.message : "グループの作成に失敗しました" };
@@ -43,146 +43,88 @@ export default function Create() {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <Button
-              as={Link}
-              to="/"
-              variant="ghost"
-              size="sm"
-              className="mb-6 hover:translate-x-1 transition-transform"
-              startContent={<ArrowLeft size={16} />}
-            >
-              wanna-goに戻る
-            </Button>
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-4 tracking-tight">
-                新しいグループを作成
-              </h1>
-              <p className="text-lg text-slate-500 dark:text-slate-400">
-                みんなで共有する行きたい場所リストを始めましょう
-              </p>
-            </div>
+    <>
+      <AppHeader />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-xl mx-auto">
+          <Button
+            as={Link}
+            to="/"
+            variant="light"
+            size="sm"
+            className="mb-5 -ml-2"
+            startContent={<ArrowLeft size={16} />}
+          >
+            ホームに戻る
+          </Button>
+
+          <div className="mb-7">
+            <h1 className="font-display text-3xl text-deep-sea dark:text-parchment mb-2">
+              新しいグループを作成
+            </h1>
+            <p className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
+              名前を入力するだけ。作成後、共有用の URL が発行されます。
+            </p>
           </div>
 
-          {/* Form Card */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="space-y-6">
-              {/* Info Banner */}
-              <Card className="bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800">
-                <CardBody className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="text-blue-600 dark:text-blue-400 text-xl mt-0.5"><Lightbulb size={20} /></div>
-                    <div>
-                      <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                        自動でグループIDを生成
-                      </h3>
-                      <p className="text-blue-700 dark:text-blue-300 text-sm">
-                        作成後に表示されるURLを家族や友人に共有して、一緒に行きたい場所を管理できます
-                      </p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-              
-              <Form method="post" className="space-y-6">
-                {/* Group Name */}
-                <div className="space-y-2">
-                  <Input
-                    name="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    label="グループ名"
-                    placeholder="我が家の行きたいところ"
-                    variant="bordered"
-                    maxLength={100}
-                    isRequired
-                    classNames={{
-                      label: "text-sm font-medium text-slate-900 dark:text-slate-50",
-                      input: "text-base"
-                    }}
-                    description={`最大100文字まで入力できます (${name.length}/100)`}
-                  />
-                </div>
+          <div className="surface p-6 space-y-5">
+            <Form method="post" className="space-y-5">
+              <Input
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                label="グループ名"
+                placeholder="我が家の行きたいところ"
+                variant="bordered"
+                maxLength={100}
+                isRequired
+                description={`${name.length}/100`}
+                classNames={{
+                  inputWrapper: "bg-content2",
+                }}
+              />
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <Textarea
-                    name="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    label="説明"
-                    placeholder="家族で行きたい場所ややりたいことをまとめています"
-                    variant="bordered"
-                    maxLength={500}
-                    minRows={4}
-                    classNames={{
-                      label: "text-sm font-medium text-slate-900 dark:text-slate-50"
-                    }}
-                    description={`グループの目的や説明を追加できます (${description.length}/500)`}
-                  />
-                </div>
+              <Textarea
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                label="説明（任意）"
+                placeholder="家族で行きたい場所をまとめます"
+                variant="bordered"
+                maxLength={500}
+                minRows={3}
+                description={`${description.length}/500`}
+                classNames={{
+                  inputWrapper: "bg-content2",
+                }}
+              />
 
-                {/* Error Message */}
-                {actionData?.error && (
-                  <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
-                    <CardBody className="p-4">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
-                        <p className="text-red-700 dark:text-red-300 font-medium">{actionData.error}</p>
-                      </div>
-                    </CardBody>
-                  </Card>
-                )}
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  color="primary"
-                  size="lg"
-                  className="w-full shadow-lg hover:shadow-xl transition-all duration-300"
-                  isDisabled={isSubmitting || !name.trim()}
-                  isLoading={isSubmitting}
-                  startContent={!isSubmitting ? <Sparkles size={20} /> : undefined}
-                >
-                  {isSubmitting ? "作成中..." : "グループを作成する"}
-                </Button>
-              </Form>
-            </CardBody>
-          </Card>
-
-          {/* Preview Card */}
-          {name.trim() && (
-            <Card className="mt-6 animate-fadeIn bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div>
-                  <h3 className="text-lg font-semibold">プレビュー</h3>
-                  <p className="text-small text-default-500">作成されるグループの見た目</p>
+              {actionData?.error && (
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-rust/10 border border-rust/30 rounded-lg">
+                  <AlertTriangle size={16} className="text-rust shrink-0" />
+                  <p className="text-rust text-sm">{actionData.error}</p>
                 </div>
-              </CardHeader>
-              <CardBody className="pt-0">
-                <div className="border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-100/20 dark:bg-slate-800/20">
-                  <h4 className="font-semibold text-slate-900 dark:text-slate-50 text-xl mb-2">{name}</h4>
-                  {description && (
-                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{description}</p>
-                  )}
-                  <div className="mt-4 flex items-center gap-2">
-                    <Chip
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                      className="text-xs"
-                    >
-                      グループID: xxxxxxxx (自動生成)
-                    </Chip>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          )}
+              )}
+
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                className="w-full"
+                isDisabled={isSubmitting || !name.trim()}
+                isLoading={isSubmitting}
+                endContent={!isSubmitting ? <ArrowRight size={18} /> : undefined}
+              >
+                {isSubmitting ? "作成中..." : "グループを作成"}
+              </Button>
+            </Form>
+          </div>
+
+          <p className="text-xs text-deep-sea-ink/50 dark:text-parchment/50 text-center mt-4">
+            グループIDは作成時に自動で発行されます
+          </p>
         </div>
-    </div>
+      </div>
+    </>
   );
 }

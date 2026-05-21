@@ -11,9 +11,10 @@ import type { BookmarkWithThemes } from "../entities/bookmark/bookmark";
 import type { Group } from "../entities/group/group";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { redirect } from "react-router";
-import { Button, Card, CardBody, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { Button, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
+import { ArrowLeft, MapPin, Globe, Check, X, Pencil } from "lucide-react";
 import { LocationSearch } from "../components/location-search";
+import { AppHeader } from "../components/app-header";
 
 export function meta() {
   return [
@@ -162,76 +163,61 @@ export default function EditBookmark() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <AppHeader />
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <Button
-              as={Link}
-              to={`/group/${groupId}`}
-              variant="ghost"
-              size="sm"
-              className="mb-4"
-              startContent={<ArrowLeft size={16} />}
-            >
+          <Button
+            as={Link}
+            to={`/group/${groupId}`}
+            variant="light"
+            size="sm"
+            className="mb-5 -ml-2"
+            startContent={<ArrowLeft size={16} />}
+          >
+            グループに戻る
+          </Button>
+          <div className="mb-6">
+            <h1 className="font-display text-3xl text-deep-sea dark:text-parchment mb-2">
               ブックマークを編集
-            </Button>
+            </h1>
           </div>
 
-          {/* Form */}
-          <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardBody className="p-6">
-            <Form method="post" className="space-y-6">
-              {/* Location Search - moved to top */}
-              <div className="space-y-2">
-                <LocationSearch
-                  onLocationSelect={handleLocationSelect}
-                  defaultLocation={latitude && longitude ? { 
-                    latitude, 
-                    longitude,
-                    address: bookmark.address || '',
-                    placeName: bookmark.placeName || bookmark.title,
-                    placeId: bookmark.placeId || undefined
-                  } : null}
-                />
-                {latitude && longitude && (
-                  <>
-                    <input type="hidden" name="latitude" value={latitude} />
-                    <input type="hidden" name="longitude" value={longitude} />
-                  </>
-                )}
-                {address && (
-                  <input type="hidden" name="address" value={address} />
-                )}
-                {placeName && (
-                  <input type="hidden" name="placeName" value={placeName} />
-                )}
-                {placeId && (
-                  <input type="hidden" name="placeId" value={placeId} />
-                )}
-              </div>
-
+          <Form method="post" className="space-y-5">
+            {/* === 始め方ブロック === */}
+            <div className="grid md:grid-cols-2 gap-4">
               {/* URL */}
-              <div className="space-y-2">
+              <div className="surface p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-deep-sea/10 text-deep-sea dark:text-gold-soft">
+                    <Globe size={14} />
+                  </span>
+                  <h2 className="text-sm font-semibold text-deep-sea dark:text-parchment">
+                    URL
+                  </h2>
+                </div>
+                <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mb-3">
+                  リンク先のページ
+                </p>
                 <Input
                   type="url"
                   name="url"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
-                  onClear={() => setUrl('')}
-                  label="URL"
-                  placeholder="https://example.com"
+                  onClear={() => setUrl("")}
+                  placeholder="https://..."
                   variant="bordered"
-                  isRequired
+                  size="sm"
                   isClearable
+                  classNames={{ inputWrapper: "bg-content2" }}
                 />
-                {(url.includes('www.google.com/maps') || url.includes('maps.google.com') || url.includes('goo.gl/maps')) && (
-                  <div className="flex items-center gap-2">
-                    <Chip 
-                      size="sm" 
-                      variant="flat" 
+                {(url.includes("www.google.com/maps") || url.includes("maps.google.com") || url.includes("goo.gl/maps")) && (
+                  <div className="mt-2">
+                    <Chip
+                      size="sm"
+                      variant="flat"
                       color="secondary"
-                      startContent={<MapPin size={16} />}
+                      startContent={<MapPin size={14} />}
                     >
                       場所のURL
                     </Chip>
@@ -239,75 +225,154 @@ export default function EditBookmark() {
                 )}
               </div>
 
-              {/* Title */}
-              <div className="space-y-2">
+              {/* Location */}
+              <div className="surface p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-rust/10 text-rust dark:text-rust-soft">
+                      <MapPin size={14} />
+                    </span>
+                    <h2 className="text-sm font-semibold text-deep-sea dark:text-parchment">
+                      場所
+                    </h2>
+                  </div>
+                  {placeName && (
+                    <span className="inline-flex items-center gap-1 text-xs text-moss dark:text-moss-soft">
+                      <Check size={12} /> 設定済み
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mb-3">
+                  Googleマップから検索して紐づけ
+                </p>
+                <LocationSearch
+                  onLocationSelect={handleLocationSelect}
+                  defaultLocation={latitude && longitude ? {
+                    latitude,
+                    longitude,
+                    address: bookmark.address || "",
+                    placeName: bookmark.placeName || bookmark.title,
+                    placeId: bookmark.placeId || undefined,
+                  } : null}
+                />
+                {placeName && (
+                  <div className="mt-3 surface-inset rounded-md p-2 border border-line text-xs">
+                    <div className="font-medium text-deep-sea-ink dark:text-parchment truncate">
+                      {placeName}
+                    </div>
+                    {address && (
+                      <div className="text-deep-sea-ink/60 dark:text-parchment/60 truncate mt-0.5">
+                        {address}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLatitude(null);
+                        setLongitude(null);
+                        setAddress("");
+                        setPlaceName("");
+                        setPlaceId("");
+                      }}
+                      className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-rust hover:underline"
+                    >
+                      <X size={10} /> 場所をクリア
+                    </button>
+                  </div>
+                )}
+                {latitude && longitude && (
+                  <>
+                    <input type="hidden" name="latitude" value={latitude} />
+                    <input type="hidden" name="longitude" value={longitude} />
+                  </>
+                )}
+                {address && <input type="hidden" name="address" value={address} />}
+                {placeName && <input type="hidden" name="placeName" value={placeName} />}
+                {placeId && <input type="hidden" name="placeId" value={placeId} />}
+              </div>
+            </div>
+
+            {/* === 詳細 === */}
+            <div className="surface p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-default text-deep-sea-ink/70 dark:text-parchment/70">
+                  <Pencil size={14} />
+                </span>
+                <h2 className="text-sm font-semibold text-deep-sea dark:text-parchment">
+                  詳細
+                </h2>
+              </div>
+              <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mb-4">
+                タイトルや興味度・テーマを編集できます
+              </p>
+
+              <div className="space-y-4">
                 <Input
                   type="text"
                   name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  onClear={() => setTitle('')}
+                  onClear={() => setTitle("")}
                   label="タイトル"
+                  labelPlacement="outside"
                   placeholder="美味しいラーメン店"
                   variant="bordered"
                   maxLength={200}
                   isRequired
                   isClearable
-                />
-              </div>
-
-              {/* Category */}
-              <div className="space-y-2">
-                <Select
-                  name="category"
-                  selectedKeys={[category]}
-                  onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as Category;
-                    setCategory(value);
+                  classNames={{
+                    inputWrapper: "bg-content2",
+                    label: "text-xs font-medium",
                   }}
-                  label="カテゴリ"
-                  variant="bordered"
-                  isRequired
-                >
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat}>{cat}</SelectItem>
-                  ))}
-                </Select>
-              </div>
+                />
 
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Select
+                    name="category"
+                    selectedKeys={[category]}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as Category;
+                      setCategory(value);
+                    }}
+                    label="カテゴリ"
+                    labelPlacement="outside"
+                    variant="bordered"
+                    isRequired
+                    classNames={{
+                      trigger: "bg-content2",
+                      label: "text-xs font-medium",
+                    }}
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat}>{cat}</SelectItem>
+                    ))}
+                  </Select>
 
-              {/* Priority */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-900 dark:text-slate-50">
-                  興味度
-                </label>
-                <div className="flex items-center gap-4">
                   <Slider
+                    label="興味度"
                     size="sm"
                     step={1}
                     minValue={1}
                     maxValue={5}
                     value={priority}
                     onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
-                    className="flex-1"
-                    color="primary"
+                    color="warning"
+                    showSteps
+                    getValue={(val) => `${val} / 5`}
+                    classNames={{
+                      base: "gap-2",
+                      label: "text-xs font-medium text-deep-sea-ink dark:text-parchment",
+                      value: "text-xs text-deep-sea-ink/65 dark:text-parchment/65",
+                      track: "bg-content3",
+                    }}
                   />
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <span key={i} className={i < priority ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}>
-                        ★
-                      </span>
-                    ))}
-                  </div>
+                  <input type="hidden" name="priority" value={priority} />
                 </div>
-                <input type="hidden" name="priority" value={priority} />
-              </div>
 
-              {/* Themes */}
-              {themes.length > 0 && (
-                <div className="space-y-2">
+                {themes.length > 0 && (
                   <Select
-                    label="テーマ（任意）"
+                    label="テーマ（複数可・任意）"
+                    labelPlacement="outside"
                     placeholder="テーマを選択..."
                     selectionMode="multiple"
                     selectedKeys={selectedThemeIds}
@@ -316,13 +381,14 @@ export default function EditBookmark() {
                     }}
                     variant="bordered"
                     classNames={{
-                      trigger: "min-h-12",
+                      trigger: "min-h-12 bg-content2",
                       value: "flex flex-wrap gap-1",
+                      label: "text-xs font-medium",
                     }}
                     renderValue={(items) => (
                       <div className="flex flex-wrap gap-1">
                         {items.map((item) => {
-                          const theme = themes.find(t => t.id === item.key);
+                          const theme = themes.find((t) => t.id === item.key);
                           return (
                             <Chip
                               key={item.key}
@@ -339,8 +405,8 @@ export default function EditBookmark() {
                     )}
                   >
                     {themes.map((theme) => (
-                      <SelectItem 
-                        key={theme.id} 
+                      <SelectItem
+                        key={theme.id}
                         textValue={theme.name}
                         startContent={theme.icon && <span>{theme.icon}</span>}
                       >
@@ -348,71 +414,64 @@ export default function EditBookmark() {
                       </SelectItem>
                     ))}
                   </Select>
-                  {/* Hidden inputs for selected theme IDs */}
-                  {Array.from(selectedThemeIds).map((themeId) => (
-                    <input key={themeId} type="hidden" name="themeIds" value={themeId} />
-                  ))}
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    ※ 複数選択可能
-                  </p>
-                </div>
-              )}
+                )}
+                {Array.from(selectedThemeIds).map((themeId) => (
+                  <input key={themeId} type="hidden" name="themeIds" value={themeId} />
+                ))}
 
-              {/* Memo */}
-              <div className="space-y-2">
                 <Textarea
                   name="memo"
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
                   label="メモ"
+                  labelPlacement="outside"
                   placeholder="友人おすすめ！"
                   variant="bordered"
-                  minRows={3}
+                  minRows={2}
                   maxLength={1000}
+                  classNames={{
+                    inputWrapper: "bg-content2",
+                    label: "text-xs font-medium",
+                  }}
                 />
               </div>
+            </div>
 
-
-              {/* Error Message */}
-              {actionData?.error && (
-                <Card className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
-                  <CardBody className="p-3">
-                    <p className="text-red-600 dark:text-red-400 text-sm">{actionData.error}</p>
-                  </CardBody>
-                </Card>
-              )}
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <Button
-                  type="submit"
-                  color="primary"
-                  size="lg"
-                  className="w-full"
-                  isDisabled={isSubmitting}
-                  isLoading={isSubmitting}
-                >
-                  {isSubmitting ? "更新中..." : "更新"}
-                </Button>
-                
-                <Button
-                  type="submit"
-                  name="intent"
-                  value="delete"
-                  color="danger"
-                  size="lg"
-                  className="w-full"
-                  onPress={() => {
-                    return confirm("このブックマークを削除しますか？");
-                  }}
-                >
-                  削除
-                </Button>
+            {actionData?.error && (
+              <div className="px-4 py-3 bg-rust/10 border border-rust/40 rounded-md">
+                <p className="text-rust text-sm">{actionData.error}</p>
               </div>
-            </Form>
-            </CardBody>
-          </Card>
+            )}
+
+            <div className="flex gap-3">
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                className="flex-1"
+                isDisabled={isSubmitting}
+                isLoading={isSubmitting}
+              >
+                {isSubmitting ? "更新中..." : "更新"}
+              </Button>
+
+              <Button
+                type="submit"
+                name="intent"
+                value="delete"
+                color="danger"
+                variant="flat"
+                size="lg"
+                onPress={() => {
+                  return confirm("このブックマークを削除しますか？");
+                }}
+              >
+                削除
+              </Button>
+            </div>
+          </Form>
         </div>
-    </div>
+      </div>
+    </>
   );
 }
