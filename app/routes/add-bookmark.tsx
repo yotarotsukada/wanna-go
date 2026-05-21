@@ -10,7 +10,7 @@ import type { Category } from "../lib/constants";
 import type { UrlMetadata } from "../lib/types";
 import type { ThemeWithBookmarkCount } from "../entities/theme/theme";
 import { Button, Input, Textarea, Select, SelectItem, Slider, Chip } from "@heroui/react";
-import { ArrowLeft, RotateCw, MapPin, Globe, Check, X } from "lucide-react";
+import { ArrowLeft, RotateCw, MapPin, Globe, Check, X, Pencil } from "lucide-react";
 import { LocationSearch } from "../components/location-search";
 import { AppHeader } from "../components/app-header";
 
@@ -346,101 +346,90 @@ export default function AddBookmark() {
             </div>
 
             {/* === 詳細 === */}
-            <div className="surface p-5 space-y-5">
-              <div className="text-eyebrow">詳細</div>
+            <div className="surface p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-default text-deep-sea-ink/70 dark:text-parchment/70">
+                  <Pencil size={14} />
+                </span>
+                <h2 className="text-sm font-semibold text-deep-sea dark:text-parchment">
+                  詳細を入力
+                </h2>
+              </div>
+              <p className="text-xs text-deep-sea-ink/60 dark:text-parchment/60 mb-4">
+                自動取得された情報は、必要に応じて編集できます
+              </p>
 
-              {/* Title */}
-              <Input
-                type="text"
-                name="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onClear={() => setTitle("")}
-                label="タイトル"
-                placeholder="美味しいラーメン店"
-                variant="bordered"
-                maxLength={200}
-                isRequired
-                isClearable
-                classNames={{ inputWrapper: "bg-content2" }}
-              />
-
-              {/* Description */}
-              <Textarea
-                name="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                label="説明"
-                placeholder="説明文..."
-                variant="bordered"
-                minRows={3}
-                maxLength={500}
-                classNames={{ inputWrapper: "bg-content2" }}
-              />
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                {/* Category */}
-                <Select
-                  name="category"
-                  selectedKeys={[category]}
-                  onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as Category;
-                    setCategory(value);
-                  }}
-                  label="カテゴリ"
+              <div className="space-y-4">
+                {/* Title */}
+                <Input
+                  type="text"
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onClear={() => setTitle("")}
+                  label="タイトル"
+                  labelPlacement="outside"
+                  placeholder="美味しいラーメン店"
                   variant="bordered"
+                  maxLength={200}
                   isRequired
-                  classNames={{ trigger: "bg-content2" }}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat}>{cat}</SelectItem>
-                  ))}
-                </Select>
+                  isClearable
+                  classNames={{
+                    inputWrapper: "bg-content2",
+                    label: "text-xs font-medium",
+                  }}
+                />
 
-                {/* Priority */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-deep-sea-ink dark:text-parchment">
-                      興味度
-                    </label>
-                    <span className="text-sm text-deep-sea-ink/65 dark:text-parchment/65">
-                      {priority} / 5
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 h-11">
-                    <Slider
-                      size="sm"
-                      step={1}
-                      minValue={1}
-                      maxValue={5}
-                      value={priority}
-                      onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
-                      className="flex-1"
-                      color="warning"
-                      aria-label="興味度"
-                    />
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span
-                          key={i}
-                          className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                            i < priority
-                              ? "bg-gold"
-                              : "bg-deep-sea/15 dark:bg-parchment/15"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* Category */}
+                  <Select
+                    name="category"
+                    selectedKeys={[category]}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as Category;
+                      setCategory(value);
+                    }}
+                    label="カテゴリ"
+                    labelPlacement="outside"
+                    variant="bordered"
+                    isRequired
+                    classNames={{
+                      trigger: "bg-content2",
+                      label: "text-xs font-medium",
+                    }}
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat}>{cat}</SelectItem>
+                    ))}
+                  </Select>
+
+                  {/* Priority */}
+                  <Slider
+                    label="興味度"
+                    size="sm"
+                    step={1}
+                    minValue={1}
+                    maxValue={5}
+                    value={priority}
+                    onChange={(value) => setPriority(Array.isArray(value) ? value[0] : value)}
+                    color="warning"
+                    showSteps
+                    getValue={(val) => `${val} / 5`}
+                    classNames={{
+                      base: "gap-2",
+                      label: "text-xs font-medium text-deep-sea-ink dark:text-parchment",
+                      value: "text-xs text-deep-sea-ink/65 dark:text-parchment/65",
+                      track: "bg-content3",
+                    }}
+                  />
                   <input type="hidden" name="priority" value={priority} />
                 </div>
-              </div>
 
-              {/* Themes */}
-              {themes.length > 0 && (
-                <div>
+                {/* Themes */}
+                {themes.length > 0 && (
                   <Select
-                    label="テーマ（任意・複数可）"
+                    label="テーマ（複数可・任意）"
+                    labelPlacement="outside"
                     placeholder="テーマを選択..."
                     selectionMode="multiple"
                     selectedKeys={selectedThemeIds}
@@ -451,6 +440,7 @@ export default function AddBookmark() {
                     classNames={{
                       trigger: "min-h-12 bg-content2",
                       value: "flex flex-wrap gap-1",
+                      label: "text-xs font-medium",
                     }}
                     renderValue={(items) => (
                       <div className="flex flex-wrap gap-1">
@@ -481,24 +471,45 @@ export default function AddBookmark() {
                       </SelectItem>
                     ))}
                   </Select>
-                  {Array.from(selectedThemeIds).map((themeId) => (
-                    <input key={themeId} type="hidden" name="themeIds" value={themeId} />
-                  ))}
-                </div>
-              )}
+                )}
+                {Array.from(selectedThemeIds).map((themeId) => (
+                  <input key={themeId} type="hidden" name="themeIds" value={themeId} />
+                ))}
 
-              {/* Memo */}
-              <Textarea
-                name="memo"
-                value={memo}
-                onChange={(e) => setMemo(e.target.value)}
-                label="メモ"
-                placeholder="友人おすすめ！"
-                variant="bordered"
-                minRows={3}
-                maxLength={1000}
-                classNames={{ inputWrapper: "bg-content2" }}
-              />
+                {/* Description */}
+                <Textarea
+                  name="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  label="説明（補足）"
+                  labelPlacement="outside"
+                  placeholder="メニュー、営業時間、ひとこと感想など"
+                  variant="bordered"
+                  minRows={3}
+                  maxLength={500}
+                  classNames={{
+                    inputWrapper: "bg-content2",
+                    label: "text-xs font-medium",
+                  }}
+                />
+
+                {/* Memo */}
+                <Textarea
+                  name="memo"
+                  value={memo}
+                  onChange={(e) => setMemo(e.target.value)}
+                  label="メモ"
+                  labelPlacement="outside"
+                  placeholder="友人おすすめ！"
+                  variant="bordered"
+                  minRows={2}
+                  maxLength={1000}
+                  classNames={{
+                    inputWrapper: "bg-content2",
+                    label: "text-xs font-medium",
+                  }}
+                />
+              </div>
             </div>
 
             {/* Error Message */}
