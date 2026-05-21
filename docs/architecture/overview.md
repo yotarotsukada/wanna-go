@@ -25,6 +25,7 @@
 - **棄却した選択肢**:
   - **完全自作 + Tailwind のみ**: 一貫性とスピードが落ちる。
   - **MUI / shadcn-ui**: トーンや React 19 対応の判断が当時の HeroUI ほど合致しなかった。
+- **配色・サーフェス・コンポーネント方針**: `docs/architecture/ui-design.md` 参照。実装規約と再利用パーツ索引は `.claude/skills/design-system` Skill。
 
 ## 4. 認証なしモデル
 
